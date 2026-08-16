@@ -1,0 +1,43 @@
+Define schema:
+ * struct containing:
+  * pod types (float, int32, string, bool? more later?)
+  * array of pod types  (index to item)
+  * dictionary of pod types (string to item? or should it be more generic than that? pod to item? array is just a contiguous int to item)
+ * root is... an object? could be a dictionary, but maybe should be user defined what the root is.
+  * or maybe dictionary of string so we can show the records on the left and the data on the right?
+  * or that is a special case?
+ ! no assets. different project
+
+Source data format:
+ * ini file format? to be easy to merge?
+ * a data file per record? what if it isn't a dictionary at the root?
+
+Destination data format:
+ * for baking. maybe user specified? could have an array of baking targets. each array entry gives a format and a destination
+
+Editor
+ * maybe imgui for now. vulkan / windows?
+ * menu item to bake and have output of baking in window (separate exe instead of a library call? and show stdout in a log window?)
+
+Baker
+ * work from command line. should it bake a single target or all targets? maybe all targets for now, could be changed later if needed.
+ * binary for now. could imagine option for compressed file later.
+ * optionally create C header files for data to work with them natively instead of querying interface for data?
+ * what about schema changes on hot reload
+
+Runtime Library
+ * load a packed data file.
+ * give a callback to call on hot reload.
+ * watch file via polling, so a tick() function is called each frame.
+ * interface to query for data.
+
+Other
+ * maybe have angelscript for writing code for how to convert from one data type to another.
+  * like for schema upgrades?
+ * also maybe being able to have a separate definition for packed struct, instead of edited struct? idk.
+
+
+============= ACTUALLY IMPLEMENTING =============
+
+Dictionary is probably fine. one file per source data record. json?
+Probably need a way to resave all source data files, like when you change the schema and have a field that is renamed or something.
