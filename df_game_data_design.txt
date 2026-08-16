@@ -41,3 +41,7 @@ Other
 
 Dictionary is probably fine. one file per source data record. json?
 Probably need a way to resave all source data files, like when you change the schema and have a field that is renamed or something.
+
+============= TODO =============
+* make an option to show the imgui demo window. show_demo_window
+* put menu and main ui drawing into another file, away from the imgui boilerplate
