@@ -42,6 +42,10 @@ Other
 Dictionary is probably fine. one file per source data record. json?
 Probably need a way to resave all source data files, like when you change the schema and have a field that is renamed or something.
 
+============= TODO NEXT =============
+* load the yaml data / databases. show the list of records on the left panel. show the selected record on the right panel.
+ * have a drop down for database to show.
+
 ============= TODO =============
 * make an option to show the imgui demo window. show_demo_window
 * put menu and main ui drawing into another file, away from the imgui boilerplate
@@ -50,9 +54,14 @@ Probably need a way to resave all source data files, like when you change the sc
 
 yaml
 
-* maybe need to rename the "source" folder to "editor" and move the external stuff out into the root
-
 * have a project yaml project file point to db yaml files which each describe a single root type (single database)
  * each db should be it's own folder.  the contents of the folder are kept, to find changes for hot reloading.
 
 * document how to make a project and db
+* document how to link to it for loading the data? (binary packing has headers that are standalone usable without the library)
+
+icon for editor? anything will do for now
+
+make editor.cpp control the window title, and have it say the file name opened, and have * when dirty
+
+need native file dialogs. nfd again? or something else?

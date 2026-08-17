@@ -3,4 +3,5 @@
     <Platform Name="x64" />
   </Configurations>
   <Project Path="editor/editor.vcxproj" Id="b4cf9797-519d-4afe-a8f4-5141a6b521d3" />
+  <Project Path="loader/loader.vcxproj" Id="306d7dd5-9b7d-4a1d-a4f6-8223b668fedf" />
 </Solution>
