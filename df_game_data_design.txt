@@ -45,3 +45,9 @@ Probably need a way to resave all source data files, like when you change the sc
 ============= TODO =============
 * make an option to show the imgui demo window. show_demo_window
 * put menu and main ui drawing into another file, away from the imgui boilerplate
+? should i support undo / redo? read up on best practices for that?
+* file watch change callback should give a void* user data back with the callback
+
+yaml
+
+* maybe need to rename the "source" folder to "editor" and move the external stuff out into the root
