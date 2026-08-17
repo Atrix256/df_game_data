@@ -51,3 +51,8 @@ Probably need a way to resave all source data files, like when you change the sc
 yaml
 
 * maybe need to rename the "source" folder to "editor" and move the external stuff out into the root
+
+* have a project yaml project file point to db yaml files which each describe a single root type (single database)
+ * each db should be it's own folder.  the contents of the folder are kept, to find changes for hot reloading.
+
+* document how to make a project and db

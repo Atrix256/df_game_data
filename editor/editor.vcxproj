@@ -179,6 +179,7 @@
     <ClCompile Include="..\external\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\external\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\external\ryml\ryml_all.cpp" />
+    <ClCompile Include="editor.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

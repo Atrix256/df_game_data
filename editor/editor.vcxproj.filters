@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="source">
-      <UniqueIdentifier>{4f33ddea-9910-456d-b868-4267eb3c2b19}</UniqueIdentifier>
-    </Filter>
     <Filter Include="external">
       <UniqueIdentifier>{3720da3b-5c13-49eb-ab23-7dd650a1888c}</UniqueIdentifier>
     </Filter>
@@ -47,9 +44,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\external\ryml\ryml_all.cpp">
       <Filter>external\ryml</Filter>
     </ClCompile>
@@ -74,5 +68,7 @@
     <ClCompile Include="..\external\imgui\backends\imgui_impl_win32.cpp">
       <Filter>external\imgui\backends</Filter>
     </ClCompile>
+    <ClCompile Include="editor.cpp" />
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
 </Project>

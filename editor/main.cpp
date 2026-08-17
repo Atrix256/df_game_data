@@ -1,5 +1,8 @@
 // Note: this file has had only minor modifications from the original Dear ImGui example code.
 
+extern bool ShowEditorMenu();
+extern void ShowEditorWindow();
+
 // Dear ImGui: standalone example application for Windows API + DirectX 12
 
 // Learn about Dear ImGui:
@@ -145,8 +148,8 @@ int main(int, char**)
     //io.ConfigViewportsNoTaskBarIcon = true;
 
     // Setup Dear ImGui style
-    ImGui::StyleColorsDark();
-    //ImGui::StyleColorsLight();
+    //ImGui::StyleColorsDark();
+    ImGui::StyleColorsLight();
 
     // Setup scaling
     ImGuiStyle& style = ImGui::GetStyle();
@@ -256,44 +259,17 @@ int main(int, char**)
             ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
             ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
 
-            static float f = 0.0f;
-            static int counter = 0;
-
-            ImGui::Begin("Hello, world!", nullptr, window_flags);                          // Create a window called "Hello, world!" and append into it.
+            ImGui::Begin("Editor", nullptr, window_flags);                          // Create a window called "Hello, world!" and append into it.
 
             if (ImGui::BeginMenuBar())
             {
-                if (ImGui::BeginMenu("File"))
-                {
-                    if (ImGui::MenuItem("New", "Ctrl+N")) { /* Handle action */ }
-                    if (ImGui::MenuItem("Open", "Ctrl+O")) { /* Handle action */ }
-                    ImGui::Separator();
-                    if (ImGui::MenuItem("Exit")) { /* Handle action */ }
-                    ImGui::EndMenu();
-                }
-                if (ImGui::BeginMenu("Edit"))
-                {
-                    if (ImGui::MenuItem("Undo", "Ctrl+Z")) { /* Handle action */ }
-                    ImGui::EndMenu();
-                }
-
-                // Always call EndMenuBar if BeginMenuBar returns true
+                if (!ShowEditorMenu())
+                    PostQuitMessage(0);
                 ImGui::EndMenuBar();
             }
 
-            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-            ImGui::Checkbox("Another Window", &show_another_window);
+            ShowEditorWindow();
 
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-            if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
-
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
             ImGui::End();
 
             // 5. Pop the style variables to prevent bleeding into other windows
