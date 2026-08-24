@@ -4,12 +4,6 @@
     <Filter Include="external">
       <UniqueIdentifier>{3720da3b-5c13-49eb-ab23-7dd650a1888c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="external\imgui">
-      <UniqueIdentifier>{fb3d294f-51ec-478e-a627-25831c80fefd}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="external\imgui\backends">
-      <UniqueIdentifier>{1535f5a8-682b-4eab-b6e7-3894e8868eb4}</UniqueIdentifier>
-    </Filter>
     <Filter Include="external\ryml">
       <UniqueIdentifier>{cd24f30e-ff30-475b-ae9c-8d66ac98728b}</UniqueIdentifier>
     </Filter>
@@ -18,57 +12,11 @@
     <ClInclude Include="..\external\ryml\ryml_all.hpp">
       <Filter>external\ryml</Filter>
     </ClInclude>
-    <ClInclude Include="..\external\imgui\imgui.h">
-      <Filter>external\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\imgui_internal.h">
-      <Filter>external\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\imstb_rectpack.h">
-      <Filter>external\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\imstb_textedit.h">
-      <Filter>external\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\imstb_truetype.h">
-      <Filter>external\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\imconfig.h">
-      <Filter>external\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\backends\imgui_impl_dx12.h">
-      <Filter>external\imgui\backends</Filter>
-    </ClInclude>
-    <ClInclude Include="..\external\imgui\backends\imgui_impl_win32.h">
-      <Filter>external\imgui\backends</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\external\ryml\ryml_all.cpp">
       <Filter>external\ryml</Filter>
     </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui.cpp">
-      <Filter>external\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui_demo.cpp">
-      <Filter>external\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui_draw.cpp">
-      <Filter>external\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui_tables.cpp">
-      <Filter>external\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\imgui_widgets.cpp">
-      <Filter>external\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\backends\imgui_impl_dx12.cpp">
-      <Filter>external\imgui\backends</Filter>
-    </ClCompile>
-    <ClCompile Include="..\external\imgui\backends\imgui_impl_win32.cpp">
-      <Filter>external\imgui\backends</Filter>
-    </ClCompile>
-    <ClCompile Include="editor.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
 </Project>

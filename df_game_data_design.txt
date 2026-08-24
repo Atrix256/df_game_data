@@ -43,8 +43,15 @@ Dictionary is probably fine. one file per source data record. json?
 Probably need a way to resave all source data files, like when you change the schema and have a field that is renamed or something.
 
 ============= TODO NEXT =============
+* wxWidgets won't build release, it wants release dlls. i don't think i ever actually want / need the debug dlls of wxWidgets.
+ * get rid of the dlls not in the main folder? or .git ignore them and make them be copied on build? idk
+ * delete the "ud" dlls?
+* make wxWidgets have a left panel listing db entries, and a right panel listing a property sheet.
+* get rid of imgui
+ * also don't link to dx anymore. maybe make a new project for wxWidgets just in case.
 * load the yaml data / databases. show the list of records on the left panel. show the selected record on the right panel.
  * have a drop down for database to show.
+* ryml is under editor project external folder. it should be under the loader. or maybe loader project shouldn't exist anymore idk.
 
 ============= TODO =============
 * make an option to show the imgui demo window. show_demo_window
