@@ -12,11 +12,15 @@
     <ClInclude Include="..\external\ryml\ryml_all.hpp">
       <Filter>external\ryml</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\external\ryml\ryml_all.cpp">
       <Filter>external\ryml</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc" />
   </ItemGroup>
 </Project>

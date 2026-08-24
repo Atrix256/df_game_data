@@ -2,6 +2,9 @@
 #include <wx/propgrid/propgrid.h>
 #include <wx/propgrid/advprops.h>
 #include <wx/filedlg.h>
+#include <wx/splitter.h>
+#include <wx/sysopt.h>
+#include <wx/stattext.h>
 
 #include "loader.h"
 
@@ -43,6 +46,91 @@ DataFrame::DataFrame()
     menuBar->Append(fileMenu, "&File");
     SetMenuBar(menuBar);
 
+#if 1
+
+    wxBoxSizer* topSizer = new wxBoxSizer(wxVERTICAL);
+
+    wxArrayString choices;
+    choices.Add("Option 1");
+    choices.Add("Option 2");
+    choices.Add("Option 3");
+
+    wxChoice* dropdown = new wxChoice(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, choices);
+    dropdown->SetSelection(0);
+
+    topSizer->Add(dropdown, 0, wxALL | wxEXPAND, 8);
+
+
+
+
+    wxSplitterWindow* splitter = new wxSplitterWindow(
+        this, wxID_ANY, wxDefaultPosition, wxDefaultSize,
+        wxSP_LIVE_UPDATE | wxSP_3D
+    );
+
+    // minimum size for each panel
+    splitter->SetMinimumPaneSize(150);
+
+    //splitter->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE));
+    splitter->SetBackgroundColour(wxColour(192, 192, 192));
+
+    // --- Left panel ---
+    wxPanel* leftPanel = new wxPanel(splitter, wxID_ANY);
+    wxBoxSizer* leftSizer = new wxBoxSizer(wxVERTICAL);
+
+
+    // 1. Create standard non-editable text
+    wxStaticText* plainText1 = new wxStaticText(
+        leftPanel,
+        wxID_ANY,
+        "Clickable Plain Text"
+    );
+    leftSizer->Add(plainText1, 0, wxALL | wxALIGN_LEFT);
+    wxStaticText* plainText2 = new wxStaticText(
+        leftPanel,
+        wxID_ANY,
+        "Clickable Plain Text"
+    );
+    leftSizer->Add(plainText2, 0, wxALL | wxALIGN_LEFT);
+
+    // 2. Bind the left-mouse-button release event
+    plainText1->Bind(wxEVT_LEFT_UP, [this](wxMouseEvent& event) {
+        wxMessageBox("You clicked the plain text! 1");
+        event.Skip();
+        });
+
+    plainText2->Bind(wxEVT_LEFT_UP, [this](wxMouseEvent& event) {
+        wxMessageBox("You clicked the plain text! 2");
+        event.Skip();
+        });
+
+    leftPanel->SetSizer(leftSizer);
+
+    // --- Right panel ---
+    wxPanel* rightPanel = new wxPanel(splitter, wxID_ANY);
+    wxBoxSizer* rightSizer = new wxBoxSizer(wxVERTICAL);
+    wxButton* rightButton = new wxButton(rightPanel, wxID_ANY, "Right Button");
+    rightSizer->Add(rightButton, 0, wxALL | wxALIGN_CENTER, 10);
+    rightPanel->SetSizer(rightSizer);
+
+    // Third argument is where the sash should start
+    splitter->SplitVertically(leftPanel, rightPanel, 150);
+
+
+
+    // CHANGE: splitter now goes into topSizer instead of being set directly
+    topSizer->Add(splitter, 1, wxEXPAND | wxALL, 8);
+
+    // CHANGE: SetSizer(splitter-related sizer) becomes SetSizer(topSizer)
+    SetSizer(topSizer);
+
+    // OPTIONAL: react to dropdown selection
+    dropdown->Bind(wxEVT_CHOICE, [dropdown](wxCommandEvent&) {
+        wxLogMessage("Selected: %s", dropdown->GetStringSelection());
+        });
+
+#else
+
     // --- Main panel and sizer-based layout ---
     wxPanel* panel = new wxPanel(this);
     wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
@@ -78,9 +166,12 @@ DataFrame::DataFrame()
 
     // --- Event bindings ---
     // Bind() is the modern approach; ties events to member functions directly
+    button->Bind(wxEVT_BUTTON, &DataFrame::OnButtonClick, this);
+
+#endif
+
     Bind(wxEVT_MENU, &DataFrame::OnOpenFile, this, ID_OpenFile);
     Bind(wxEVT_MENU, &DataFrame::OnExit, this, wxID_EXIT);
-    button->Bind(wxEVT_BUTTON, &DataFrame::OnButtonClick, this);
 
     CreateStatusBar();
     SetStatusText("Ready");
