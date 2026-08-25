@@ -58,17 +58,20 @@ DataFrame::DataFrame()
 
     wxBoxSizer* topSizer = new wxBoxSizer(wxVERTICAL);
 
-    // TODO: for a label, do this:
-    // wxStaticText* label = new wxStaticText(this, wxID_ANY, "Select State:");
-    // needs a horizontal sizer, which is parented to the topSizer
-
     // Database table drop down
-    wxArrayString choices;
-    m_dbDropDown = new wxChoice(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, choices);
-    m_dbDropDown->SetSelection(0);
-    topSizer->Add(m_dbDropDown, 0, wxALL | wxEXPAND, 8);
+    {
+        wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
 
+        wxStaticText* label = new wxStaticText(this, wxID_ANY, "Table:");
+        sizer->Add(label, 0, wxALL | wxALIGN_LEFT, 8);
 
+        wxArrayString choices;
+        m_dbDropDown = new wxChoice(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, choices);
+        m_dbDropDown->SetSelection(0);
+        sizer->Add(m_dbDropDown, 0, wxALL | wxEXPAND, 8);
+
+        topSizer->Add(sizer, 0, wxALL | wxEXPAND, 0);
+    }
 
 
     wxSplitterWindow* splitter = new wxSplitterWindow(
