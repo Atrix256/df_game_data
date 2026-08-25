@@ -2,4 +2,5 @@
 Debug/
 Release/
 x64/
-imgui.ini
+vcpkg_installed/
+vcpkg/

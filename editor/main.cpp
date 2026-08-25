@@ -1,3 +1,5 @@
+#pragma warning(push)
+#pragma warning(disable: 4996)
 #include <wx/wx.h>
 #include <wx/propgrid/propgrid.h>
 #include <wx/propgrid/advprops.h>
@@ -5,8 +7,9 @@
 #include <wx/splitter.h>
 #include <wx/sysopt.h>
 #include <wx/stattext.h>
+#pragma warning(pop)
 
-#include "loader.h"
+#include "../loader/loader.h"
 
 class DataApp : public wxApp
 {
