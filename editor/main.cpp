@@ -206,8 +206,8 @@ void DataFrame::OnOpenFile(wxCommandEvent& /*event*/)
     }
 
     wxArrayString choices;
-    for (const std::string& table : m_database.GetTablePaths())
-        choices.Add(table);
+    for (const DBTable& table : m_database.GetTables())
+        choices.Add(table.GetPath());
 
     m_dbDropDown->Clear();
     m_dbDropDown->Set(choices);
@@ -257,7 +257,20 @@ TODO: for flat buffer schemas
 * struct must contain a string name
 ? do we want more control, like the user specifies a limited schema in json and we turn that into a flat buffer schema?
 
+? what types should we allow?
+ * pod, string, bool -> with default values
+ * structs -> can we have override default values for the entire struct?
+ * can we do links to other records? like for a link, specify the database name, and it can be any db that is part of the current project
+
+? could maybe go to yaml if schema is sufficiently complicated
+ * if so, could have the dbroot file be yaml too.
+ * dbName1: "relative/path/to/db1.yaml"
+ * dbName2: "relative/path/to/db2.yaml"
+ * etc.
+
 TODO:
+* make the db table be full sized again
+* ask someone for help with wxwidgets looking bad, not like a native app
 * open recent
 * save? or automatic save on close / when changing records and databases?
 * file watch for files changing on disk

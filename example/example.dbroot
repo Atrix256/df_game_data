@@ -1,3 +1,3 @@
-weapons/weapons.db
-items/items.db
-enemies/enemies.db
+weapons/schema.db
+items/schema.db
+enemies/schema.db

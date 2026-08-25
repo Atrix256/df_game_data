@@ -3,6 +3,20 @@
 #include <vector>
 #include <string>
 
+class DBTable
+{
+public:
+    bool Load(const char* path);
+
+    const char* GetPath() const
+    {
+        return m_path.c_str();
+    }
+
+private:
+    std::string m_path;
+};
+
 class DBRoot
 {
 public:
@@ -10,12 +24,12 @@ public:
 
     void Clear();
 
-    const std::vector<std::string>& GetTablePaths() const
+    const std::vector<DBTable>& GetTables() const
     {
-        return m_tablePaths;
+        return m_tables;
     }
 
 private:
 
-    std::vector<std::string> m_tablePaths;
+    std::vector<DBTable> m_tables;
 };

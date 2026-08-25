@@ -3,6 +3,12 @@
 #include <fstream>
 #include <algorithm>
 
+bool DBTable::Load(const char* path)
+{
+    m_path = path;
+    return true;
+}
+
 bool DBRoot::Load(const char* path)
 {
     Clear();
@@ -15,9 +21,19 @@ bool DBRoot::Load(const char* path)
 
         std::string line;
         while (std::getline(file, line))
-            m_tablePaths.push_back(line);
+        {
+            DBTable& newTable = m_tables.emplace_back();
+            if (!newTable.Load(line.c_str()))
+            {
+                Clear();
+                file.close();
+                return false;
+            }
+        }
 
-        std::sort(m_tablePaths.begin(), m_tablePaths.end());
+        std::sort(m_tables.begin(), m_tables.end(), [](const DBTable& a, const DBTable& b) {
+            return strcmp(a.GetPath(), b.GetPath()) < 0;
+        });
 
         file.close();
     }
@@ -27,5 +43,5 @@ bool DBRoot::Load(const char* path)
 
 void DBRoot::Clear()
 {
-    m_tablePaths.clear();
+    m_tables.clear();
 }
