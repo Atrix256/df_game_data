@@ -27,6 +27,11 @@ private:
     void OnButtonClick(wxCommandEvent& event);
     void OnExit(wxCommandEvent& event);
 
+    wxChoice* m_dbDropDown = nullptr;
+
+    DBRoot m_database;
+
+    // TODO: delete this when no longer needed
     wxPropertyGrid* m_propGrid = nullptr;
     wxTextCtrl* m_textCtrl = nullptr;
 };
@@ -53,15 +58,15 @@ DataFrame::DataFrame()
 
     wxBoxSizer* topSizer = new wxBoxSizer(wxVERTICAL);
 
+    // TODO: for a label, do this:
+    // wxStaticText* label = new wxStaticText(this, wxID_ANY, "Select State:");
+    // needs a horizontal sizer, which is parented to the topSizer
+
+    // Database table drop down
     wxArrayString choices;
-    choices.Add("Option 1");
-    choices.Add("Option 2");
-    choices.Add("Option 3");
-
-    wxChoice* dropdown = new wxChoice(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, choices);
-    dropdown->SetSelection(0);
-
-    topSizer->Add(dropdown, 0, wxALL | wxEXPAND, 8);
+    m_dbDropDown = new wxChoice(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, choices);
+    m_dbDropDown->SetSelection(0);
+    topSizer->Add(m_dbDropDown, 0, wxALL | wxEXPAND, 8);
 
 
 
@@ -128,8 +133,8 @@ DataFrame::DataFrame()
     SetSizer(topSizer);
 
     // OPTIONAL: react to dropdown selection
-    dropdown->Bind(wxEVT_CHOICE, [dropdown](wxCommandEvent&) {
-        wxLogMessage("Selected: %s", dropdown->GetStringSelection());
+    m_dbDropDown->Bind(wxEVT_CHOICE, [this](wxCommandEvent&) {
+        wxLogMessage("Selected: %s", m_dbDropDown->GetStringSelection());
         });
 
 #else
@@ -183,7 +188,7 @@ DataFrame::DataFrame()
 void DataFrame::OnOpenFile(wxCommandEvent& /*event*/)
 {
     wxFileDialog openFileDialog(this, "Open File", "", "",
-        "Text files (*.txt)|*.txt|All files (*.*)|*.*",
+        "DBRoot files (*.dbroot)|*.dbroot",
         wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 
     if (openFileDialog.ShowModal() == wxID_CANCEL)
@@ -191,14 +196,31 @@ void DataFrame::OnOpenFile(wxCommandEvent& /*event*/)
 
     wxString path = openFileDialog.GetPath();
 
-    // Read it, e.g. into the text control
-    wxFile file(path);
-    wxString contents;
-    if (file.IsOpened())
+    if(!m_database.Load(path.ToUTF8().data()))
     {
-        file.ReadAll(&contents);
-        m_textCtrl->SetValue(contents);
-        SetStatusText("Opened: " + path);
+        wxMessageBox("Failed to load database file.", "Error", wxOK | wxICON_ERROR);
+        return;
+    }
+
+    wxArrayString choices;
+    for (const std::string& table : m_database.GetTablePaths())
+        choices.Add(table);
+
+    m_dbDropDown->Clear();
+    m_dbDropDown->Set(choices);
+    m_dbDropDown->SetSelection(0);
+
+    // Read it, e.g. into the text control
+    if (m_textCtrl)
+    {
+        wxFile file(path);
+        wxString contents;
+        if (file.IsOpened())
+        {
+            file.ReadAll(&contents);
+            m_textCtrl->SetValue(contents);
+            SetStatusText("Opened: " + path);
+        }
     }
 }
 
@@ -224,3 +246,18 @@ bool DataApp::OnInit()
     frame->Show(true);
     return true;
 }
+
+/*
+
+TODO: for flat buffer schemas
+* root must be an array of struct (tables have more chaser pointing etc)
+* struct must contain a string name
+? do we want more control, like the user specifies a limited schema in json and we turn that into a flat buffer schema?
+
+TODO:
+* open recent
+* save? or automatic save on close / when changing records and databases?
+* file watch for files changing on disk
+? what if you change the schema? and like data versioning?
+
+*/

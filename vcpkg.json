@@ -1,5 +1,6 @@
 {
   "dependencies": [
-    "wxwidgets"
+    "wxwidgets",
+    "flatbuffers"
   ]
 }
