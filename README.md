@@ -29,3 +29,4 @@ TODO: fill out and continue
 | -- | -- | -- |
 | wxWidgets | For editor UI | https://wxwidgets.org/ |
 | FlatBuffers | To make binary data and static loaders | https://flatbuffers.dev/ |
+| rapidjson | To load json data | https://rapidjson.org/ |

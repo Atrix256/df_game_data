@@ -201,7 +201,7 @@ void DataFrame::OnOpenFile(wxCommandEvent& /*event*/)
 
     if(!m_database.Load(path.ToUTF8().data()))
     {
-        wxMessageBox("Failed to load database file.", "Error", wxOK | wxICON_ERROR);
+        wxMessageBox(m_database.GetErrorText(), "Error", wxOK | wxICON_ERROR);
         return;
     }
 
@@ -253,7 +253,7 @@ bool DataApp::OnInit()
 /*
 
 TODO: for flat buffer schemas
-* root must be an array of struct (tables have more chaser pointing etc)
+* root must be a table that contains an array of struct (tables have more chaser pointing etc)
 * struct must contain a string name
 ? do we want more control, like the user specifies a limited schema in json and we turn that into a flat buffer schema?
 
@@ -267,6 +267,8 @@ TODO: for flat buffer schemas
  * dbName1: "relative/path/to/db1.yaml"
  * dbName2: "relative/path/to/db2.yaml"
  * etc.
+
+! maybe do json for schema, because the data files will be in json?
 
 TODO:
 * make the db table be full sized again
