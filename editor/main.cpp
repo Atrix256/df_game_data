@@ -252,6 +252,9 @@ bool DataApp::OnInit()
 
 /*
 
+* have an enum in the example schema, and make editor have you choose which type it is.
+* have an example C++ program that loads the example data.
+
 TODO: for flat buffer schemas
 * root must be a table that contains an array of struct (tables have more chaser pointing etc)
 * struct must contain a string name

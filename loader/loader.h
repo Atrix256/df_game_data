@@ -19,6 +19,9 @@ public:
     }
 
 private:
+    bool EnsureBFBSExists();
+
+private:
     std::string m_path;
     std::string m_errorText;
 };

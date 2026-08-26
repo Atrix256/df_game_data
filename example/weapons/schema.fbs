@@ -1,6 +1,6 @@
 // Define the namespace for the generated code
 namespace MyGame.Sample;
-
+attribute "root_type";
 
 // Enums allow you to restrict values to a predefined set
 enum Color : byte { Red = 1, Green, Blue }
@@ -13,7 +13,7 @@ struct Vec3 {
 }
 
 // Tables are the main way to define objects (fields can be optional or evolved later)
-table Monster {
+table Monster (root_type) {
   pos:Vec3;
   mana:short = 150;        // Default value provided
   hp:short = 100;          // Default value provided
@@ -22,6 +22,3 @@ table Monster {
   inventory:[ubyte];       // Vector (array) of unsigned bytes
   color:Color = Blue;      // Uses the enum defined above
 }
-
-// Declare the root object type of the buffer
-root_type Monster;
