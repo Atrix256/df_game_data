@@ -11,6 +11,178 @@
 
 #include "LaunchProcess.h"
 
+static inline DBObjectFieldType FromFlatBufferType(const reflection::BaseType& type)
+{
+    DBObjectFieldType ret;
+
+    static_assert(reflection::BaseType::MaxBaseType == 19);
+    switch (type)
+    {
+        case reflection::BaseType::None:
+        {
+            break;
+        }
+        case reflection::BaseType::UType:
+        {
+            ret.type = DBObjectFieldType::Type::Int;
+            ret.Int.isSigned = false;
+            ret.Int.bytes = 4;
+            ret.Int.isUnionDiscriminant = true;
+            break;
+        }
+        case reflection::BaseType::Bool:
+        {
+            ret.type = DBObjectFieldType::Type::Bool;
+            break;
+        }
+        case reflection::BaseType::Byte:
+        {
+            ret.type = DBObjectFieldType::Type::Int;
+            ret.Int.isSigned = true;
+            ret.Int.bytes = 1;
+            ret.Int.isUnionDiscriminant = false;
+            break;
+        }
+        case reflection::BaseType::UByte:
+        {
+            ret.type = DBObjectFieldType::Type::Int;
+            ret.Int.isSigned = false;
+            ret.Int.bytes = 1;
+            ret.Int.isUnionDiscriminant = false;
+            break;
+        }
+        case reflection::BaseType::Short:
+        {
+            ret.type = DBObjectFieldType::Type::Int;
+            ret.Int.isSigned = true;
+            ret.Int.bytes = 2;
+            ret.Int.isUnionDiscriminant = false;
+            break;
+        }
+        case reflection::BaseType::UShort:
+        {
+            ret.type = DBObjectFieldType::Type::Int;
+            ret.Int.isSigned = false;
+            ret.Int.bytes = 2;
+            ret.Int.isUnionDiscriminant = false;
+            break;
+        }
+        case reflection::BaseType::Int:
+        {
+            ret.type = DBObjectFieldType::Type::Int;
+            ret.Int.isSigned = true;
+            ret.Int.bytes = 4;
+            ret.Int.isUnionDiscriminant = false;
+            break;
+        }
+        case reflection::BaseType::UInt:
+        {
+            ret.type = DBObjectFieldType::Type::Int;
+            ret.Int.isSigned = false;
+            ret.Int.bytes = 4;
+            ret.Int.isUnionDiscriminant = false;
+            break;
+        }
+        case reflection::BaseType::Long:
+        {
+            ret.type = DBObjectFieldType::Type::Int;
+            ret.Int.isSigned = true;
+            ret.Int.bytes = 8;
+            ret.Int.isUnionDiscriminant = false;
+            break;
+        }
+        case reflection::BaseType::ULong:
+        {
+            ret.type = DBObjectFieldType::Type::Int;
+            ret.Int.isSigned = false;
+            ret.Int.bytes = 8;
+            ret.Int.isUnionDiscriminant = false;
+            break;
+        }
+        case reflection::BaseType::Float:
+        {
+            ret.type = DBObjectFieldType::Type::Float;
+            ret.Float.isDouble = false;
+            break;
+        }
+        case reflection::BaseType::Double:
+        {
+            ret.type = DBObjectFieldType::Type::Float;
+            ret.Float.isDouble = true;
+            break;
+        }
+        case reflection::BaseType::String:
+        {
+            ret.type = DBObjectFieldType::Type::String;
+            break;
+        }
+        case reflection::BaseType::Vector:
+        {
+            ret.type = DBObjectFieldType::Type::Vector;
+            ret.Vector.fixedSize = 0;
+            break;
+        }
+        case reflection::BaseType::Obj:
+        {
+            ret.type = DBObjectFieldType::Type::Object;
+            break;
+        }
+        case reflection::BaseType::Union:
+        {
+            ret.type = DBObjectFieldType::Type::Union;
+            break;
+        }
+        case reflection::BaseType::Array:
+        {
+            ret.type = DBObjectFieldType::Type::Vector;
+            ret.Vector.fixedSize = 0;
+            break;
+        }
+        case reflection::BaseType::Vector64:
+        {
+            ret.type = DBObjectFieldType::Type::Vector;
+            ret.Vector.fixedSize = 0;
+            break;
+        }
+    }
+
+    return ret;
+}
+
+static inline void FromFlatBufferType(const reflection::Type& fieldType, DBObjectFieldType& baseType, DBObjectFieldType& elementType)
+{
+    // base_type is the type. if it's a vector or array, then element is the type in that vector or array.
+    baseType = FromFlatBufferType(fieldType.base_type());
+    switch (baseType.type)
+    {
+        case DBObjectFieldType::Type::Vector:
+        {
+            if (fieldType.base_type() == reflection::BaseType::Array)
+                baseType.Vector.fixedSize = fieldType.fixed_length();
+            else
+                baseType.Vector.fixedSize = 0;
+
+            elementType = FromFlatBufferType(fieldType.element());
+            break;
+        }
+        case DBObjectFieldType::Type::Object:
+        {
+            baseType.Object.objectIndex = fieldType.index();
+            break;
+        }
+        case DBObjectFieldType::Type::Int:
+        {
+            baseType.Int.enumIndex = fieldType.index();
+            break;
+        }
+        case DBObjectFieldType::Type::Union:
+        {
+            baseType.Union.enumIndex = fieldType.index();
+            break;
+        }
+    }
+}
+
 bool DBTable::EnsureBFBSExists()
 {
     // Find out when the input file was last modified
@@ -61,13 +233,80 @@ bool DBTable::Load(const char* path)
 
     // Get the items from the schema
     const reflection::Schema& schema = *reflection::GetSchema(bfbs_file_contents.c_str());
-    auto objects = schema.objects();
-    auto enums = schema.enums();
 
-    //enums->Get(0)->values()->Get(0).
-    //objects->Get(0)->fields()->Get(0)->type()
+    // Get the enums
+    {
+        auto enums = schema.enums();
+        for (flatbuffers::uoffset_t i = 0; i < enums->size(); ++i)
+        {
+            const reflection::Enum* e = enums->Get(i);
+            if (!e)
+                continue;
 
+            DBEnum& newEnum = m_enums.emplace_back();
+            newEnum.name = e->name()->str();
+            newEnum.isUnion = e->is_union();
+
+            // Loop through the values in the enum
+            for (flatbuffers::uoffset_t j = 0; j < e->values()->size(); ++j)
+            {
+                const reflection::EnumVal* val = e->values()->Get(j);
+                if (!val)
+                    continue;
+
+                DBEnumItem& newItem = newEnum.items.emplace_back();
+                newItem.name = val->name()->str();
+                newItem.value = val->value();
+
+                const reflection::Type* unionType = val->union_type();
+                if (!unionType)
+                    continue;
+
+                FromFlatBufferType(*unionType, newItem.unionBaseType, newItem.unionElementType);
+            }
+        }
+    }
+
+    // Get the objects
+    {
+        auto objects = schema.objects();
+        for (flatbuffers::uoffset_t i = 0; i < objects->size(); ++i)
+        {
+            const reflection::Object* obj = objects->Get(i);
+            if (!obj)
+                continue;
+
+            DBObject& newObj = m_objects.emplace_back();
+            newObj.name = obj->name()->str();
+
+            // Loop through the fields in the object
+            for (flatbuffers::uoffset_t j = 0; j < obj->fields()->size(); ++j)
+            {
+                const reflection::Field* field = obj->fields()->Get(j);
+                if (!field)
+                    continue;
+                const reflection::Type* fieldType = field->type();
+                if (!fieldType)
+                    continue;
+
+                DBObjectField newField;
+                FromFlatBufferType(*fieldType, newField.baseType, newField.elementType);
+
+                if (newField.baseType.type == DBObjectFieldType::Type::Unknown)
+                    continue;
+
+                if (newField.baseType.type == DBObjectFieldType::Type::Vector && newField.elementType.type == DBObjectFieldType::Type::Unknown)
+                    continue;
+
+                newField.name = field->name()->str();
+                newObj.fields.push_back(newField);
+            }
+        }
+    }
+
+    // TODO: need to store off which one is the root type! error if < 1 or > 1 found
     // Find the root type by looking for a custom attribute "root_type"
+    auto objects = schema.objects();
     for (flatbuffers::uoffset_t i = 0; i < objects->size(); ++i)
     {
         const reflection::Object* obj = objects->Get(i);
@@ -134,6 +373,22 @@ void DBRoot::Clear()
 }
 
 /*
+TODO:
+* allow multiple root types per file, or error if there are 0 or > 1?
+  * multiple types would just affect the schema code gen, and the drop down menu, so that's doable
+  * but what does that mean for data records?? i think 1 root type is correct.
+* use "documentation" field as tooltips in editor
+* how do we support schema changes? we need a resave of all the data.
+ * could maybe have a "convert" option from one known type to another?
+ * angel script? idk.
+ * source data maybe should have schema? (object names, hash, ??)
+* TODOs in this file and other files
+* support singular items, so when you open the db there is one record only, not a dictionary of them.
+* note that there is a (key) field in flatbuffers, which apparently sorts by that field for binary search lookup.
+* make sure you support unicode file names. run everything from within a unicode path.
+*/
+
+/*
 Schemas...
 
 ? how to find the root type?
@@ -160,4 +415,25 @@ TODO:
 * use namespaces feature in the schema?
 * use includes feature in the schema, or at least allow it and show it as part of the example code
 
+*/
+
+/*
+TODO:
+Hot reloading:
+Have a record reference for each type. Those can survive a reload(*). Maybe store name internally and a load version #. It can relook up when used, and db load version is different.
+
+Dont cache anything off from the recods (**)
+
+* - deleting a data record makes it be default valued.
+** - you can, at your own risk. But you get a callback on hot reload so can update whatever you want in response.
+
+Have same interface for non hot reload version. Just, data records etc are simpler.
+*/
+
+/*
+TODO: Example data:
+* use enums
+* use unions
+* use various types
+* use links to other DBs
 */
