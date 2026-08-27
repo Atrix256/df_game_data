@@ -269,6 +269,7 @@ bool DBTable::Load(const char* path)
 
     // Get the objects
     {
+        bool foundRoot = false;
         auto objects = schema.objects();
         for (flatbuffers::uoffset_t i = 0; i < objects->size(); ++i)
         {
@@ -301,26 +302,31 @@ bool DBTable::Load(const char* path)
                 newField.name = field->name()->str();
                 newObj.fields.push_back(newField);
             }
-        }
-    }
 
-    // TODO: need to store off which one is the root type! error if < 1 or > 1 found
-    // Find the root type by looking for a custom attribute "root_type"
-    auto objects = schema.objects();
-    for (flatbuffers::uoffset_t i = 0; i < objects->size(); ++i)
-    {
-        const reflection::Object* obj = objects->Get(i);
-        if (!obj || !obj->attributes())
-            continue;
+            if (!obj->attributes())
+                continue;
 
-        // Loop through the KeyValue attributes on this object/table
-        for (flatbuffers::uoffset_t j = 0; j < obj->attributes()->size(); ++j)
-        {
-            auto attr = obj->attributes()->Get(j);
-            if (attr && attr->key() && attr->key()->str() == "root_type")
+            // Remember if this is a root_type object
+            for (flatbuffers::uoffset_t j = 0; j < obj->attributes()->size(); ++j)
             {
-                int ijkl = 0;
+                auto attr = obj->attributes()->Get(j);
+                if (attr && attr->key() && attr->key()->str() == "root_type")
+                {
+                    if (foundRoot)
+                    {
+                        m_errorText = "Multiple root types found in file: " + std::string(path);
+                        return false;
+                    }
+                    newObj.isRoot = true;
+                    foundRoot = true;
+                }
             }
+        }
+
+        if (!foundRoot)
+        {
+            m_errorText = "No root type found in file: " + std::string(path) + "\nPlease use the (root_type) attribute to designate a root type.";
+            return false;
         }
     }
 
