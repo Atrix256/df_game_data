@@ -5,4 +5,3 @@ x64/
 vcpkg_installed/
 vcpkg/
 editor/flatc.exe
-*.bfbs
