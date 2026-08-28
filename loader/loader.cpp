@@ -11,6 +11,21 @@
 
 #include "LaunchProcess.h"
 
+static inline std::string DocumentationToString(const flatbuffers::Vector<flatbuffers::Offset<flatbuffers::String>>* doc)
+{
+    std::string ret;
+    if (!doc)
+        return ret;
+
+    for (size_t i = 0; i < doc->size(); ++i)
+    {
+        if (i > 0)
+            ret += '\n';
+        ret += doc->Get(i)->str();
+    }
+    return ret;
+}
+
 static inline DBObjectFieldType FromFlatBufferType(const reflection::BaseType& type)
 {
     DBObjectFieldType ret;
@@ -246,6 +261,7 @@ bool DBTable::Load(const char* path)
             DBEnum& newEnum = m_enums.emplace_back();
             newEnum.name = e->name()->str();
             newEnum.isUnion = e->is_union();
+            newEnum.comment = DocumentationToString(e->documentation());
 
             // Loop through the values in the enum
             for (flatbuffers::uoffset_t j = 0; j < e->values()->size(); ++j)
@@ -257,6 +273,7 @@ bool DBTable::Load(const char* path)
                 DBEnumItem& newItem = newEnum.items.emplace_back();
                 newItem.name = val->name()->str();
                 newItem.value = val->value();
+                newItem.comment = DocumentationToString(val->documentation());
 
                 const reflection::Type* unionType = val->union_type();
                 if (!unionType)
@@ -279,6 +296,7 @@ bool DBTable::Load(const char* path)
 
             DBObject& newObj = m_objects.emplace_back();
             newObj.name = obj->name()->str();
+            newObj.comment = DocumentationToString(obj->documentation());
 
             // Loop through the fields in the object
             for (flatbuffers::uoffset_t j = 0; j < obj->fields()->size(); ++j)
@@ -300,6 +318,7 @@ bool DBTable::Load(const char* path)
                     continue;
 
                 newField.name = field->name()->str();
+                newField.comment = DocumentationToString(field->documentation());
                 newObj.fields.push_back(newField);
             }
 
@@ -377,69 +396,3 @@ void DBRoot::Clear()
 {
     m_tables.clear();
 }
-
-/*
-TODO:
-* allow multiple root types per file, or error if there are 0 or > 1?
-  * multiple types would just affect the schema code gen, and the drop down menu, so that's doable
-  * but what does that mean for data records?? i think 1 root type is correct.
-* use "documentation" field as tooltips in editor
-* how do we support schema changes? we need a resave of all the data.
- * could maybe have a "convert" option from one known type to another?
- * angel script? idk.
- * source data maybe should have schema? (object names, hash, ??)
-* TODOs in this file and other files
-* support singular items, so when you open the db there is one record only, not a dictionary of them.
-* note that there is a (key) field in flatbuffers, which apparently sorts by that field for binary search lookup.
-* make sure you support unicode file names. run everything from within a unicode path.
-*/
-
-/*
-Schemas...
-
-? how to find the root type?
- 1) only allow 1 table, and it's the table (not great limiting usage)
- 2) Match name of a table to the name of the db (from filename maybe? idk)
- 3) Custom attribute.
-
-Yeah, custom attribute!
-Near top of file: (maybe you inject this, actually, when loading the file)
-attribute "root_type";
-
-Then:
-struct Vec3 (root_type) {
-  x:float;
-  y:float;
-  z:float;
-}
-
-Then find that custom attribute on a struct or table.
-Put this in the instructions
-
-TODO:
-* make it add the "root_type" attribute automatically. Will have to move the file over to a tmp directory and work there and copy it back.
-* use namespaces feature in the schema?
-* use includes feature in the schema, or at least allow it and show it as part of the example code
-
-*/
-
-/*
-TODO:
-Hot reloading:
-Have a record reference for each type. Those can survive a reload(*). Maybe store name internally and a load version #. It can relook up when used, and db load version is different.
-
-Dont cache anything off from the recods (**)
-
-* - deleting a data record makes it be default valued.
-** - you can, at your own risk. But you get a callback on hot reload so can update whatever you want in response.
-
-Have same interface for non hot reload version. Just, data records etc are simpler.
-*/
-
-/*
-TODO: Example data:
-* use enums
-* use unions
-* use various types
-* use links to other DBs
-*/

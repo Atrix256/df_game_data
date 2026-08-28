@@ -251,7 +251,10 @@ bool DataApp::OnInit()
 }
 
 /*
+TODO: Next
+* start showing UI?
 
+* use "documentation" field as tooltips in editor
 * have an enum in the example schema, and make editor have you choose which type it is.
 * have an example C++ program that loads the example data.
 
@@ -281,4 +284,51 @@ TODO:
 * file watch for files changing on disk
 ? what if you change the schema? and like data versioning?
 
+*/
+
+
+/*
+TODO:
+* how do we support schema changes? we need a resave of all the data.
+ * could maybe have a "convert" option from one known type to another?
+ * angel script? idk.
+ * source data maybe should have schema? (object names, hash, ??)
+* TODOs in this file and other files
+* support singular items, so when you open the db there is one record only, not a dictionary of them.
+* note that there is a (key) field in flatbuffers, which apparently sorts by that field for binary search lookup.
+* make sure you support unicode file names. run everything from within a unicode path.
+*/
+
+/*
+Schemas...
+
+TODO:
+* make it add the "root_type" attribute definition automatically. Will have to move the file over to a tmp directory and work there and copy it back.
+* use namespaces feature in the schema?
+* use includes feature in the schema, or at least allow it and show it as part of the example code
+
+*/
+
+/*
+TODO:
+Hot reloading:
+Have a record reference for each type. Those can survive a reload(*). Maybe store name internally and a load version #. It can relook up when used, and db load version is different.
+
+Dont cache anything off from the recods (**)
+
+* - deleting a data record makes it be default valued.
+** - you can, at your own risk. But you get a callback on hot reload so can update whatever you want in response.
+
+Have same interface for non hot reload version. Just, data records etc are simpler.
+*/
+
+/*
+TODO: Example data:
+* use enums
+* use unions
+* use various types
+* use links to other DBs
+
+! note that comments become tooltips and show in example data
+! noet the custom attribute for (root_type)
 */

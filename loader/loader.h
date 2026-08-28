@@ -64,6 +64,7 @@ struct DBObjectFieldType
 struct DBObjectField
 {
     std::string name;
+    std::string comment;
     DBObjectFieldType baseType;
     DBObjectFieldType elementType;
 };
@@ -71,6 +72,7 @@ struct DBObjectField
 struct DBObject
 {
     std::string name;
+    std::string comment;
     std::vector<DBObjectField> fields;
     bool isRoot = false;
 };
@@ -78,7 +80,8 @@ struct DBObject
 struct DBEnumItem
 {
     std::string name;
-    int64_t value;
+    std::string comment;
+    int64_t value = 0;
 
     DBObjectFieldType unionBaseType;
     DBObjectFieldType unionElementType;
@@ -87,6 +90,7 @@ struct DBEnumItem
 struct DBEnum
 {
     std::string name;
+    std::string comment;
     std::vector<DBEnumItem> items;
     bool isUnion = false;
 };
