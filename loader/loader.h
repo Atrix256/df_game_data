@@ -117,6 +117,8 @@ public:
 
 private:
     bool EnsureBFBSExists();
+    bool LoadSchema();
+    bool LoadData();
 
 private:
     std::string m_path;

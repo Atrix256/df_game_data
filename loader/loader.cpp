@@ -17,7 +17,7 @@ static inline std::string DocumentationToString(const flatbuffers::Vector<flatbu
     if (!doc)
         return ret;
 
-    for (size_t i = 0; i < doc->size(); ++i)
+    for (flatbuffers::uoffset_t i = 0; i < doc->size(); ++i)
     {
         if (i > 0)
             ret += '\n';
@@ -228,10 +228,8 @@ bool DBTable::EnsureBFBSExists()
     return true;
 }
 
-bool DBTable::Load(const char* path)
+bool DBTable::LoadSchema()
 {
-    m_path = path;
-
     // make sure the .bfbs file exists
     if (!EnsureBFBSExists())
         return false;
@@ -333,7 +331,7 @@ bool DBTable::Load(const char* path)
                 {
                     if (foundRoot)
                     {
-                        m_errorText = "Multiple root types found in file: " + std::string(path);
+                        m_errorText = "Multiple root types found in file: " + m_path;
                         return false;
                     }
                     newObj.isRoot = true;
@@ -344,10 +342,32 @@ bool DBTable::Load(const char* path)
 
         if (!foundRoot)
         {
-            m_errorText = "No root type found in file: " + std::string(path) + "\nPlease use the (root_type) attribute to designate a root type.";
+            m_errorText = "No root type found in file: " + m_path + "\nPlease use the (root_type) attribute to designate a root type.";
             return false;
         }
     }
+
+    return true;
+}
+
+bool DBTable::LoadData()
+{
+    // TODO: this! Find all the data files, load them, make sure they follow the schema
+    // TODO: may not need to make the binary version of the schema.
+    // #include "flatbuffers/idl.h"
+    // #include "flatbuffers/util.h"
+    return true;
+}
+
+bool DBTable::Load(const char* path)
+{
+    m_path = path;
+
+    if (!LoadSchema())
+        return false;
+
+    if (!LoadData())
+        return false;
 
     return true;
 }

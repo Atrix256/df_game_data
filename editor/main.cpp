@@ -297,6 +297,11 @@ TODO:
 * support singular items, so when you open the db there is one record only, not a dictionary of them.
 * note that there is a (key) field in flatbuffers, which apparently sorts by that field for binary search lookup.
 * make sure you support unicode file names. run everything from within a unicode path.
+* file / directory watching
+ * what to do if a schema file changes? reload that table? what if there is unsaved data records?
+ * what to do if a data file changes? 
+ * what if a schema file is added or removed?
+ * what if a data file is added or removed?
 */
 
 /*
@@ -324,11 +329,12 @@ Have same interface for non hot reload version. Just, data records etc are simpl
 
 /*
 TODO: Example data:
+* have at least 2 tables
 * use enums
 * use unions
 * use various types
-* use links to other DBs
+* use links to other tables
 
 ! note that comments become tooltips and show in example data
-! noet the custom attribute for (root_type)
+! note the custom attribute for (root_type)
 */
