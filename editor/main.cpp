@@ -312,16 +312,6 @@ TODO:
 */
 
 /*
-Schemas...
-
-TODO:
-* make it add the "root_type" attribute definition automatically. Will have to move the file over to a tmp directory and work there and copy it back.
-* use namespaces feature in the schema?
-* use includes feature in the schema, or at least allow it and show it as part of the example code
-
-*/
-
-/*
 TODO:
 Hot reloading:
 Have a record reference for each type. Those can survive a reload(*). Maybe store name internally and a load version #. It can relook up when used, and db load version is different.
@@ -344,4 +334,6 @@ TODO: Example data:
 
 ! note that comments become tooltips and show in example data
 ! note the custom attribute for (root_type)
+! note how to use links. a string with attribute (link:"tablename") inventory:[string] (link:"Item");.  It gives you the record name
+ TODO: should it be an integer type for index instead? or let either work?
 */

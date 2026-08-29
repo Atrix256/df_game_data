@@ -18,6 +18,7 @@ bool DBTable::LoadSchema()
 
     // insert after the last include:
     // attribute "root_type";
+    // attribute "link";
     {
         size_t lastIncludePos = m_fbsFile.rfind("include \"");
         if (lastIncludePos != std::string::npos)
@@ -26,7 +27,7 @@ bool DBTable::LoadSchema()
             lastIncludePos = m_fbsFile.find("\n", lastIncludePos + 1);
         if (lastIncludePos == std::string::npos)
             lastIncludePos = 0;
-        m_fbsFile.insert(lastIncludePos, "\nattribute \"root_type\";");
+        m_fbsFile.insert(lastIncludePos, "\nattribute \"root_type\";\nattribute \"link\";");
     }
 
     m_includeDirsStr.push_back(std::filesystem::path(m_path).remove_filename().string());
