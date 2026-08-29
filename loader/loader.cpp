@@ -15,7 +15,18 @@ bool DBTable::LoadSchema()
         return false;
     }
 
-    m_fbsFile = std::string("attribute \"root_type\";\n") + m_fbsFile;
+    // insert after the last include:
+    // attribute "root_type";
+    {
+        size_t lastIncludePos = m_fbsFile.rfind("include \"");
+        if (lastIncludePos != std::string::npos)
+            lastIncludePos = m_fbsFile.find("\"", lastIncludePos + 9);
+        if (lastIncludePos != std::string::npos)
+            lastIncludePos = m_fbsFile.find("\n", lastIncludePos + 1);
+        if (lastIncludePos == std::string::npos)
+            lastIncludePos = 0;
+        m_fbsFile.insert(lastIncludePos, "\nattribute \"root_type\";");
+    }
 
     m_includeDirsStr.push_back(std::filesystem::path(m_path).remove_filename().string());
 

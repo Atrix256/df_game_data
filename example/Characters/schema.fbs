@@ -1,0 +1,24 @@
+// rawr!
+
+include "../common.fbs";
+
+namespace ExampleData.Characters;
+
+// Enums
+enum EyeColor : byte { Brown, Hazel, Blue, Green }
+enum Alignment : byte { Good, Neutral, Evil }
+enum Class : byte { Warrior, Wizard, Cleric, Druid }
+
+// Root Type
+table Character (root_type)
+{
+  name: string;
+  eyeColor:EyeColor = Brown;
+  alignment:Alignment = Good;
+  class:Class = Warrior;
+  location:Vec3;
+  maxMP:uint16;
+  maxHP:uint16;
+
+  //inventory:[ubyte];       // Vector (array) of unsigned bytes
+}
