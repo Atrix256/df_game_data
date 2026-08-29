@@ -1,6 +1,5 @@
 // Define the namespace for the generated code
 namespace MyGame.Sample;
-attribute "root_type";
 
 // Enums allow you to restrict values to a predefined set
 enum Color : byte { Red = 1, Green, Blue }

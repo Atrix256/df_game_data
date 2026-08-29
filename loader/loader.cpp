@@ -15,6 +15,8 @@ bool DBTable::LoadSchema()
         return false;
     }
 
+    m_fbsFile = std::string("attribute \"root_type\";\n") + m_fbsFile;
+
     m_includeDirsStr.push_back(std::filesystem::path(m_path).remove_filename().string());
 
     m_includeDirs.resize(m_includeDirsStr.size());
@@ -24,6 +26,27 @@ bool DBTable::LoadSchema()
     if (!m_parser.Parse(m_fbsFile.c_str(), m_includeDirs.data(), m_path.c_str()))
     {
         m_errorText = "Error when loading schema: " + m_path + "\n" + m_parser.error_;
+        return false;
+    }
+
+    // Get the one (no less, no more) root_type
+    bool rootTypeFound = false;
+    for (auto& structDef : m_parser.structs_.vec)
+    {
+        if (structDef->attributes.Lookup("root_type") != nullptr)
+        {
+            if (rootTypeFound)
+            {
+                m_errorText = "Multiple root types found in schema: " + m_path;
+                return false;
+            }
+            m_rootType = structDef->name;
+            rootTypeFound = true;
+        }
+    }
+    if (!rootTypeFound)
+    {
+        m_errorText = "No root type found, please add the (root_type) attribute to one struct.\n" + m_path;
         return false;
     }
 
@@ -83,7 +106,7 @@ bool DBRoot::Load(const char* path)
         }
 
         std::sort(m_tables.begin(), m_tables.end(), [](const DBTable& a, const DBTable& b) {
-            return strcmp(a.GetPath(), b.GetPath()) < 0;
+            return strcmp(a.GetName(), b.GetName()) < 0;
         });
 
         file.close();

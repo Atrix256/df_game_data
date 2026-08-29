@@ -15,6 +15,11 @@ public:
         return m_path.c_str();
     }
 
+    const char* GetName() const
+    {
+        return m_rootType.c_str();
+    }
+
     const char* GetErrorText() const
     {
         return m_errorText.c_str();
@@ -28,11 +33,12 @@ private:
     std::string m_path;
     std::string m_errorText;
 
-    // TODO: sort this out. it's a problem with parser error causing parser to be fubar internally.
+    std::string m_rootType;
+
     // parser needs all inputs to last as long as it lasts
-    inline static std::string m_fbsFile;
-    inline static std::vector<std::string> m_includeDirsStr;
-    inline static std::vector<const char*> m_includeDirs;
+    std::string m_fbsFile;
+    std::vector<std::string> m_includeDirsStr;
+    std::vector<const char*> m_includeDirs;
 };
 
 class DBRoot

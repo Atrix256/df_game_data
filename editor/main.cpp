@@ -68,7 +68,7 @@ DataFrame::DataFrame()
         wxArrayString choices;
         m_dbDropDown = new wxChoice(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, choices);
         m_dbDropDown->SetSelection(0);
-        sizer->Add(m_dbDropDown, 0, wxALL | wxEXPAND, 8);
+        sizer->Add(m_dbDropDown, 1, wxALL | wxEXPAND, 8);
 
         topSizer->Add(sizer, 0, wxALL | wxEXPAND, 0);
     }
@@ -207,7 +207,7 @@ void DataFrame::OnOpenFile(wxCommandEvent& /*event*/)
 
     wxArrayString choices;
     for (const DBTable& table : m_database.GetTables())
-        choices.Add(table.GetPath());
+        choices.Add(table.GetName());
 
     m_dbDropDown->Clear();
     m_dbDropDown->Set(choices);
@@ -338,3 +338,5 @@ TODO: Example data:
 ! note that comments become tooltips and show in example data
 ! note the custom attribute for (root_type)
 */
+
+// TODO: when flatbuffer fails to parse a schema, it is in a bad state internally that crashes when the object is destructed. fix library? :/
