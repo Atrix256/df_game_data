@@ -1,0 +1,23 @@
+include "../common.fbs";
+
+namespace ExampleData.Items;
+
+// Enums
+//enum EyeColor : byte { Brown, Hazel, Blue, Green }
+//enum Alignment : byte { Good, Neutral, Evil }
+//enum Class : byte { Warrior, Wizard, Cleric, Druid }
+
+// Root Type
+table Item (root_type)
+{
+  name: string;
+  //eyeColor:EyeColor = Brown;
+  //alignment:Alignment = Good;
+  //class:Class = Warrior;
+  //location:Vec3;
+  //maxMP:uint16;
+  max_hp:uint16;
+
+  // TODO: inventory. link to another database record!
+  //inventory:[ubyte];       // Vector (array) of unsigned bytes
+}

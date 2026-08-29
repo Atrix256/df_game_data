@@ -5,9 +5,10 @@
 
 bool DBTable::LoadSchema()
 {
-    m_parser.opts.strict_json = true;
-    m_parser.opts.output_default_scalars_in_json = true;
-    m_parser.opts.output_enum_identifiers = true;
+    m_parser = std::make_unique<flatbuffers::Parser>();
+    m_parser->opts.strict_json = true;
+    m_parser->opts.output_default_scalars_in_json = true;
+    m_parser->opts.output_enum_identifiers = true;
 
     if (!flatbuffers::LoadFile(m_path.c_str(), false, &m_fbsFile))
     {
@@ -34,15 +35,19 @@ bool DBTable::LoadSchema()
     for (size_t i = 0; i < m_includeDirs.size(); ++i)
         m_includeDirs[i] = m_includeDirsStr[i].c_str();
 
-    if (!m_parser.Parse(m_fbsFile.c_str(), m_includeDirs.data(), m_path.c_str()))
+    if (!m_parser->Parse(m_fbsFile.c_str(), m_includeDirs.data(), m_path.c_str()))
     {
-        m_errorText = "Error when loading schema: " + m_path + "\n" + m_parser.error_;
+        m_errorText = "Error when loading schema: " + m_path + "\n" + m_parser->error_;
         return false;
+    }
+    else if(!m_parser->error_.empty())
+    {
+        m_errorText = "Warning when loading schema: " + m_path + "\n" + m_parser->error_;
     }
 
     // Get the one (no less, no more) root_type
     bool rootTypeFound = false;
-    for (auto& structDef : m_parser.structs_.vec)
+    for (auto& structDef : m_parser->structs_.vec)
     {
         if (structDef->attributes.Lookup("root_type") != nullptr)
         {
@@ -113,6 +118,15 @@ bool DBRoot::Load(const char* path)
                 Clear();
                 file.close();
                 return false;
+            }
+
+            // accumulate warnings
+            std::string warningText = newTable.GetErrorText();
+            if (!warningText.empty())
+            {
+                if (!m_errorText.empty())
+                    m_errorText += std::string("\n\n");
+                m_errorText += warningText;
             }
         }
 

@@ -29,16 +29,19 @@ private:
     bool LoadData();
 
 private:
-    flatbuffers::Parser m_parser;
     std::string m_path;
     std::string m_errorText;
 
     std::string m_rootType;
 
-    // parser needs all inputs to last as long as it lasts
     std::string m_fbsFile;
     std::vector<std::string> m_includeDirsStr;
     std::vector<const char*> m_includeDirs;
+
+    // Parser needs all inputs to last as long as it lasts, so:
+    // 1) Everything it needs is a member
+    // 2) It is last in the class, to be destructed first
+    std::unique_ptr<flatbuffers::Parser> m_parser;
 };
 
 class DBRoot

@@ -205,6 +205,13 @@ void DataFrame::OnOpenFile(wxCommandEvent& /*event*/)
         return;
     }
 
+    // show warnings if we should
+    std::string warningText = m_database.GetErrorText();
+    if (!warningText.empty())
+    {
+        wxMessageBox(m_database.GetErrorText(), "Warning", wxOK | wxICON_WARNING);
+    }
+
     wxArrayString choices;
     for (const DBTable& table : m_database.GetTables())
         choices.Add(table.GetName());
@@ -338,5 +345,3 @@ TODO: Example data:
 ! note that comments become tooltips and show in example data
 ! note the custom attribute for (root_type)
 */
-
-// TODO: when flatbuffer fails to parse a schema, it is in a bad state internally that crashes when the object is destructed. fix library? :/

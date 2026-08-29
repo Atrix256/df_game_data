@@ -1,5 +1,3 @@
-// rawr!
-
 include "../common.fbs";
 
 namespace ExampleData.Characters;
@@ -13,12 +11,15 @@ enum Class : byte { Warrior, Wizard, Cleric, Druid }
 table Character (root_type)
 {
   name: string;
-  eyeColor:EyeColor = Brown;
+  eye_color:EyeColor = Brown;
   alignment:Alignment = Good;
   class:Class = Warrior;
   location:Vec3;
-  maxMP:uint16;
-  maxHP:uint16;
+  max_mp:uint16;
+  max_hp:uint16;
 
+  //holding:Item;
+
+  // TODO: inventory. link to another database record!
   //inventory:[ubyte];       // Vector (array) of unsigned bytes
 }
