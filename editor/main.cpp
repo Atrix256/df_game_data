@@ -288,7 +288,7 @@ TODO:
 * ask someone for help with wxwidgets looking bad, not like a native app
 * open recent
 * save? or automatic save on close / when changing records and databases?
-* file watch for files changing on disk
+* file watch for files changing on disk. implement the file watcher
 ? what if you change the schema? and like data versioning?
 
 */

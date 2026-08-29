@@ -81,9 +81,11 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="FileWatcher.cpp" />
     <ClCompile Include="loader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="FileWatcher.h" />
     <ClInclude Include="loader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -2,8 +2,10 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="loader.cpp" />
+    <ClCompile Include="FileWatcher.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="loader.h" />
+    <ClInclude Include="FileWatcher.h" />
   </ItemGroup>
 </Project>

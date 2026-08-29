@@ -4,6 +4,7 @@
 #include <string>
 
 #include "flatbuffers/idl.h"
+#include "FileWatcher.h"
 
 class DBTable
 {
@@ -64,4 +65,6 @@ public:
 private:
     std::vector<DBTable> m_tables;
     std::string m_errorText;
+
+    FileWatcher m_fileWatcher;
 };

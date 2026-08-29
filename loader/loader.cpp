@@ -105,6 +105,8 @@ bool DBRoot::Load(const char* path)
             return false;
         }
 
+        m_fileWatcher.AddFile(path, nullptr);
+
         std::filesystem::path base_path = std::filesystem::absolute(path).remove_filename();
 
         std::string line;
@@ -120,6 +122,8 @@ bool DBRoot::Load(const char* path)
                 file.close();
                 return false;
             }
+
+            m_fileWatcher.AddDirectory(full_path.remove_filename().string().c_str(), nullptr);
 
             // accumulate warnings
             std::string warningText = newTable.GetErrorText();
