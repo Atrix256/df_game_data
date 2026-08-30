@@ -109,19 +109,35 @@ bool DBTable::LoadData()
 bool DBTable::LoadFile(const char* fileName)
 {
     // Load the json file
-    std::string jsonFile;
-    if (!flatbuffers::LoadFile(fileName, false, &jsonFile))
+    std::string jsonString;
+    if (!flatbuffers::LoadFile(fileName, false, &jsonString))
     {
         m_errorText = "Could not load data file: " + std::string(fileName);
         return false;
     }
 
     // Make sure it conforms to the schema
-    if (!m_parser->Parse(jsonFile.c_str(), nullptr, fileName))
+    if (!m_parser->Parse(jsonString.c_str(), nullptr, fileName))
     {
         m_errorText = "Could not load data file: " + std::string(fileName) + "\n" + m_parser->error_;
         return false;
     }
+
+    // Load the data using nlohmann since it's easier to work with
+    json data = json::parse(jsonString, nullptr, false);
+    if (data.is_discarded())
+    {
+        // No error text available from nlohmann.
+        // This is a weird error because flatbuffers loaded it just fine.
+        m_errorText = "Could not load parse data file: " + std::string(fileName) + "\n" + m_parser->error_;
+        return false;
+    }
+
+    // Insert the data into the data table.
+    // The filename without extension is the key.
+    std::string key = std::filesystem::path(fileName).filename().replace_extension("").string();
+    m_data[key] = std::make_unique<json>(data);
+
     return true;
 }
 

@@ -4,6 +4,10 @@
 #include <string>
 
 #include "flatbuffers/idl.h"
+
+#include <nlohmann/json.hpp>
+using json = nlohmann::ordered_json;
+
 #include "FileWatcher.h"
 
 class DBTable
@@ -25,6 +29,10 @@ public:
     {
         return m_errorText.c_str();
     }
+
+public:
+    std::unordered_map<std::string, std::unique_ptr<json>> m_data;
+
 private:
     bool LoadSchema();
     bool LoadData();
@@ -53,18 +61,15 @@ public:
 
     void Clear();
 
-    const std::vector<DBTable>& GetTables() const
-    {
-        return m_tables;
-    }
-
     const char* GetErrorText() const
     {
         return m_errorText.c_str();
     }
 
-private:
+public:
     std::vector<DBTable> m_tables;
+
+private:
     std::string m_errorText;
 
     FileWatcher m_fileWatcher;

@@ -2,5 +2,21 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="FormBuilder\main\DataEditor.cpp">
+      <Filter>FormBuilder\main</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="FormBuilder">
+      <UniqueIdentifier>{ede99766-2d95-4ad1-a326-ee9e03fd4000}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FormBuilder\main">
+      <UniqueIdentifier>{31963adf-678d-42b7-8eb1-216b3c68d659}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="FormBuilder\main\DataEditor.h">
+      <Filter>FormBuilder\main</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
