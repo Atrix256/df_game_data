@@ -67,15 +67,61 @@ bool DBTable::LoadSchema()
         return false;
     }
 
+    // set the root type on the parser
+    m_parser->SetRootType(m_rootType.c_str());
+
     return true;
 }
 
 bool DBTable::LoadData()
 {
-    // TODO: this! Find all the data files, load them, make sure they follow the schema
-    // TODO: may not need to make the binary version of the schema.
-    // #include "flatbuffers/idl.h"
-    // #include "flatbuffers/util.h"
+    // Get a file iterator for this directory
+    std::error_code ec;
+    std::filesystem::recursive_directory_iterator it(std::filesystem::path(m_path).remove_filename(), ec);
+    if (ec)
+    {
+        m_errorText = "Could not scan directory: " + std::filesystem::path(m_path).remove_filename().string();
+        return false;
+    }
+
+    // Loop through all the files
+    while (it != std::filesystem::recursive_directory_iterator{})
+    {
+        // Use the noexcept overload of is_regular_file
+        const auto& entry = *it;
+        if (std::filesystem::is_regular_file(entry, ec) && entry.path().extension() == ".json")
+        {
+            if (!LoadFile(entry.path().string().c_str()))
+                return false;
+        }
+
+        it.increment(ec);
+        if (ec)
+        {
+            m_errorText = "Error while scanning directory: " + std::filesystem::path(m_path).remove_filename().string() + "\n" + ec.message();
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool DBTable::LoadFile(const char* fileName)
+{
+    // Load the json file
+    std::string jsonFile;
+    if (!flatbuffers::LoadFile(fileName, false, &jsonFile))
+    {
+        m_errorText = "Could not load data file: " + std::string(fileName);
+        return false;
+    }
+
+    // Make sure it conforms to the schema
+    if (!m_parser->Parse(jsonFile.c_str(), nullptr, fileName))
+    {
+        m_errorText = "Could not load data file: " + std::string(fileName) + "\n" + m_parser->error_;
+        return false;
+    }
     return true;
 }
 

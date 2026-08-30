@@ -28,6 +28,7 @@ public:
 private:
     bool LoadSchema();
     bool LoadData();
+    bool LoadFile(const char* fileName);
 
 private:
     std::string m_path;

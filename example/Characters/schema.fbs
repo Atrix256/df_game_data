@@ -19,7 +19,4 @@ table Character (root_type)
   max_hp:uint16;
 
   inventory:[string] (link:"Item");
-
-  // TODO: inventory. link to another database record!
-  //inventory:[ubyte];       // Vector (array) of unsigned bytes
 }

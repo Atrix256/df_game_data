@@ -264,6 +264,11 @@ TODO: Next
 * use "documentation" field as tooltips in editor
 * have an enum in the example schema, and make editor have you choose which type it is.
 * have an example C++ program that loads the example data.
+* rename the .dbroot file to like dbroot.txt maybe? the rest of the file extensions are plain. maybe not
+
+TODO: flatbuffers say the schema of tables can "evolve", so that binary files are forward and backwards compatible.
+ When our source data is json, we don't really need that.
+ Maybe have the root type be a struct in your example data.
 
 TODO: for flat buffer schemas
 * root must be a table that contains an array of struct (tables have more chaser pointing etc)
@@ -332,6 +337,7 @@ TODO: Example data:
 * use various types
 * use links to other tables
 
+! note that it scans the folder where the schema lives, recursively, for all .json files and tries to load them as table entries
 ! note that comments become tooltips and show in example data
 ! note the custom attribute for (root_type)
 ! note how to use links. a string with attribute (link:"tablename") inventory:[string] (link:"Item");.  It gives you the record name
