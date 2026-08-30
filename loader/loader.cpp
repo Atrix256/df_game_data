@@ -5,10 +5,9 @@
 
 bool DBTable::LoadSchema()
 {
-    m_parser = std::make_unique<flatbuffers::Parser>();
-    m_parser->opts.strict_json = true;
-    m_parser->opts.output_default_scalars_in_json = true;
-    m_parser->opts.output_enum_identifiers = true;
+    m_parser.opts.strict_json = true;
+    m_parser.opts.output_default_scalars_in_json = true;
+    m_parser.opts.output_enum_identifiers = true;
 
     if (!flatbuffers::LoadFile(m_path.c_str(), false, &m_fbsFile))
     {
@@ -36,19 +35,19 @@ bool DBTable::LoadSchema()
     for (size_t i = 0; i < m_includeDirs.size(); ++i)
         m_includeDirs[i] = m_includeDirsStr[i].c_str();
 
-    if (!m_parser->Parse(m_fbsFile.c_str(), m_includeDirs.data(), m_path.c_str()))
+    if (!m_parser.Parse(m_fbsFile.c_str(), m_includeDirs.data(), m_path.c_str()))
     {
-        m_errorText = "Error when loading schema: " + m_path + "\n" + m_parser->error_;
+        m_errorText = "Error when loading schema: " + m_path + "\n" + m_parser.error_;
         return false;
     }
-    else if(!m_parser->error_.empty())
+    else if(!m_parser.error_.empty())
     {
-        m_errorText = "Warning when loading schema: " + m_path + "\n" + m_parser->error_;
+        m_errorText = "Warning when loading schema: " + m_path + "\n" + m_parser.error_;
     }
 
     // Get the one (no less, no more) root_type
     bool rootTypeFound = false;
-    for (auto& structDef : m_parser->structs_.vec)
+    for (auto& structDef : m_parser.structs_.vec)
     {
         if (structDef->attributes.Lookup("root_type") != nullptr)
         {
@@ -68,7 +67,7 @@ bool DBTable::LoadSchema()
     }
 
     // set the root type on the parser
-    m_parser->SetRootType(m_rootType.c_str());
+    m_parser.SetRootType(m_rootType.c_str());
 
     return true;
 }
@@ -117,9 +116,9 @@ bool DBTable::LoadFile(const char* fileName)
     }
 
     // Make sure it conforms to the schema
-    if (!m_parser->Parse(jsonString.c_str(), nullptr, fileName))
+    if (!m_parser.Parse(jsonString.c_str(), nullptr, fileName))
     {
-        m_errorText = "Could not load data file: " + std::string(fileName) + "\n" + m_parser->error_;
+        m_errorText = "Could not load data file: " + std::string(fileName) + "\n" + m_parser.error_;
         return false;
     }
 
@@ -129,7 +128,7 @@ bool DBTable::LoadFile(const char* fileName)
     {
         // No error text available from nlohmann.
         // This is a weird error because flatbuffers loaded it just fine.
-        m_errorText = "Could not load parse data file: " + std::string(fileName) + "\n" + m_parser->error_;
+        m_errorText = "Could not load parse data file: " + std::string(fileName) + "\n" + m_parser.error_;
         return false;
     }
 
@@ -176,10 +175,10 @@ bool DBRoot::Load(const char* path)
         {
             std::filesystem::path full_path = std::filesystem::weakly_canonical(base_path / line);
 
-            DBTable& newTable = m_tables.emplace_back();
-            if (!newTable.Load(full_path.string().c_str()))
+            std::unique_ptr<DBTable> newTable = std::make_unique<DBTable>();
+            if (!newTable->Load(full_path.string().c_str()))
             {
-                m_errorText = newTable.GetErrorText();
+                m_errorText = newTable->GetErrorText();
                 Clear();
                 file.close();
                 return false;
@@ -188,18 +187,16 @@ bool DBRoot::Load(const char* path)
             m_fileWatcher.AddDirectory(full_path.remove_filename().string().c_str(), nullptr);
 
             // accumulate warnings
-            std::string warningText = newTable.GetErrorText();
+            std::string warningText = newTable->GetErrorText();
             if (!warningText.empty())
             {
                 if (!m_errorText.empty())
                     m_errorText += std::string("\n\n");
                 m_errorText += warningText;
             }
-        }
 
-        std::sort(m_tables.begin(), m_tables.end(), [](const DBTable& a, const DBTable& b) {
-            return strcmp(a.GetName(), b.GetName()) < 0;
-        });
+            m_tables[newTable->m_rootType] = std::move(newTable);
+        }
 
         file.close();
     }

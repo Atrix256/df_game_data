@@ -54,8 +54,8 @@ public:
         }
 
         wxArrayString choices;
-        for (auto& table : m_database.m_tables)
-            choices.Add(table.GetName());
+        for (auto& it : m_database.m_tables)
+            choices.Add(it.first.c_str());
 
         m_tableChoice->Clear();
         m_tableChoice->Set(choices);
@@ -73,8 +73,7 @@ public:
     {
         m_dataChoice->DeleteAllItems();
 
-        int tableIndex = m_tableChoice->GetSelection();
-        DBTable& table = m_database.m_tables[tableIndex];
+        DBTable& table = *m_database.m_tables[m_tableChoice->GetStringSelection().utf8_string()].get();
 
         for (auto& it : table.m_data)
             m_dataChoice->InsertItem(m_dataChoice->GetItemCount(), it.first.c_str());
@@ -141,7 +140,6 @@ TODO:
 
 /*
 TODO:
-* maybe m_tables should be a map instead of a vector
 * how do we support schema changes? we need a resave of all the data.
  * could maybe have a "convert" option from one known type to another?
  * angel script? idk.
