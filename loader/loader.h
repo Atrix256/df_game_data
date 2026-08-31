@@ -25,6 +25,8 @@ public:
         return m_errorText.c_str();
     }
 
+    bool LoadFile(const char* fileName);
+
 public:
     struct JSONData
     {
@@ -38,7 +40,6 @@ public:
 private:
     bool LoadSchema();
     bool LoadData();
-    bool LoadFile(const char* fileName);
 
 private:
     std::string m_path;

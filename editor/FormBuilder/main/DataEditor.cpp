@@ -76,6 +76,7 @@ Main::Main( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoin
 	m_dataChoice->Connect( wxEVT_KEY_DOWN, wxKeyEventHandler( Main::OnDataChoiceKeyDown ), NULL, this );
 	m_dataChoice->Connect( wxEVT_COMMAND_LIST_DELETE_ITEM, wxListEventHandler( Main::OnDataChoiceDelete ), NULL, this );
 	m_dataChoice->Connect( wxEVT_COMMAND_LIST_END_LABEL_EDIT, wxListEventHandler( Main::OnDataChoiceRenamed ), NULL, this );
+	m_dataChoice->Connect( wxEVT_COMMAND_LIST_ITEM_RIGHT_CLICK, wxListEventHandler( Main::OnRightClickItem ), NULL, this );
 	m_dataChoice->Connect( wxEVT_COMMAND_LIST_ITEM_SELECTED, wxListEventHandler( Main::OnDataChoiceSelect ), NULL, this );
 }
 

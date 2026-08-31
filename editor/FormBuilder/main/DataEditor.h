@@ -51,6 +51,7 @@ class Main : public wxFrame
 		virtual void OnDataChoiceKeyDown( wxKeyEvent& event ) { event.Skip(); }
 		virtual void OnDataChoiceDelete( wxListEvent& event ) { event.Skip(); }
 		virtual void OnDataChoiceRenamed( wxListEvent& event ) { event.Skip(); }
+		virtual void OnRightClickItem( wxListEvent& event ) { event.Skip(); }
 		virtual void OnDataChoiceSelect( wxListEvent& event ) { event.Skip(); }
 
 

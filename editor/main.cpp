@@ -139,6 +139,121 @@ public:
         table.m_data.erase(name.utf8_string());
     }
 
+    void OnRightClickItem(wxListEvent& event) override final
+    {
+        long itemIndex = event.GetIndex();
+
+        // select the item that was right clicked
+        m_dataChoice->SetItemState(itemIndex, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
+
+        wxMenu menu;
+
+        wxMenuItem* menuItemNewEntry = new wxMenuItem(m_menu1, wxID_ANY, wxString(_("New Entry")), wxEmptyString, wxITEM_NORMAL);
+        menu.Append(menuItemNewEntry);
+
+        menu.AppendSeparator();
+
+        wxMenuItem* menuItemDuplicate = new wxMenuItem(m_menu1, wxID_ANY, wxString(_("Duplicate")), wxEmptyString, wxITEM_NORMAL);
+        menu.Append(menuItemDuplicate);
+        wxMenuItem* menuItemRename = new wxMenuItem(m_menu1, wxID_ANY, wxString(_("Rename")), wxEmptyString, wxITEM_NORMAL);
+        menu.Append(menuItemRename);
+        wxMenuItem* menuItemDelete = new wxMenuItem(m_menu1, wxID_ANY, wxString(_("Delete")), wxEmptyString, wxITEM_NORMAL);
+        menu.Append(menuItemDelete);
+
+        // bind fnuctions to the menu options
+        menu.Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainWindow::OnDataChoiceNewEntry), this, menuItemNewEntry->GetId());
+        menu.Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainWindow::OnDataChoiceDuplicate), this, menuItemDuplicate->GetId());
+        menu.Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainWindow::OnDataChoiceRename), this, menuItemRename->GetId());
+        menu.Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(MainWindow::OnDataChoiceDelete), this, menuItemDelete->GetId());
+
+        // pop up where they clicked
+        wxPoint pos = event.GetPoint();
+        m_dataChoice->PopupMenu(&menu, pos);
+    }
+
+    std::string GetUniqueDataEntryName(const char* baseName)
+    {
+        DBTable& table = *m_database.m_tables[m_tableChoice->GetStringSelection().utf8_string()].get();
+        if (table.m_data.count(baseName) == 0)
+            return baseName;
+
+        int index = 0;
+        char buffer[1024];
+
+        while (1)
+        {
+            index++;
+            sprintf_s(buffer, "%s_%i", baseName, index);
+
+            if (table.m_data.count(buffer) == 0)
+                return buffer;
+        }
+    }
+
+    void OnDataChoiceNewEntry(wxCommandEvent& event)
+    {
+        DBTable& table = *m_database.m_tables[m_tableChoice->GetStringSelection().utf8_string()].get();
+        std::string itemName = GetUniqueDataEntryName("NewEntry");
+        std::filesystem::path fileName = (std::filesystem::path(table.GetPath()).remove_filename() / itemName).replace_extension(".json");
+
+        // make the file
+        {
+            FILE* file = nullptr;
+            fopen_s(&file, fileName.string().c_str(), "wb");
+            if (!file)
+                return;
+
+            fprintf(file, "{\n}\n");
+            fclose(file);
+        }
+
+        // make the entry in the data
+        table.LoadFile(fileName.string().c_str());
+
+        // make the entry in the UI and select it
+        m_dataChoice->InsertItem(m_dataChoice->GetItemCount(), itemName.c_str());
+        m_dataChoice->SetItemState(m_dataChoice->GetItemCount()-1, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
+    }
+
+    void OnDataChoiceDuplicate(wxCommandEvent& event)
+    {
+        DBTable& table = *m_database.m_tables[m_tableChoice->GetStringSelection().utf8_string()].get();
+
+        long selectedIndex = m_dataChoice->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+        if (selectedIndex == -1)
+            return;
+
+        std::string oldName = m_dataChoice->GetItemText(selectedIndex).utf8_string();
+        std::string newName = GetUniqueDataEntryName(oldName.c_str());
+
+        std::filesystem::path oldFileName = (std::filesystem::path(table.GetPath()).remove_filename() / oldName).replace_extension(".json");
+        std::filesystem::path newFileName = (std::filesystem::path(table.GetPath()).remove_filename() / newName).replace_extension(".json");
+
+        // Copy the file
+        std::error_code ec;
+        std::filesystem::copy_file(oldFileName, newFileName, std::filesystem::copy_options::overwrite_existing, ec);
+
+        // make the entry in the data
+        table.LoadFile(newFileName.string().c_str());
+
+        // make the entry in the UI and select it
+        m_dataChoice->InsertItem(m_dataChoice->GetItemCount(), newName.c_str());
+        m_dataChoice->SetItemState(m_dataChoice->GetItemCount() - 1, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
+    }
+
+    void OnDataChoiceRename(wxCommandEvent& event)
+    {
+        int selectedIndex = m_dataChoice->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+        if (selectedIndex != -1)
+            m_dataChoice->EditLabel(selectedIndex);
+    }
+
+    void OnDataChoiceDelete(wxCommandEvent& event)
+    {
+        int selectedIndex = m_dataChoice->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+        m_dataChoice->DeleteItem(selectedIndex);
+    }
+
     void OnDataChoiceSelect(wxListEvent& /*event*/) override final
     {
         int ijkl = 0;
