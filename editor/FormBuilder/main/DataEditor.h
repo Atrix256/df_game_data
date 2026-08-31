@@ -48,6 +48,10 @@ class Main : public wxFrame
 		virtual void OnFileOpen( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnFileExit( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnTableViewChange( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnDataChoiceKeyDown( wxKeyEvent& event ) { event.Skip(); }
+		virtual void OnDataChoiceDelete( wxListEvent& event ) { event.Skip(); }
+		virtual void OnDataChoiceRenamed( wxListEvent& event ) { event.Skip(); }
+		virtual void OnDataChoiceSelect( wxListEvent& event ) { event.Skip(); }
 
 
 	public:

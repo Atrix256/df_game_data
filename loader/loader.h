@@ -26,7 +26,13 @@ public:
     }
 
 public:
-    std::unordered_map<std::string, std::unique_ptr<json>> m_data;
+    struct JSONData
+    {
+        std::string m_path;
+        json m_data;
+    };
+
+    std::unordered_map<std::string, std::unique_ptr<JSONData>> m_data;
     std::string m_rootType;
 
 private:

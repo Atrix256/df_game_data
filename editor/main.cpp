@@ -69,6 +69,106 @@ public:
         PopulateDataChoices();
     }
 
+    void OnDataChoiceRenamed(wxListEvent& event) override final
+    {
+        if (event.IsEditCancelled())
+            return;
+
+        long itemIndex = event.GetIndex();
+        wxString oldName = m_dataChoice->GetItemText(itemIndex);
+        wxString newName = event.GetLabel();
+
+        // If the name didn't change, nothing to do
+        if (oldName == newName)
+            return;
+
+        // Don't allow characters which are not valid to be part of filename
+        static const std::string_view illegalChars = "<>:\"/\\|?*";
+        bool hasIllegal = std::any_of(
+            newName.begin(), newName.end(), [](char c)
+            {
+                // don't allow characters < 32, or the illegal characters
+                return (static_cast<unsigned char>(c) < 32) || (illegalChars.find(c) != std::string_view::npos);
+            }
+        );
+        if (hasIllegal)
+            return;
+
+        // If the name is already taken by something else, don't do it
+        int totalItems = m_dataChoice->GetItemCount();
+        for (int index = 0; index < totalItems; ++index)
+        {
+            if (index == itemIndex)
+                continue;
+
+            if (m_dataChoice->GetItemText(itemIndex) == newName)
+                return;
+        }
+
+        // rename the file on disk
+        std::string tableName = m_tableChoice->GetStringSelection().utf8_string();
+        DBTable& table = *m_database.m_tables[tableName].get();
+        std::unique_ptr<DBTable::JSONData> data = std::move(table.m_data[oldName.utf8_string()]);
+        std::string oldFileName = data->m_path;
+        std::string newFileName = (std::filesystem::path(oldFileName).remove_filename() / newName.utf8_string()).replace_extension(".json").string();
+        std::filesystem::rename(oldFileName.c_str(), newFileName.c_str());
+        data->m_path = newFileName;
+
+        // change the key where this data is, from the old name to the new
+        table.m_data.erase(oldName.utf8_string());
+        table.m_data[newName.utf8_string()] = std::move(data);
+
+        // rename the item in the UI
+        m_dataChoice->SetItemText(itemIndex, newName);
+    }
+
+    void OnDataChoiceDelete(wxListEvent& event) override final
+    {
+        long itemIndex = event.GetIndex();
+        if (itemIndex < 0 || itemIndex >= m_dataChoice->GetItemCount())
+            return;
+
+        std::string tableName = m_tableChoice->GetStringSelection().utf8_string();
+        DBTable& table = *m_database.m_tables[tableName].get();
+        wxString name = m_dataChoice->GetItemText(itemIndex);
+
+        // delete file from disk
+        std::filesystem::remove(table.m_data[name.utf8_string()]->m_path);
+
+        // delete from the table
+        table.m_data.erase(name.utf8_string());
+    }
+
+    void OnDataChoiceSelect(wxListEvent& /*event*/) override final
+    {
+        int ijkl = 0;
+    }
+
+    void OnDataChoiceKeyDown(wxKeyEvent& event) override final
+    {
+        switch (event.GetKeyCode())
+        {
+            case WXK_F2:
+            {
+                int selectedIndex = m_dataChoice->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+                if (selectedIndex != -1)
+                    m_dataChoice->EditLabel(selectedIndex);
+                break;
+            }
+            case WXK_DELETE:
+            {
+                int selectedIndex = m_dataChoice->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+                m_dataChoice->DeleteItem(selectedIndex);
+                break;
+            }
+            default:
+            {
+                event.Skip();
+                break;
+            }
+        }
+    }
+
     void PopulateDataChoices()
     {
         m_dataChoice->DeleteAllItems();

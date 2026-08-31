@@ -134,8 +134,11 @@ bool DBTable::LoadFile(const char* fileName)
 
     // Insert the data into the data table.
     // The filename without extension is the key.
+    std::unique_ptr<JSONData> newData = std::make_unique<JSONData>();
     std::string key = std::filesystem::path(fileName).filename().replace_extension("").string();
-    m_data[key] = std::make_unique<json>(data);
+    newData->m_data = data;
+    newData->m_path = fileName;
+    m_data[key] = std::move(newData);
 
     return true;
 }
