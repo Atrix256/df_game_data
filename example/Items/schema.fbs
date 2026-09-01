@@ -3,7 +3,10 @@ include "../common.fbs";
 namespace ExampleData.Items;
 
 // Root Type
-table Item (root_type)
+table Item
 {
   name: string;
 }
+
+root_type Item;
+

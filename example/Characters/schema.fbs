@@ -8,7 +8,7 @@ enum Alignment : byte { Good, Neutral, Evil }
 enum Class : byte { Warrior, Wizard, Cleric, Druid }
 
 // Root Type
-table Character (root_type)
+table Character
 {
   name: string;
   eye_color:EyeColor = Brown;
@@ -20,3 +20,5 @@ table Character (root_type)
 
   inventory:[string] (link:"Item");
 }
+
+root_type Character;

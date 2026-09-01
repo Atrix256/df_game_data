@@ -272,6 +272,19 @@ public:
 
     void OnDataChoiceSelect(wxListEvent& /*event*/) override final
     {
+        DBTable& table = *m_database.m_tables[m_tableChoice->GetStringSelection().utf8_string()].get();
+
+        long selectedIndex = m_dataChoice->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+        if (selectedIndex == -1)
+            return;
+
+        std::string name = m_dataChoice->GetItemText(selectedIndex).utf8_string();
+        DBTable::JSONData& data = *table.m_data[name].get();
+
+        const flatbuffers::Parser& parser = table.GetParser();
+
+
+
         int ijkl = 0;
     }
 
@@ -326,6 +339,8 @@ bool DataApp::OnInit()
 /*
 TODO: Next
 * start showing UI?
+
+* it's ok to use the actual root_type statement instead of the custom attrbutes. we can remove those lines when we combine them.
 
 * use "documentation" field as tooltips in editor
 * have an enum in the example schema, and make editor have you choose which type it is.
@@ -410,7 +425,6 @@ TODO: Example data:
 
 ! note that it scans the folder where the schema lives, recursively, for all .json files and tries to load them as table entries
 ! note that comments become tooltips and show in example data
-! note the custom attribute for (root_type)
 ! note how to use links. a string with attribute (link:"tablename") inventory:[string] (link:"Item");.  It gives you the record name
  TODO: should it be an integer type for index instead? or let either work?
 */

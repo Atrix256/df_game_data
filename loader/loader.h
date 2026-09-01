@@ -27,6 +27,11 @@ public:
 
     bool LoadFile(const char* fileName);
 
+    const flatbuffers::Parser& GetParser() const
+    {
+        return m_parser;
+    }
+
 public:
     struct JSONData
     {

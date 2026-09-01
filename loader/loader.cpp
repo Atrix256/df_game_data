@@ -16,7 +16,6 @@ bool DBTable::LoadSchema()
     }
 
     // insert after the last include:
-    // attribute "root_type";
     // attribute "link";
     {
         size_t lastIncludePos = m_fbsFile.rfind("include \"");
@@ -26,7 +25,9 @@ bool DBTable::LoadSchema()
             lastIncludePos = m_fbsFile.find("\n", lastIncludePos + 1);
         if (lastIncludePos == std::string::npos)
             lastIncludePos = 0;
-        m_fbsFile.insert(lastIncludePos, "\nattribute \"root_type\";\nattribute \"link\";");
+        else
+            lastIncludePos++;
+        m_fbsFile.insert(lastIncludePos, "attribute \"link\";\n");
     }
 
     m_includeDirsStr.push_back(std::filesystem::path(m_path).remove_filename().string());
@@ -45,29 +46,12 @@ bool DBTable::LoadSchema()
         m_errorText = "Warning when loading schema: " + m_path + "\n" + m_parser.error_;
     }
 
-    // Get the one (no less, no more) root_type
-    bool rootTypeFound = false;
-    for (auto& structDef : m_parser.structs_.vec)
+    if (!m_parser.root_struct_def_)
     {
-        if (structDef->attributes.Lookup("root_type") != nullptr)
-        {
-            if (rootTypeFound)
-            {
-                m_errorText = "Multiple root types found in schema: " + m_path;
-                return false;
-            }
-            m_rootType = structDef->name;
-            rootTypeFound = true;
-        }
-    }
-    if (!rootTypeFound)
-    {
-        m_errorText = "No root type found, please add the (root_type) attribute to one struct.\n" + m_path;
+        m_errorText = "No root type specified for schema: " + m_path;
         return false;
     }
-
-    // set the root type on the parser
-    m_parser.SetRootType(m_rootType.c_str());
+    m_rootType = m_parser.root_struct_def_->name;
 
     return true;
 }
