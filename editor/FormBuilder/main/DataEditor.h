@@ -23,6 +23,7 @@
 #include <wx/choice.h>
 #include <wx/sizer.h>
 #include <wx/listctrl.h>
+#include <wx/button.h>
 #include <wx/panel.h>
 #include <wx/frame.h>
 
@@ -41,6 +42,8 @@ class Main : public wxFrame
 		wxStaticText* m_staticText1;
 		wxChoice* m_tableChoice;
 		wxListCtrl* m_dataChoice;
+		wxButton* m_button2;
+		wxButton* m_button1;
 		wxPanel* MyPanel1;
 		wxBoxSizer* m_editSizer;
 
@@ -53,6 +56,8 @@ class Main : public wxFrame
 		virtual void OnDataChoiceRenamed( wxListEvent& event ) { event.Skip(); }
 		virtual void OnRightClickItem( wxListEvent& event ) { event.Skip(); }
 		virtual void OnDataChoiceSelect( wxListEvent& event ) { event.Skip(); }
+		virtual void OnDataChoiceButtonNew( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnDataChoiceButtonDelete( wxCommandEvent& event ) { event.Skip(); }
 
 
 	public:

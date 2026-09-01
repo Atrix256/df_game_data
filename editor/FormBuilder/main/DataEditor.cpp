@@ -48,8 +48,26 @@ Main::Main( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoin
 	wxBoxSizer* bSizer3;
 	bSizer3 = new wxBoxSizer( wxHORIZONTAL );
 
+	wxBoxSizer* bSizer5;
+	bSizer5 = new wxBoxSizer( wxVERTICAL );
+
 	m_dataChoice = new wxListCtrl( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_EDIT_LABELS|wxLC_LIST|wxLC_SINGLE_SEL );
-	bSizer3->Add( m_dataChoice, 0, wxALL|wxEXPAND, 1 );
+	bSizer5->Add( m_dataChoice, 1, wxALL|wxEXPAND, 1 );
+
+	wxBoxSizer* bSizer6;
+	bSizer6 = new wxBoxSizer( wxHORIZONTAL );
+
+	m_button2 = new wxButton( this, wxID_ANY, _("New"), wxDefaultPosition, wxDefaultSize, 0 );
+	bSizer6->Add( m_button2, 1, wxALL, 1 );
+
+	m_button1 = new wxButton( this, wxID_ANY, _("Delete"), wxDefaultPosition, wxDefaultSize, 0 );
+	bSizer6->Add( m_button1, 1, wxALL, 1 );
+
+
+	bSizer5->Add( bSizer6, 0, wxEXPAND, 1 );
+
+
+	bSizer3->Add( bSizer5, 1, wxEXPAND, 5 );
 
 	MyPanel1 = new wxPanel( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
 	m_editSizer = new wxBoxSizer( wxVERTICAL );
@@ -58,7 +76,7 @@ Main::Main( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoin
 	MyPanel1->SetSizer( m_editSizer );
 	MyPanel1->Layout();
 	m_editSizer->Fit( MyPanel1 );
-	bSizer3->Add( MyPanel1, 1, wxEXPAND | wxALL, 1 );
+	bSizer3->Add( MyPanel1, 4, wxEXPAND | wxALL, 1 );
 
 
 	bSizer1->Add( bSizer3, 1, wxEXPAND, 1 );
@@ -78,6 +96,8 @@ Main::Main( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoin
 	m_dataChoice->Connect( wxEVT_COMMAND_LIST_END_LABEL_EDIT, wxListEventHandler( Main::OnDataChoiceRenamed ), NULL, this );
 	m_dataChoice->Connect( wxEVT_COMMAND_LIST_ITEM_RIGHT_CLICK, wxListEventHandler( Main::OnRightClickItem ), NULL, this );
 	m_dataChoice->Connect( wxEVT_COMMAND_LIST_ITEM_SELECTED, wxListEventHandler( Main::OnDataChoiceSelect ), NULL, this );
+	m_button2->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( Main::OnDataChoiceButtonNew ), NULL, this );
+	m_button1->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( Main::OnDataChoiceButtonDelete ), NULL, this );
 }
 
 Main::~Main()

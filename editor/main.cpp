@@ -190,7 +190,7 @@ public:
         }
     }
 
-    void OnDataChoiceNewEntry(wxCommandEvent& event)
+    void MakeNewDataChoiceEntry()
     {
         DBTable& table = *m_database.m_tables[m_tableChoice->GetStringSelection().utf8_string()].get();
         std::string itemName = GetUniqueDataEntryName("NewEntry");
@@ -212,7 +212,12 @@ public:
 
         // make the entry in the UI and select it
         m_dataChoice->InsertItem(m_dataChoice->GetItemCount(), itemName.c_str());
-        m_dataChoice->SetItemState(m_dataChoice->GetItemCount()-1, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
+        m_dataChoice->SetItemState(m_dataChoice->GetItemCount() - 1, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
+    }
+
+    void OnDataChoiceNewEntry(wxCommandEvent& event)
+    {
+        MakeNewDataChoiceEntry();
     }
 
     void OnDataChoiceDuplicate(wxCommandEvent& event)
@@ -252,6 +257,17 @@ public:
     {
         int selectedIndex = m_dataChoice->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
         m_dataChoice->DeleteItem(selectedIndex);
+    }
+
+    void OnDataChoiceButtonNew(wxCommandEvent& event)
+    {
+        MakeNewDataChoiceEntry();
+    }
+    void OnDataChoiceButtonDelete(wxCommandEvent & event)
+    {
+        int selectedIndex = m_dataChoice->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+        if (selectedIndex != -1)
+            m_dataChoice->DeleteItem(selectedIndex);
     }
 
     void OnDataChoiceSelect(wxListEvent& /*event*/) override final
