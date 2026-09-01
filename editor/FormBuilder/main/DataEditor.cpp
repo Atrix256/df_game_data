@@ -69,14 +69,14 @@ Main::Main( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoin
 
 	bSizer3->Add( bSizer5, 1, wxEXPAND, 5 );
 
-	MyPanel1 = new wxPanel( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
+	m_editPanel = new wxPanel( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
 	m_editSizer = new wxBoxSizer( wxVERTICAL );
 
 
-	MyPanel1->SetSizer( m_editSizer );
-	MyPanel1->Layout();
-	m_editSizer->Fit( MyPanel1 );
-	bSizer3->Add( MyPanel1, 4, wxEXPAND | wxALL, 1 );
+	m_editPanel->SetSizer( m_editSizer );
+	m_editPanel->Layout();
+	m_editSizer->Fit( m_editPanel );
+	bSizer3->Add( m_editPanel, 4, wxEXPAND | wxALL, 1 );
 
 
 	bSizer1->Add( bSizer3, 1, wxEXPAND, 1 );

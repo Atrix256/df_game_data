@@ -12,6 +12,8 @@
 #include "FormBuilder/main/DataEditor.h"
 #pragma warning(pop)
 
+#include "TypesUI.h"
+
 class DataApp : public wxApp
 {
 public:
@@ -283,9 +285,7 @@ public:
 
         const flatbuffers::Parser& parser = table.GetParser();
 
-
-
-        int ijkl = 0;
+        AddUIForType(parser, *parser.root_struct_def_, m_editPanel, m_editSizer);
     }
 
     void OnDataChoiceKeyDown(wxKeyEvent& event) override final

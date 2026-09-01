@@ -44,7 +44,7 @@ class Main : public wxFrame
 		wxListCtrl* m_dataChoice;
 		wxButton* m_button2;
 		wxButton* m_button1;
-		wxPanel* MyPanel1;
+		wxPanel* m_editPanel;
 		wxBoxSizer* m_editSizer;
 
 		// Virtual event handlers, override them in your derived class

@@ -18,5 +18,6 @@
     <ClInclude Include="FormBuilder\main\DataEditor.h">
       <Filter>FormBuilder\main</Filter>
     </ClInclude>
+    <ClInclude Include="TypesUI.h" />
   </ItemGroup>
 </Project>
