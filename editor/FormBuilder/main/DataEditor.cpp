@@ -70,7 +70,10 @@ Main::Main( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoin
 	bSizer3->Add( bSizer5, 1, wxEXPAND, 5 );
 
 	m_editPanel = new wxPanel( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
-	m_editSizer = new wxBoxSizer( wxVERTICAL );
+	m_editSizer = new wxFlexGridSizer( 0, 2, 0, 0 );
+	m_editSizer->AddGrowableCol( 1 );
+	m_editSizer->SetFlexibleDirection( wxBOTH );
+	m_editSizer->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
 
 
 	m_editPanel->SetSizer( m_editSizer );

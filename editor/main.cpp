@@ -64,6 +64,7 @@ public:
         m_tableChoice->SetSelection(0);
 
         PopulateDataChoices();
+        PopulateDataEditUI();
     }
 
     void OnTableViewChange(wxCommandEvent& /*event*/) override final
@@ -272,20 +273,36 @@ public:
             m_dataChoice->DeleteItem(selectedIndex);
     }
 
-    void OnDataChoiceSelect(wxListEvent& /*event*/) override final
+    void PopulateDataEditUI()
     {
-        DBTable& table = *m_database.m_tables[m_tableChoice->GetStringSelection().utf8_string()].get();
+        // Remove any UI there already
+        m_editPanel->Freeze();
+        m_editPanel->DestroyChildren();
+        m_editSizer->Clear(true);
+
+        // Refresh UI
+        m_editPanel->Layout();
+        m_editPanel->Thaw();
 
         long selectedIndex = m_dataChoice->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
         if (selectedIndex == -1)
             return;
 
+        DBTable& table = *m_database.m_tables[m_tableChoice->GetStringSelection().utf8_string()].get();
         std::string name = m_dataChoice->GetItemText(selectedIndex).utf8_string();
         DBTable::JSONData& data = *table.m_data[name].get();
 
         const flatbuffers::Parser& parser = table.GetParser();
 
         AddUIForType(parser, *parser.root_struct_def_, m_editPanel, m_editSizer);
+
+        m_editPanel->Layout();
+        m_editSizer->Fit(m_editPanel);
+    }
+
+    void OnDataChoiceSelect(wxListEvent& /*event*/) override final
+    {
+        PopulateDataEditUI();
     }
 
     void OnDataChoiceKeyDown(wxKeyEvent& event) override final

@@ -93,6 +93,7 @@
   <ItemGroup>
     <ClCompile Include="FormBuilder\main\DataEditor.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="TypesUI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\loader\loader.vcxproj">

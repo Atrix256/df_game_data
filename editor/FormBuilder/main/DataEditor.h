@@ -45,7 +45,7 @@ class Main : public wxFrame
 		wxButton* m_button2;
 		wxButton* m_button1;
 		wxPanel* m_editPanel;
-		wxBoxSizer* m_editSizer;
+		wxFlexGridSizer* m_editSizer;
 
 		// Virtual event handlers, override them in your derived class
 		virtual void OnFileOpen( wxCommandEvent& event ) { event.Skip(); }
