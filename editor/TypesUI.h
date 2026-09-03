@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../loader/JSONFwd.h"
+
 namespace flatbuffers
 {
     class Parser;
@@ -9,4 +11,4 @@ namespace flatbuffers
 class wxPanel;
 class wxSizer;
 
-void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::StructDef& structDef, wxPanel* panel, wxSizer* sizer, int indent = 0);
+void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::StructDef& structDef, wxPanel* panel, wxSizer* sizer, json& json, int indent = 0);

@@ -294,10 +294,9 @@ public:
 
         const flatbuffers::Parser& parser = table.GetParser();
 
-        AddUIForType(parser, *parser.root_struct_def_, m_editPanel, m_editSizer);
+        AddUIForType(parser, *parser.root_struct_def_, m_editPanel, m_editSizer, data.m_data);
 
         m_editPanel->Layout();
-        m_editSizer->Fit(m_editPanel);
     }
 
     void OnDataChoiceSelect(wxListEvent& /*event*/) override final

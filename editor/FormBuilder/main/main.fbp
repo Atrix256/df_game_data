@@ -510,7 +510,7 @@
               </object>
             </object>
             <object class="sizeritem" expanded="true">
-              <property name="border">1</property>
+              <property name="border">2</property>
               <property name="flag">wxEXPAND | wxALL</property>
               <property name="proportion">4</property>
               <object class="wxPanel" expanded="true">

@@ -5,8 +5,7 @@
 
 #include "flatbuffers/idl.h"
 
-#include <nlohmann/json.hpp>
-using json = nlohmann::ordered_json;
+#include "JSON.h"
 
 #include "FileWatcher.h"
 

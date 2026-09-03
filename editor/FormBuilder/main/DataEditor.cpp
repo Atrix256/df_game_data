@@ -79,7 +79,7 @@ Main::Main( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoin
 	m_editPanel->SetSizer( m_editSizer );
 	m_editPanel->Layout();
 	m_editSizer->Fit( m_editPanel );
-	bSizer3->Add( m_editPanel, 4, wxEXPAND | wxALL, 1 );
+	bSizer3->Add( m_editPanel, 4, wxEXPAND | wxALL, 2 );
 
 
 	bSizer1->Add( bSizer3, 1, wxEXPAND, 1 );

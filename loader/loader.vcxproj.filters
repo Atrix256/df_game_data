@@ -7,5 +7,7 @@
   <ItemGroup>
     <ClInclude Include="loader.h" />
     <ClInclude Include="FileWatcher.h" />
+    <ClInclude Include="JSONFwd.h" />
+    <ClInclude Include="JSON.h" />
   </ItemGroup>
 </Project>
