@@ -16,48 +16,50 @@
 #include <wx/stattext.h>
 #pragma warning(pop)
 
-static void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::FieldDef& fieldDef, wxPropertyGrid* grid, wxPGProperty* root, json& json)
+enum class TypeCategory
 {
-    if (fieldDef.deprecated)
-        return;
+    Unknown,
+    Bool,
+    Int,
+    Float,
+    String,
+    Struct,
+};
 
-    // Handle struct fields
-    const flatbuffers::Type& type = fieldDef.value.type;
-    if (type.base_type == flatbuffers::BaseType::BASE_TYPE_STRUCT)
+union TypeDetails
+{
+    struct
     {
-        AddUIForType(parser, *type.struct_def, fieldDef.name.c_str(), grid, root, json);
-        return;
+        bool isSigned;
+        int numBytes;
     }
+    Int;
 
-    enum class TypeCategory
+    struct
     {
-        Unknown,
-        Bool,
-        Int,
-        Float,
-        String
-    };
+        bool isDouble;
+    }
+    Float;
 
-    union TypeDetails
+    struct
     {
-        struct
-        {
-            bool isSigned;
-            int numBytes;
-        }
-        Int;
+        flatbuffers::StructDef* structDef;
+    }
+    Struct;
+};
 
-        struct
-        {
-            bool isDouble;
-        }
-        Float;
-    };
-
+struct Type
+{
     TypeCategory category = TypeCategory::Unknown;
     TypeDetails details;
 
-    switch (type.base_type)
+    bool isVector = false;
+    uint16_t vectorSize = 0;
+};
+
+void FlatBufferBaseTypeToOurType(const flatbuffers::Type& type, const flatbuffers::BaseType& baseType, TypeCategory& category, TypeDetails& details)
+{
+    switch (baseType)
     {
         case flatbuffers::BaseType::BASE_TYPE_NONE:
         {
@@ -148,13 +150,45 @@ static void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::F
             category = TypeCategory::String;
             break;
         }
+        case flatbuffers::BaseType::BASE_TYPE_STRUCT:
+        {
+            category = TypeCategory::Struct;
+            details.Struct.structDef = type.struct_def;
+            break;
+        }
+    }
+}
+
+Type FlatBufferTypeToOurType(const flatbuffers::Type& type)
+{
+    Type ret;
+
+    if (type.base_type == flatbuffers::BaseType::BASE_TYPE_VECTOR || type.base_type == flatbuffers::BaseType::BASE_TYPE_VECTOR64)
+    {
+        ret.isVector = true;
+        ret.vectorSize = type.fixed_length;
+        FlatBufferBaseTypeToOurType(type, type.element, ret.category, ret.details);
+    }
+    else
+    {
+        FlatBufferBaseTypeToOurType(type, type.base_type, ret.category, ret.details);
     }
 
-    if (category == TypeCategory::Unknown)
+    return ret;
+}
+
+static void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::FieldDef& fieldDef, wxPropertyGrid* grid, wxPGProperty* root, json& json)
+{
+    if (fieldDef.deprecated)
+        return;
+
+    Type ourType = FlatBufferTypeToOurType(fieldDef.value.type);
+
+    if (ourType.category == TypeCategory::Unknown)
         return;
 
     // Add the control
-    switch (category)
+    switch (ourType.category)
     {
         case TypeCategory::Bool:
         {
@@ -174,6 +208,12 @@ static void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::F
         case TypeCategory::String:
         {
             grid->AppendIn(root, new wxStringProperty(fieldDef.name.c_str(), wxPG_LABEL, ""));
+            break;
+        }
+        case TypeCategory::Struct:
+        {
+            AddUIForType(parser, *ourType.details.Struct.structDef, fieldDef.name.c_str(), grid, root, json);
+            break;
             break;
         }
     }
