@@ -24,6 +24,8 @@
 #include <wx/sizer.h>
 #include <wx/listctrl.h>
 #include <wx/button.h>
+#include <wx/propgrid/propgrid.h>
+#include <wx/propgrid/advprops.h>
 #include <wx/panel.h>
 #include <wx/frame.h>
 
@@ -45,7 +47,7 @@ class Main : public wxFrame
 		wxButton* m_button2;
 		wxButton* m_button1;
 		wxPanel* m_editPanel;
-		wxFlexGridSizer* m_editSizer;
+		wxPropertyGrid* m_editGrid;
 
 		// Virtual event handlers, override them in your derived class
 		virtual void OnFileOpen( wxCommandEvent& event ) { event.Skip(); }

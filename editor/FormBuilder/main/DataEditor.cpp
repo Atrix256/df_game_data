@@ -70,16 +70,17 @@ Main::Main( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoin
 	bSizer3->Add( bSizer5, 1, wxEXPAND, 5 );
 
 	m_editPanel = new wxPanel( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
-	m_editSizer = new wxFlexGridSizer( 0, 2, 0, 0 );
-	m_editSizer->AddGrowableCol( 1 );
-	m_editSizer->SetFlexibleDirection( wxBOTH );
-	m_editSizer->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
+	wxBoxSizer* bSizer7;
+	bSizer7 = new wxBoxSizer( wxVERTICAL );
+
+	m_editGrid = new wxPropertyGrid(m_editPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxPG_DEFAULT_STYLE);
+	bSizer7->Add( m_editGrid, 1, wxALL|wxEXPAND, 0 );
 
 
-	m_editPanel->SetSizer( m_editSizer );
+	m_editPanel->SetSizer( bSizer7 );
 	m_editPanel->Layout();
-	m_editSizer->Fit( m_editPanel );
-	bSizer3->Add( m_editPanel, 4, wxEXPAND | wxALL, 2 );
+	bSizer7->Fit( m_editPanel );
+	bSizer3->Add( m_editPanel, 4, wxALL|wxEXPAND, 2 );
 
 
 	bSizer1->Add( bSizer3, 1, wxEXPAND, 1 );

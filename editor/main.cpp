@@ -277,8 +277,7 @@ public:
     {
         // Remove any UI there already
         m_editPanel->Freeze();
-        m_editPanel->DestroyChildren();
-        m_editSizer->Clear(true);
+        m_editGrid->Clear();
 
         // Refresh UI
         m_editPanel->Layout();
@@ -294,7 +293,9 @@ public:
 
         const flatbuffers::Parser& parser = table.GetParser();
 
-        AddUIForType(parser, *parser.root_struct_def_, m_editPanel, m_editSizer, data.m_data);
+        wxPGProperty* root = m_editGrid->GetRoot();
+
+        AddUIForType(parser, *parser.root_struct_def_, m_editGrid, root, data.m_data);
 
         m_editPanel->Layout();
     }

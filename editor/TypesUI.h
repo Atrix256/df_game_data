@@ -8,7 +8,7 @@ namespace flatbuffers
     struct StructDef;
 };
 
-class wxPanel;
-class wxSizer;
+class wxPropertyGrid;
+class wxPGProperty;
 
-void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::StructDef& structDef, wxPanel* panel, wxSizer* sizer, json& json, int indent = 0);
+void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::StructDef& structDef, wxPropertyGrid* grid, wxPGProperty* root, json& json);
