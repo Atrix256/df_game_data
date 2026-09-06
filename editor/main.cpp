@@ -295,7 +295,7 @@ public:
 
         wxPGProperty* root = m_editGrid->GetRoot();
 
-        AddUIForType(parser, *parser.root_struct_def_, m_editGrid, root, data.m_data);
+        AddUIForType(parser, *parser.root_struct_def_, parser.root_struct_def_->name.c_str(), m_editGrid, root, data.m_data);
 
         m_editPanel->Layout();
     }

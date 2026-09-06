@@ -11,4 +11,4 @@ namespace flatbuffers
 class wxPropertyGrid;
 class wxPGProperty;
 
-void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::StructDef& structDef, wxPropertyGrid* grid, wxPGProperty* root, json& json);
+void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::StructDef& structDef, const char* structFieldName, wxPropertyGrid* grid, wxPGProperty* root, json& json);

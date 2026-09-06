@@ -21,7 +21,13 @@ static void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::F
     if (fieldDef.deprecated)
         return;
 
+    // Handle struct fields
     const flatbuffers::Type& type = fieldDef.value.type;
+    if (type.base_type == flatbuffers::BaseType::BASE_TYPE_STRUCT)
+    {
+        AddUIForType(parser, *type.struct_def, fieldDef.name.c_str(), grid, root, json);
+        return;
+    }
 
     enum class TypeCategory
     {
@@ -176,10 +182,14 @@ static void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::F
 
 }
 
-void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::StructDef& structDef, wxPropertyGrid* grid, wxPGProperty* root, json& json)
+void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::StructDef& structDef, const char* structFieldName, wxPropertyGrid* grid, wxPGProperty* root, json& json)
 {
-    wxPropertyCategory* newRoot = new wxPropertyCategory(parser.root_struct_def_->name);
-    grid->AppendIn(root, newRoot);
+    wxPGProperty* newRoot = root;
+    if (structFieldName && structFieldName[0])
+    {
+        newRoot = new wxPropertyCategory(structFieldName);
+        grid->AppendIn(root, newRoot);
+    }
 
     // Add the fields
     for (const flatbuffers::FieldDef* fieldDef : structDef.fields.vec)
