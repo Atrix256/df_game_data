@@ -20,5 +20,6 @@
       <Filter>FormBuilder\main</Filter>
     </ClInclude>
     <ClInclude Include="TypesUI.h" />
+    <ClInclude Include="ButtonRowProperty.h" />
   </ItemGroup>
 </Project>

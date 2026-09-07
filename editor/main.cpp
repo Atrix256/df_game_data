@@ -1,7 +1,5 @@
 #include "../loader/loader.h"
 
-#pragma warning(push)
-#pragma warning(disable: 4996)
 #include <wx/wx.h>
 #include <wx/propgrid/propgrid.h>
 #include <wx/propgrid/advprops.h>
@@ -10,7 +8,6 @@
 #include <wx/sysopt.h>
 #include <wx/stattext.h>
 #include "FormBuilder/main/DataEditor.h"
-#pragma warning(pop)
 
 #include "TypesUI.h"
 

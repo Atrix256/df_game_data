@@ -103,6 +103,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ButtonRowProperty.h" />
     <ClInclude Include="FormBuilder\main\DataEditor.h" />
     <ClInclude Include="TypesUI.h" />
   </ItemGroup>

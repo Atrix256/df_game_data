@@ -6,8 +6,6 @@
 #include "flatbuffers/idl.h"
 #include "../loader/JSON.h"
 
-#pragma warning(push)
-#pragma warning(disable: 4996)
 #include <wx/wx.h>
 #include <wx/propgrid/propgrid.h>
 #include <wx/propgrid/advprops.h>
@@ -15,7 +13,14 @@
 #include <wx/splitter.h>
 #include <wx/sysopt.h>
 #include <wx/stattext.h>
-#pragma warning(pop)
+#include "ButtonRowProperty.h"
+
+static wxPGEditor* GetButtonRowEditor()
+{
+    static wxPGEditor* editor =
+        wxPropertyGrid::RegisterEditorClass(new ButtonRowEditor());
+    return editor;
+}
 
 template <typename T>
 T GetValueFromString(const char* valueStr);
@@ -237,7 +242,7 @@ static void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::F
             case TypeCategory::Bool:
             {
                 bool value = json.value(jsonPathItem, GetValueFromString<bool>(fieldDef.value.constant.c_str()));
-                wxPGProperty* newProperty = grid->AppendIn(newRoot, new wxBoolProperty(fieldName.c_str(), wxPG_LABEL, value));
+                wxPGProperty* newProperty = grid->AppendIn(newRoot, new wxBoolProperty(fieldName.c_str(), jsonPathItem.to_string().c_str(), value));
                 propertyMap[newProperty] = PropertyInfo(jsonPathItem.to_string().c_str(), type);
                 break;
             }
@@ -248,13 +253,13 @@ static void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::F
                 {
                     int64_t value = GetValueFromString<int64_t>(fieldDef.value.constant.c_str());
                     value = json.value(jsonPathItem, value);
-                    newProperty = grid->AppendIn(newRoot, new wxIntProperty(fieldName.c_str(), wxPG_LABEL, (long)value));
+                    newProperty = grid->AppendIn(newRoot, new wxIntProperty(fieldName.c_str(), jsonPathItem.to_string().c_str(), (long)value));
                 }
                 else
                 {
                     uint64_t value = GetValueFromString<uint64_t>(fieldDef.value.constant.c_str());
                     value = json.value(jsonPathItem, value);
-                    newProperty = grid->AppendIn(newRoot, new wxUIntProperty(fieldName.c_str(), wxPG_LABEL, (unsigned long)value));
+                    newProperty = grid->AppendIn(newRoot, new wxUIntProperty(fieldName.c_str(), jsonPathItem.to_string().c_str(), (unsigned long)value));
                 }
 
                 propertyMap[newProperty] = PropertyInfo(jsonPathItem.to_string().c_str(), type);
@@ -264,14 +269,14 @@ static void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::F
             {
                 double value = GetValueFromString<double>(fieldDef.value.constant.c_str());
                 value = json.value(jsonPathItem, value);
-                wxPGProperty* newProperty = grid->AppendIn(newRoot, new wxFloatProperty(fieldName.c_str(), wxPG_LABEL, value));
+                wxPGProperty* newProperty = grid->AppendIn(newRoot, new wxFloatProperty(fieldName.c_str(), jsonPathItem.to_string().c_str(), value));
                 propertyMap[newProperty] = PropertyInfo(jsonPathItem.to_string().c_str(), type);
                 break;
             }
             case TypeCategory::String:
             {
                 std::string value = json.value(jsonPathItem, fieldDef.value.constant.c_str());
-                wxPGProperty* newProperty = grid->AppendIn(newRoot, new wxStringProperty(fieldName.c_str(), wxPG_LABEL, value.c_str()));
+                wxPGProperty* newProperty = grid->AppendIn(newRoot, new wxStringProperty(fieldName.c_str(), jsonPathItem.to_string().c_str(), value.c_str()));
                 propertyMap[newProperty] = PropertyInfo(jsonPathItem.to_string().c_str(), type);
                 break;
             }
