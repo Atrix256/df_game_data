@@ -39,15 +39,15 @@ Main::Main( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoin
 
 	m_staticText1 = new wxStaticText( this, wxID_ANY, _("Table:"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticText1->Wrap( -1 );
-	bSizer2->Add( m_staticText1, 0, wxALL, 5 );
+	bSizer2->Add( m_staticText1, 0, wxALL|wxEXPAND, 5 );
 
 	wxArrayString m_tableChoiceChoices;
 	m_tableChoice = new wxChoice( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, m_tableChoiceChoices, wxCB_SORT );
 	m_tableChoice->SetSelection( 0 );
-	bSizer2->Add( m_tableChoice, 1, wxALL, 1 );
+	bSizer2->Add( m_tableChoice, 1, wxALL|wxEXPAND, 1 );
 
 
-	bSizer1->Add( bSizer2, 0, wxEXPAND, 5 );
+	bSizer1->Add( bSizer2, 0, wxALL|wxEXPAND, 1 );
 
 	wxBoxSizer* bSizer3;
 	bSizer3 = new wxBoxSizer( wxHORIZONTAL );
@@ -56,7 +56,7 @@ Main::Main( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoin
 	bSizer5 = new wxBoxSizer( wxVERTICAL );
 
 	m_dataChoice = new wxListCtrl( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_EDIT_LABELS|wxLC_LIST|wxLC_SINGLE_SEL );
-	bSizer5->Add( m_dataChoice, 1, wxALL|wxEXPAND, 1 );
+	bSizer5->Add( m_dataChoice, 1, wxALL|wxEXPAND, 2 );
 
 	wxBoxSizer* bSizer6;
 	bSizer6 = new wxBoxSizer( wxHORIZONTAL );
@@ -68,7 +68,7 @@ Main::Main( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoin
 	bSizer6->Add( m_button1, 1, wxALL, 1 );
 
 
-	bSizer5->Add( bSizer6, 0, wxEXPAND, 1 );
+	bSizer5->Add( bSizer6, 0, wxALL|wxEXPAND, 2 );
 
 
 	bSizer3->Add( bSizer5, 1, wxEXPAND, 5 );

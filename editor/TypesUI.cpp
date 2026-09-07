@@ -17,6 +17,56 @@
 #include <wx/stattext.h>
 #pragma warning(pop)
 
+template <typename T>
+T GetValueFromString(const char* valueStr);
+
+template <>
+bool GetValueFromString<bool>(const char* valueStr)
+{
+    return (!stricmp(valueStr, "true") || !stricmp(valueStr, "1"));
+}
+
+template <>
+int64_t GetValueFromString<int64_t>(const char* valueStr)
+{
+    int64_t value;
+    sscanf_s(valueStr, "%lld", &value);
+    return value;
+}
+
+template <>
+uint64_t GetValueFromString<uint64_t>(const char* valueStr)
+{
+    uint64_t value;
+    sscanf_s(valueStr, "%llu", &value);
+    return value;
+}
+
+template <>
+double GetValueFromString<double>(const char* valueStr)
+{
+    double value;
+    sscanf_s(valueStr, "%lf", &value);
+    return value;
+}
+
+void SetPropertyFromString(json& json, const json_pointer& path, const Type& type, const char* valueStr)
+{
+    if (type.category == TypeCategory::Bool)
+    {
+        bool value = (!stricmp(valueStr, "true") || !stricmp(valueStr, "1"));
+        json[path] = value;
+    }
+    else if (type.category == TypeCategory::String)
+    {
+        json[path] = valueStr;
+    }
+    else
+    {
+        json[path] = json::parse(valueStr);
+    }
+}
+
 void FlatBufferBaseTypeToOurType(const flatbuffers::Type& type, const flatbuffers::BaseType& baseType, TypeCategory& category, TypeDetails& details)
 {
     switch (baseType)
@@ -161,28 +211,41 @@ static void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::F
     {
         case TypeCategory::Bool:
         {
-            bool value = json.value(jsonPath, false);
+            bool value = json.value(jsonPath, GetValueFromString<bool>(fieldDef.value.constant.c_str()));
             wxPGProperty* newProperty = grid->AppendIn(newRoot, new wxBoolProperty(fieldDef.name.c_str(), wxPG_LABEL, value));
             propertyMap[newProperty] = PropertyInfo(jsonPath.to_string().c_str(), type);
             break;
         }
         case TypeCategory::Int:
         {
-            int value = json.value(jsonPath, 0);
-            wxPGProperty* newProperty = grid->AppendIn(newRoot, new wxIntProperty(fieldDef.name.c_str(), wxPG_LABEL, value));
+            wxPGProperty* newProperty = nullptr;
+            if (type.details.Int.isSigned)
+            {
+                int64_t value = GetValueFromString<int64_t>(fieldDef.value.constant.c_str());
+                value = json.value(jsonPath, value);
+                newProperty = grid->AppendIn(newRoot, new wxIntProperty(fieldDef.name.c_str(), wxPG_LABEL, (long)value));
+            }
+            else
+            {
+                uint64_t value = GetValueFromString<uint64_t>(fieldDef.value.constant.c_str());
+                value = json.value(jsonPath, value);
+                newProperty = grid->AppendIn(newRoot, new wxUIntProperty(fieldDef.name.c_str(), wxPG_LABEL, (unsigned long)value));
+            }
+
             propertyMap[newProperty] = PropertyInfo(jsonPath.to_string().c_str(), type);
             break;
         }
         case TypeCategory::Float:
         {
-            double value = json.value(jsonPath, 0.0);
+            double value = GetValueFromString<double>(fieldDef.value.constant.c_str());
+            value = json.value(jsonPath, value);
             wxPGProperty* newProperty = grid->AppendIn(newRoot, new wxFloatProperty(fieldDef.name.c_str(), wxPG_LABEL, value));
             propertyMap[newProperty] = PropertyInfo(jsonPath.to_string().c_str(), type);
             break;
         }
         case TypeCategory::String:
         {
-            std::string value = json.value(jsonPath, "");
+            std::string value = json.value(jsonPath, fieldDef.value.constant.c_str());
             wxPGProperty* newProperty = grid->AppendIn(newRoot, new wxStringProperty(fieldDef.name.c_str(), wxPG_LABEL, value.c_str()));
             propertyMap[newProperty] = PropertyInfo(jsonPath.to_string().c_str(), type);
             break;

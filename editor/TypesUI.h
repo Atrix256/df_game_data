@@ -73,3 +73,5 @@ struct PropertyInfo
 using PropertyMap = std::unordered_map<wxPGProperty*, PropertyInfo>;
 
 void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::StructDef& structDef, const char* structFieldName, wxPropertyGrid* grid, wxPGProperty* root, json& json, const json_pointer& path, PropertyMap& propertyMap);
+
+void SetPropertyFromString(json& json, const json_pointer& path, const Type& type, const char* value);

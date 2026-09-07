@@ -344,23 +344,11 @@ public:
         {
             if (pair.first == property)
             {
-                json::json_pointer jsonPath(pair.second.m_jsonPath.c_str());
+                json_pointer jsonPath(pair.second.m_jsonPath.c_str());
 
                 std::string newValue = property->GetValueAsString().utf8_string();
 
-                if (pair.second.m_type.category == TypeCategory::Bool)
-                {
-                    bool value = (!stricmp(newValue.c_str(), "true") || !stricmp(newValue.c_str(), "1"));
-                    data.m_data[jsonPath] = value;
-                }
-                else if (pair.second.m_type.category == TypeCategory::String)
-                {
-                    data.m_data[jsonPath] = newValue;
-                }
-                else
-                {
-                    data.m_data[jsonPath] = json::parse(newValue);
-                }
+                SetPropertyFromString(data.m_data, jsonPath, pair.second.m_type, newValue.c_str());
 
                 m_dirty = true;
 
@@ -532,4 +520,19 @@ TODO: Example data:
 ! note that comments become tooltips and show in example data
 ! note how to use links. a string with attribute (link:"tablename") inventory:[string] (link:"Item");.  It gives you the record name
  TODO: should it be an integer type for index instead? or let either work?
+*/
+
+/*
+TODO:
+undo / redo stack
+have a stack of actions and whether they are dirty or clean (match files on disk).
+most will be dirty. when user saves, mark them all as dirty
+maxium depth.
+index into it.
+when do new action, it writes from index (so you can lose undo/redo stuff)
+actions are like:
+1) edit json (have the json before and after?)
+2) delete file (have filename and contents)
+3) create file (have filename and contents)
+4) rename file (old and new name)
 */
