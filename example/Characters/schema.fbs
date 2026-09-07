@@ -17,6 +17,7 @@ table Character
   location:Vec3;
   max_mp:uint16;
   max_hp:uint16;
+  playable:bool = true;
 
   inventory:[string] (link:"Item");
 }

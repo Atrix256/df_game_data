@@ -295,9 +295,49 @@ public:
 
         wxPGProperty* root = m_editGrid->GetRoot();
 
-        AddUIForType(parser, *parser.root_struct_def_, parser.root_struct_def_->name.c_str(), m_editGrid, root, data.m_data);
+        m_propertyMap.clear();
+
+        AddUIForType(parser, *parser.root_struct_def_, parser.root_struct_def_->name.c_str(), m_editGrid, root, data.m_data, json_pointer(""), m_propertyMap);
 
         m_editPanel->Layout();
+    }
+
+    void OnPropertyGridChanged(wxPropertyGridEvent& event) override final
+    {
+        long selectedIndex = m_dataChoice->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+        if (selectedIndex == -1)
+            return;
+
+        DBTable& table = *m_database.m_tables[m_tableChoice->GetStringSelection().utf8_string()].get();
+        std::string name = m_dataChoice->GetItemText(selectedIndex).utf8_string();
+        DBTable::JSONData& data = *table.m_data[name].get();
+
+        wxPGProperty* property = event.GetProperty();
+        for (auto pair : m_propertyMap)
+        {
+            if (pair.first == property)
+            {
+                json::json_pointer jsonPath(pair.second.m_jsonPath.c_str());
+
+                std::string newValue = property->GetValueAsString().utf8_string();
+
+                if (pair.second.m_type.category == TypeCategory::Bool)
+                {
+                    bool value = (!stricmp(newValue.c_str(), "true") || !stricmp(newValue.c_str(), "1"));
+                    data.m_data[jsonPath] = value;
+                }
+                else if (pair.second.m_type.category == TypeCategory::String)
+                {
+                    data.m_data[jsonPath] = newValue;
+                }
+                else
+                {
+                    data.m_data[jsonPath] = json::parse(newValue);
+                }
+                return;
+            }
+        }
+
     }
 
     void OnDataChoiceSelect(wxListEvent& /*event*/) override final
@@ -342,6 +382,7 @@ public:
 
 private:
     DBRoot m_database;
+    PropertyMap m_propertyMap;
 };
 
 wxIMPLEMENT_APP(DataApp);

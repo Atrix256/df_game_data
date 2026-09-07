@@ -60,6 +60,7 @@ class Main : public wxFrame
 		virtual void OnDataChoiceSelect( wxListEvent& event ) { event.Skip(); }
 		virtual void OnDataChoiceButtonNew( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnDataChoiceButtonDelete( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnPropertyGridChanged( wxPropertyGridEvent& event ) { event.Skip(); }
 
 
 	public:

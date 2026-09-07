@@ -102,6 +102,7 @@ Main::Main( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoin
 	m_dataChoice->Connect( wxEVT_COMMAND_LIST_ITEM_SELECTED, wxListEventHandler( Main::OnDataChoiceSelect ), NULL, this );
 	m_button2->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( Main::OnDataChoiceButtonNew ), NULL, this );
 	m_button1->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( Main::OnDataChoiceButtonDelete ), NULL, this );
+	m_editGrid->Connect( wxEVT_PG_CHANGED, wxPropertyGridEventHandler( Main::OnPropertyGridChanged ), NULL, this );
 }
 
 Main::~Main()

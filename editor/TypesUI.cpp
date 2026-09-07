@@ -4,6 +4,7 @@
 #include <string>
 
 #include "flatbuffers/idl.h"
+#include "../loader/JSON.h"
 
 #pragma warning(push)
 #pragma warning(disable: 4996)
@@ -15,47 +16,6 @@
 #include <wx/sysopt.h>
 #include <wx/stattext.h>
 #pragma warning(pop)
-
-enum class TypeCategory
-{
-    Unknown,
-    Bool,
-    Int,
-    Float,
-    String,
-    Struct,
-};
-
-union TypeDetails
-{
-    struct
-    {
-        bool isSigned;
-        int numBytes;
-    }
-    Int;
-
-    struct
-    {
-        bool isDouble;
-    }
-    Float;
-
-    struct
-    {
-        flatbuffers::StructDef* structDef;
-    }
-    Struct;
-};
-
-struct Type
-{
-    TypeCategory category = TypeCategory::Unknown;
-    TypeDetails details;
-
-    bool isVector = false;
-    uint16_t vectorSize = 0;
-};
 
 void FlatBufferBaseTypeToOurType(const flatbuffers::Type& type, const flatbuffers::BaseType& baseType, TypeCategory& category, TypeDetails& details)
 {
@@ -163,7 +123,7 @@ Type FlatBufferTypeToOurType(const flatbuffers::Type& type)
 {
     Type ret;
 
-    if (type.base_type == flatbuffers::BaseType::BASE_TYPE_VECTOR || type.base_type == flatbuffers::BaseType::BASE_TYPE_VECTOR64)
+    if (type.base_type == flatbuffers::BaseType::BASE_TYPE_VECTOR || type.base_type == flatbuffers::BaseType::BASE_TYPE_VECTOR64 || type.base_type == flatbuffers::BaseType::BASE_TYPE_ARRAY)
     {
         ret.isVector = true;
         ret.vectorSize = type.fixed_length;
@@ -177,42 +137,59 @@ Type FlatBufferTypeToOurType(const flatbuffers::Type& type)
     return ret;
 }
 
-static void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::FieldDef& fieldDef, wxPropertyGrid* grid, wxPGProperty* root, json& json)
+static void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::FieldDef& fieldDef, wxPropertyGrid* grid, wxPGProperty* root, json& json, const json_pointer& jsonPath, PropertyMap& propertyMap)
 {
     if (fieldDef.deprecated)
         return;
 
-    Type ourType = FlatBufferTypeToOurType(fieldDef.value.type);
+    Type type = FlatBufferTypeToOurType(fieldDef.value.type);
 
-    if (ourType.category == TypeCategory::Unknown)
+    if (type.category == TypeCategory::Unknown)
         return;
 
+    wxPGProperty* newRoot = root;
+    if (type.isVector)
+    {
+        char buffer[256];
+        sprintf_s(buffer, "%s []", fieldDef.name.c_str());
+        newRoot = new wxPropertyCategory(buffer);
+        grid->AppendIn(root, newRoot);
+    }
+
     // Add the control
-    switch (ourType.category)
+    switch (type.category)
     {
         case TypeCategory::Bool:
         {
-            grid->AppendIn(root, new wxBoolProperty(fieldDef.name.c_str(), wxPG_LABEL, false));
+            bool value = json.value(jsonPath, false);
+            wxPGProperty* newProperty = grid->AppendIn(newRoot, new wxBoolProperty(fieldDef.name.c_str(), wxPG_LABEL, value));
+            propertyMap[newProperty] = PropertyInfo(jsonPath.to_string().c_str(), type);
             break;
         }
         case TypeCategory::Int:
         {
-            grid->AppendIn(root, new wxIntProperty(fieldDef.name.c_str(), wxPG_LABEL, 0));
+            int value = json.value(jsonPath, 0);
+            wxPGProperty* newProperty = grid->AppendIn(newRoot, new wxIntProperty(fieldDef.name.c_str(), wxPG_LABEL, value));
+            propertyMap[newProperty] = PropertyInfo(jsonPath.to_string().c_str(), type);
             break;
         }
         case TypeCategory::Float:
         {
-            grid->AppendIn(root, new wxFloatProperty(fieldDef.name.c_str(), wxPG_LABEL, 0.0));
+            double value = json.value(jsonPath, 0.0);
+            wxPGProperty* newProperty = grid->AppendIn(newRoot, new wxFloatProperty(fieldDef.name.c_str(), wxPG_LABEL, value));
+            propertyMap[newProperty] = PropertyInfo(jsonPath.to_string().c_str(), type);
             break;
         }
         case TypeCategory::String:
         {
-            grid->AppendIn(root, new wxStringProperty(fieldDef.name.c_str(), wxPG_LABEL, ""));
+            std::string value = json.value(jsonPath, "");
+            wxPGProperty* newProperty = grid->AppendIn(newRoot, new wxStringProperty(fieldDef.name.c_str(), wxPG_LABEL, value.c_str()));
+            propertyMap[newProperty] = PropertyInfo(jsonPath.to_string().c_str(), type);
             break;
         }
         case TypeCategory::Struct:
         {
-            AddUIForType(parser, *ourType.details.Struct.structDef, fieldDef.name.c_str(), grid, root, json);
+            AddUIForType(parser, *type.details.Struct.structDef, fieldDef.name.c_str(), grid, newRoot, json, jsonPath, propertyMap);
             break;
             break;
         }
@@ -222,7 +199,7 @@ static void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::F
 
 }
 
-void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::StructDef& structDef, const char* structFieldName, wxPropertyGrid* grid, wxPGProperty* root, json& json)
+void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::StructDef& structDef, const char* structFieldName, wxPropertyGrid* grid, wxPGProperty* root, json& json, const json_pointer& jsonPath, PropertyMap& propertyMap)
 {
     wxPGProperty* newRoot = root;
     if (structFieldName && structFieldName[0])
@@ -233,5 +210,9 @@ void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::StructDe
 
     // Add the fields
     for (const flatbuffers::FieldDef* fieldDef : structDef.fields.vec)
-        AddUIForType(parser, *fieldDef, grid, newRoot, json);
+    {
+        json_pointer fieldPath = jsonPath;
+        fieldPath /= fieldDef->name.c_str();
+        AddUIForType(parser, *fieldDef, grid, newRoot, json, fieldPath, propertyMap);
+    }
 }
