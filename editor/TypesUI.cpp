@@ -288,8 +288,40 @@ static void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::F
         }
     }
 
+    if (type.isVector)
+    {
+        json_pointer jsonPathItem = jsonPath;
+        size_t index = 4;
+        std::string value = "blah";
+        {
+            // Construct the property for this specific row
+            ButtonRowProperty* prop = new ButtonRowProperty(
+                "Item " + std::to_string(index),      // label shown in the grid
+                jsonPathItem.to_string().c_str(),                            // name (wxPG_LABEL = use label as name)
+                value.c_str(), // the display value in the value column
+                {
+                    { "Delete", [index]() {
+                        int ijkl = 0;
+                        //arrayNode->erase(arrayNode->begin() + index);
+                        //RebuildArrayCategory(arrayInfo);
+                    }}
+                });
 
+            // Attach the editor we registered in step 1
+            prop->SetEditor(GetButtonRowEditor());
 
+            // Add it to the grid under the array's category
+            grid->AppendIn(newRoot, prop);
+        }
+    }
+
+    int ijkl = 0;
+
+    // TODO: continue!
+    // TODO: structs, arrays, unions, enums, etc.
+    // TODO: also table links.
+    // TODO: make sure arrays of structs works
+    // TODO: need buttons for arrays: delete index, move up, move down, add new item, clone item
 }
 
 void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::StructDef& structDef, const char* structFieldName, wxPropertyGrid* grid, wxPGProperty* root, json& json, const json_pointer& jsonPath, PropertyMap& propertyMap)

@@ -4,31 +4,26 @@
 #include <wx/propgrid/propgrid.h>
 #include <wx/propgrid/advprops.h>
 
-class ButtonRowProperty : public wxStringProperty
+class ButtonRowProperty : public wxPGProperty
 {
 public:
-    struct ButtonDef
-    {
-        wxString label;
-        std::function<void()> onClick;
-    };
+    struct ButtonDef { wxString label; std::function<void()> onClick; };
 
     ButtonRowProperty(const wxString& label, const wxString& name,
-                       const wxString& displayValue,
-                       std::vector<ButtonDef> buttons)
-        : wxStringProperty(label, name, displayValue)
-        , m_buttons(std::move(buttons))
+        std::vector<ButtonDef> buttons)
+        : wxPGProperty(label, name), m_buttons(std::move(buttons))
     {
         SetFlag(wxPG_PROP_READONLY);
     }
 
     const std::vector<ButtonDef>& GetButtons() const { return m_buttons; }
+    wxString ValueToString(wxVariant&, int) const override { return wxEmptyString; }
 
 private:
     std::vector<ButtonDef> m_buttons;
 };
 
-class ButtonRowEditor : public wxPGTextCtrlEditor
+class ButtonRowEditor : public wxPGEditor
 {
 public:
     wxString GetName() const override { return "ButtonRowEditor"; }
@@ -38,31 +33,26 @@ public:
     {
         auto* btnProp = static_cast<ButtonRowProperty*>(property);
 
-        // 1. Create buttons container first, sized against the full cell rect
         wxPGMultiButton* buttons = new wxPGMultiButton(pg, sz);
         for (const auto& def : btnProp->GetButtons())
             buttons->Add(def.label);
 
-        // 2/3. Create the primary control using the space left after buttons
-        wxWindow* primary = wxPGTextCtrlEditor::CreateControls(
-            pg, property, pos, buttons->GetPrimarySize()).GetPrimary();
-
-        // 4. Now position the buttons relative to the primary control
         buttons->Finalize(pg, pos);
 
-        // 5. Primary goes in the window list as usual; buttons is tracked
-        //    as the "secondary" window so OnEvent/GetEditorControlSecondary can find it
-        return wxPGWindowList(primary, buttons);
+        return wxPGWindowList(buttons); // buttons ARE the primary window now
     }
 
-    bool OnEvent(wxPropertyGrid* pg, wxPGProperty* property, wxWindow* wnd,
+    // No value to sync back and forth — these are no-ops
+    void UpdateControl(wxPGProperty*, wxWindow*) const override {}
+    bool GetValueFromControl(wxVariant&, wxPGProperty*, wxWindow*) const override { return false; }
+
+    bool OnEvent(wxPropertyGrid* pg, wxPGProperty* property, wxWindow*,
         wxEvent& event) const override
     {
         if (event.GetEventType() == wxEVT_BUTTON)
         {
-            auto* buttons = static_cast<wxPGMultiButton*>(pg->GetEditorControlSecondary());
+            auto* buttons = static_cast<wxPGMultiButton*>(pg->GetEditorControl()); // now primary
             auto* btnProp = static_cast<ButtonRowProperty*>(property);
-
             if (buttons)
             {
                 for (unsigned i = 0; i < buttons->GetCount(); ++i)
@@ -70,13 +60,12 @@ public:
                     if (buttons->GetButtonId(i) == event.GetId())
                     {
                         std::function<void()> cb = btnProp->GetButtons()[i].onClick;
-                        if (cb)
-                            cb();
+                        if (cb) cb();
                         return true;
                     }
                 }
             }
         }
-        return wxPGTextCtrlEditor::OnEvent(pg, property, wnd, event);
+        return false;
     }
 };
