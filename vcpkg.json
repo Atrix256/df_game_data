@@ -2,6 +2,10 @@
   "dependencies": [
     "flatbuffers",
     "wxwidgets",
-    "nlohmann-json"
+    "nlohmann-json",
+    {
+      "name": "imgui",
+      "features": [ "docking-experimental", "win32-binding", "dx12-binding" ]
+    }
   ]
 }

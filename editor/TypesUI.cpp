@@ -298,7 +298,6 @@ static void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::F
             ButtonRowProperty* prop = new ButtonRowProperty(
                 "Item " + std::to_string(index),      // label shown in the grid
                 jsonPathItem.to_string().c_str(),                            // name (wxPG_LABEL = use label as name)
-                value.c_str(), // the display value in the value column
                 {
                     { "Delete", [index]() {
                         int ijkl = 0;

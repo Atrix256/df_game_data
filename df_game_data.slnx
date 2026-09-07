@@ -3,5 +3,6 @@
     <Platform Name="x64" />
   </Configurations>
   <Project Path="Editor/Editor.vcxproj" Id="a8064da3-811b-40bd-afd9-ffb3694a7bbf" />
+  <Project Path="EditorImGui/EditorImGui.vcxproj" Id="74d4139a-86fd-4ede-bc4c-d7a1ddb80954" />
   <Project Path="loader/loader.vcxproj" Id="306d7dd5-9b7d-4a1d-a4f6-8223b668fedf" />
 </Solution>
