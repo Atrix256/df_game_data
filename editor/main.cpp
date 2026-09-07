@@ -371,6 +371,14 @@ public:
         }
     }
 
+    virtual void OnDataChoiceLeftClick(wxMouseEvent& event)
+    {
+        // make sure any uncommited changes get commited before changing selection
+        m_editGrid->CommitChangesFromEditor();
+
+        event.Skip();
+    }
+
     void OnDataChoiceSelect(wxListEvent& /*event*/) override final
     {
         PopulateDataEditUI();
@@ -447,8 +455,6 @@ TODO: Next
 * if there's an error during loading, clear the UI and filename
 * show the filename in the title bar, and a * when it's dirty. make a "save all" option. or call it save but it does a save all.
 * this json library is aparently really good at handling undo. look into it so you can do undo
-
-* if you edit a record and click to another record before clicking away from the field, it doesn't save the change.
 
 TODO: flatbuffers say the schema of tables can "evolve", so that binary files are forward and backwards compatible.
  When our source data is json, we don't really need that.

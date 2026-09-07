@@ -354,6 +354,7 @@
                     <property name="window_name"></property>
                     <property name="window_style"></property>
                     <event name="OnKeyDown">OnDataChoiceKeyDown</event>
+                    <event name="OnLeftDown">OnDataChoiceLeftClick</event>
                     <event name="OnListDeleteItem">OnDataChoiceDelete</event>
                     <event name="OnListEndLabelEdit">OnDataChoiceRenamed</event>
                     <event name="OnListItemRightClick">OnRightClickItem</event>

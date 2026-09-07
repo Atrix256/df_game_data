@@ -101,6 +101,7 @@ Main::Main( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoin
 	m_menu1->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( Main::OnFileExit ), this, m_menuItem2->GetId());
 	m_tableChoice->Connect( wxEVT_COMMAND_CHOICE_SELECTED, wxCommandEventHandler( Main::OnTableViewChange ), NULL, this );
 	m_dataChoice->Connect( wxEVT_KEY_DOWN, wxKeyEventHandler( Main::OnDataChoiceKeyDown ), NULL, this );
+	m_dataChoice->Connect( wxEVT_LEFT_DOWN, wxMouseEventHandler( Main::OnDataChoiceLeftClick ), NULL, this );
 	m_dataChoice->Connect( wxEVT_COMMAND_LIST_DELETE_ITEM, wxListEventHandler( Main::OnDataChoiceDelete ), NULL, this );
 	m_dataChoice->Connect( wxEVT_COMMAND_LIST_END_LABEL_EDIT, wxListEventHandler( Main::OnDataChoiceRenamed ), NULL, this );
 	m_dataChoice->Connect( wxEVT_COMMAND_LIST_ITEM_RIGHT_CLICK, wxListEventHandler( Main::OnRightClickItem ), NULL, this );
