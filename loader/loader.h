@@ -71,6 +71,11 @@ public:
         return m_errorText.c_str();
     }
 
+    const char* GetPath() const
+    {
+        return m_path.c_str();
+    }
+
 public:
     std::unordered_map<std::string, std::unique_ptr<DBTable>> m_tables;
 
@@ -78,4 +83,6 @@ private:
     std::string m_errorText;
 
     FileWatcher m_fileWatcher;
+
+    std::string m_path;
 };

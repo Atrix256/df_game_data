@@ -152,6 +152,7 @@ bool DBRoot::Load(const char* path)
             m_errorText = "Failed to open dbroot file: " + std::string(path);
             return false;
         }
+        m_path = path;
 
         m_fileWatcher.AddFile(path, nullptr);
 
@@ -194,4 +195,5 @@ bool DBRoot::Load(const char* path)
 void DBRoot::Clear()
 {
     m_tables.clear();
+    m_path = "";
 }

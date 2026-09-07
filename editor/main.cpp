@@ -65,11 +65,14 @@ public:
 
         PopulateDataChoices();
         PopulateDataEditUI();
+        UpdateWindowTitle();
+        m_dirty = false;
     }
 
     void OnTableViewChange(wxCommandEvent& /*event*/) override final
     {
         PopulateDataChoices();
+        PopulateDataEditUI();
     }
 
     void OnDataChoiceRenamed(wxListEvent& event) override final
@@ -140,6 +143,8 @@ public:
 
         // delete from the table
         table.m_data.erase(name.utf8_string());
+
+        PopulateDataEditUI();
     }
 
     void OnRightClickItem(wxListEvent& event) override final
@@ -334,10 +339,14 @@ public:
                 {
                     data.m_data[jsonPath] = json::parse(newValue);
                 }
+
+                m_dirty = true;
+
+                UpdateWindowTitle();
+
                 return;
             }
         }
-
     }
 
     void OnDataChoiceSelect(wxListEvent& /*event*/) override final
@@ -380,9 +389,18 @@ public:
             m_dataChoice->InsertItem(m_dataChoice->GetItemCount(), it.first.c_str());
     }
 
+    void UpdateWindowTitle()
+    {
+        std::filesystem::path path(m_database.GetPath());
+        char buffer[1024];
+        sprintf_s(buffer, "Data Editor - %s%s", path.filename().string().c_str(), m_dirty ? " *" : "");
+        SetTitle(buffer);
+    }
+
 private:
     DBRoot m_database;
     PropertyMap m_propertyMap;
+    bool m_dirty = false;
 };
 
 wxIMPLEMENT_APP(DataApp);
