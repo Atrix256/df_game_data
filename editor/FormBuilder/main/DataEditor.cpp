@@ -16,11 +16,15 @@ Main::Main( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoin
 	m_menubar3 = new wxMenuBar( 0 );
 	m_menu1 = new wxMenu();
 	wxMenuItem* m_menuItem1;
-	m_menuItem1 = new wxMenuItem( m_menu1, wxID_ANY, wxString( _("Open") ) , wxEmptyString, wxITEM_NORMAL );
+	m_menuItem1 = new wxMenuItem( m_menu1, wxID_ANY, wxString( _("&Open\tCtrl+O") ) , wxEmptyString, wxITEM_NORMAL );
 	m_menu1->Append( m_menuItem1 );
 
+	m_fileSave = new wxMenuItem( m_menu1, wxID_ANY, wxString( _("&Save\tCtrl+S") ) , wxEmptyString, wxITEM_NORMAL );
+	m_menu1->Append( m_fileSave );
+	m_fileSave->Enable( false );
+
 	wxMenuItem* m_menuItem2;
-	m_menuItem2 = new wxMenuItem( m_menu1, wxID_ANY, wxString( _("Exit") ) , wxEmptyString, wxITEM_NORMAL );
+	m_menuItem2 = new wxMenuItem( m_menu1, wxID_ANY, wxString( _("E&xit\tCtrl+X") ) , wxEmptyString, wxITEM_NORMAL );
 	m_menu1->Append( m_menuItem2 );
 
 	m_menubar3->Append( m_menu1, _("File") );
@@ -93,6 +97,7 @@ Main::Main( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoin
 
 	// Connect Events
 	m_menu1->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( Main::OnFileOpen ), this, m_menuItem1->GetId());
+	m_menu1->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( Main::OnFileSave ), this, m_fileSave->GetId());
 	m_menu1->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( Main::OnFileExit ), this, m_menuItem2->GetId());
 	m_tableChoice->Connect( wxEVT_COMMAND_CHOICE_SELECTED, wxCommandEventHandler( Main::OnTableViewChange ), NULL, this );
 	m_dataChoice->Connect( wxEVT_KEY_DOWN, wxKeyEventHandler( Main::OnDataChoiceKeyDown ), NULL, this );

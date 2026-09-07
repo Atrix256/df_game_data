@@ -67,6 +67,28 @@ public:
         PopulateDataEditUI();
         UpdateWindowTitle();
         m_dirty = false;
+
+        m_fileSave->Enable(true);
+    }
+
+    void OnFileSave(wxCommandEvent& /*event*/) override final
+    {
+        // save all dirty data
+        for (auto& tableIt : m_database.m_tables)
+        {
+            DBTable& table = *tableIt.second.get();
+            for (auto& dataIt : table.m_data)
+            {
+                DBTable::JSONData& data = *dataIt.second.get();
+                std::string jsonString = data.m_data.dump(4);
+
+                FILE* file = fopen(data.m_path.c_str(), "wb");
+                fwrite(jsonString.c_str(), 1, jsonString.size(), file);
+                fclose(file);
+            }
+        }
+        m_dirty = false;
+        UpdateWindowTitle();
     }
 
     void OnTableViewChange(wxCommandEvent& /*event*/) override final
@@ -426,6 +448,7 @@ TODO: Next
 * show the filename in the title bar, and a * when it's dirty. make a "save all" option. or call it save but it does a save all.
 * this json library is aparently really good at handling undo. look into it so you can do undo
 
+* if you edit a record and click to another record before clicking away from the field, it doesn't save the change.
 
 TODO: flatbuffers say the schema of tables can "evolve", so that binary files are forward and backwards compatible.
  When our source data is json, we don't really need that.

@@ -41,6 +41,7 @@ class Main : public wxFrame
 	protected:
 		wxMenuBar* m_menubar3;
 		wxMenu* m_menu1;
+		wxMenuItem* m_fileSave;
 		wxStaticText* m_staticText1;
 		wxChoice* m_tableChoice;
 		wxListCtrl* m_dataChoice;
@@ -51,6 +52,7 @@ class Main : public wxFrame
 
 		// Virtual event handlers, override them in your derived class
 		virtual void OnFileOpen( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnFileSave( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnFileExit( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnTableViewChange( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnDataChoiceKeyDown( wxKeyEvent& event ) { event.Skip(); }
