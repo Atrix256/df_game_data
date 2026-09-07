@@ -47,7 +47,7 @@ Main::Main( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoin
 	bSizer2->Add( m_tableChoice, 1, wxALL|wxEXPAND, 1 );
 
 
-	bSizer1->Add( bSizer2, 0, wxALL|wxEXPAND, 1 );
+	bSizer1->Add( bSizer2, 0, wxALL|wxEXPAND, 0 );
 
 	wxBoxSizer* bSizer3;
 	bSizer3 = new wxBoxSizer( wxHORIZONTAL );
@@ -56,7 +56,7 @@ Main::Main( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoin
 	bSizer5 = new wxBoxSizer( wxVERTICAL );
 
 	m_dataChoice = new wxListCtrl( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_EDIT_LABELS|wxLC_LIST|wxLC_SINGLE_SEL );
-	bSizer5->Add( m_dataChoice, 1, wxALL|wxEXPAND, 2 );
+	bSizer5->Add( m_dataChoice, 1, wxALL|wxEXPAND, 1 );
 
 	wxBoxSizer* bSizer6;
 	bSizer6 = new wxBoxSizer( wxHORIZONTAL );
@@ -68,26 +68,26 @@ Main::Main( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoin
 	bSizer6->Add( m_button1, 1, wxALL, 1 );
 
 
-	bSizer5->Add( bSizer6, 0, wxALL|wxEXPAND, 2 );
+	bSizer5->Add( bSizer6, 0, wxALL|wxEXPAND, 1 );
 
 
-	bSizer3->Add( bSizer5, 1, wxEXPAND, 5 );
+	bSizer3->Add( bSizer5, 1, wxALL|wxEXPAND, 1 );
 
 	m_editPanel = new wxPanel( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
 	wxBoxSizer* bSizer7;
 	bSizer7 = new wxBoxSizer( wxVERTICAL );
 
 	m_editGrid = new wxPropertyGrid(m_editPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxPG_DEFAULT_STYLE);
-	bSizer7->Add( m_editGrid, 1, wxALL|wxEXPAND, 0 );
+	bSizer7->Add( m_editGrid, 1, wxALL|wxEXPAND, 1 );
 
 
 	m_editPanel->SetSizer( bSizer7 );
 	m_editPanel->Layout();
 	bSizer7->Fit( m_editPanel );
-	bSizer3->Add( m_editPanel, 4, wxALL|wxEXPAND, 2 );
+	bSizer3->Add( m_editPanel, 4, wxALL|wxEXPAND, 1 );
 
 
-	bSizer1->Add( bSizer3, 1, wxEXPAND, 1 );
+	bSizer1->Add( bSizer3, 1, wxALL|wxEXPAND, 0 );
 
 
 	this->SetSizer( bSizer1 );

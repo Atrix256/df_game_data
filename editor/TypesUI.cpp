@@ -197,64 +197,89 @@ static void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::F
     if (type.category == TypeCategory::Unknown)
         return;
 
+    // Figure out how many items are in this array (1 item for non arrays)
+    size_t arrayItemCount = 1;
+    if (type.isVector)
+    {
+        if (type.vectorSize > 0)
+            arrayItemCount = type.vectorSize;
+        else
+            arrayItemCount = json.value(jsonPath, json::array()).size();
+    }
+
+    // make a new cateory for arrays
     wxPGProperty* newRoot = root;
     if (type.isVector)
     {
         char buffer[256];
-        sprintf_s(buffer, "%s []", fieldDef.name.c_str());
+        sprintf_s(buffer, "%s[%zu]", fieldDef.name.c_str(), arrayItemCount);
         newRoot = new wxPropertyCategory(buffer);
         grid->AppendIn(root, newRoot);
     }
 
-    // Add the control
-    switch (type.category)
+    // Add the controls
+    for (size_t arrayIndex = 0; arrayIndex < arrayItemCount; ++arrayIndex)
     {
-        case TypeCategory::Bool:
-        {
-            bool value = json.value(jsonPath, GetValueFromString<bool>(fieldDef.value.constant.c_str()));
-            wxPGProperty* newProperty = grid->AppendIn(newRoot, new wxBoolProperty(fieldDef.name.c_str(), wxPG_LABEL, value));
-            propertyMap[newProperty] = PropertyInfo(jsonPath.to_string().c_str(), type);
-            break;
-        }
-        case TypeCategory::Int:
-        {
-            wxPGProperty* newProperty = nullptr;
-            if (type.details.Int.isSigned)
-            {
-                int64_t value = GetValueFromString<int64_t>(fieldDef.value.constant.c_str());
-                value = json.value(jsonPath, value);
-                newProperty = grid->AppendIn(newRoot, new wxIntProperty(fieldDef.name.c_str(), wxPG_LABEL, (long)value));
-            }
-            else
-            {
-                uint64_t value = GetValueFromString<uint64_t>(fieldDef.value.constant.c_str());
-                value = json.value(jsonPath, value);
-                newProperty = grid->AppendIn(newRoot, new wxUIntProperty(fieldDef.name.c_str(), wxPG_LABEL, (unsigned long)value));
-            }
+        json_pointer jsonPathItem = jsonPath;
+        std::string fieldName = fieldDef.name;
 
-            propertyMap[newProperty] = PropertyInfo(jsonPath.to_string().c_str(), type);
-            break;
-        }
-        case TypeCategory::Float:
+        if (type.isVector)
         {
-            double value = GetValueFromString<double>(fieldDef.value.constant.c_str());
-            value = json.value(jsonPath, value);
-            wxPGProperty* newProperty = grid->AppendIn(newRoot, new wxFloatProperty(fieldDef.name.c_str(), wxPG_LABEL, value));
-            propertyMap[newProperty] = PropertyInfo(jsonPath.to_string().c_str(), type);
-            break;
+            jsonPathItem /= arrayIndex;
+
+            char buffer[256];
+            sprintf_s(buffer, "%zu", arrayIndex);
+            fieldName = buffer;
         }
-        case TypeCategory::String:
+
+        switch (type.category)
         {
-            std::string value = json.value(jsonPath, fieldDef.value.constant.c_str());
-            wxPGProperty* newProperty = grid->AppendIn(newRoot, new wxStringProperty(fieldDef.name.c_str(), wxPG_LABEL, value.c_str()));
-            propertyMap[newProperty] = PropertyInfo(jsonPath.to_string().c_str(), type);
-            break;
-        }
-        case TypeCategory::Struct:
-        {
-            AddUIForType(parser, *type.details.Struct.structDef, fieldDef.name.c_str(), grid, newRoot, json, jsonPath, propertyMap);
-            break;
-            break;
+            case TypeCategory::Bool:
+            {
+                bool value = json.value(jsonPathItem, GetValueFromString<bool>(fieldDef.value.constant.c_str()));
+                wxPGProperty* newProperty = grid->AppendIn(newRoot, new wxBoolProperty(fieldName.c_str(), wxPG_LABEL, value));
+                propertyMap[newProperty] = PropertyInfo(jsonPathItem.to_string().c_str(), type);
+                break;
+            }
+            case TypeCategory::Int:
+            {
+                wxPGProperty* newProperty = nullptr;
+                if (type.details.Int.isSigned)
+                {
+                    int64_t value = GetValueFromString<int64_t>(fieldDef.value.constant.c_str());
+                    value = json.value(jsonPathItem, value);
+                    newProperty = grid->AppendIn(newRoot, new wxIntProperty(fieldName.c_str(), wxPG_LABEL, (long)value));
+                }
+                else
+                {
+                    uint64_t value = GetValueFromString<uint64_t>(fieldDef.value.constant.c_str());
+                    value = json.value(jsonPathItem, value);
+                    newProperty = grid->AppendIn(newRoot, new wxUIntProperty(fieldName.c_str(), wxPG_LABEL, (unsigned long)value));
+                }
+
+                propertyMap[newProperty] = PropertyInfo(jsonPathItem.to_string().c_str(), type);
+                break;
+            }
+            case TypeCategory::Float:
+            {
+                double value = GetValueFromString<double>(fieldDef.value.constant.c_str());
+                value = json.value(jsonPathItem, value);
+                wxPGProperty* newProperty = grid->AppendIn(newRoot, new wxFloatProperty(fieldName.c_str(), wxPG_LABEL, value));
+                propertyMap[newProperty] = PropertyInfo(jsonPathItem.to_string().c_str(), type);
+                break;
+            }
+            case TypeCategory::String:
+            {
+                std::string value = json.value(jsonPathItem, fieldDef.value.constant.c_str());
+                wxPGProperty* newProperty = grid->AppendIn(newRoot, new wxStringProperty(fieldName.c_str(), wxPG_LABEL, value.c_str()));
+                propertyMap[newProperty] = PropertyInfo(jsonPathItem.to_string().c_str(), type);
+                break;
+            }
+            case TypeCategory::Struct:
+            {
+                AddUIForType(parser, *type.details.Struct.structDef, fieldName.c_str(), grid, newRoot, json, jsonPathItem, propertyMap);
+                break;
+            }
         }
     }
 

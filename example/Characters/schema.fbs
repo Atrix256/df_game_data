@@ -18,6 +18,7 @@ table Character
   max_mp:uint16;
   max_hp:uint16;
   playable:bool = true;
+  favorite_numbers:[uint16];
 
   inventory:[string] (link:"Item");
 }

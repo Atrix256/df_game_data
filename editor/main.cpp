@@ -536,3 +536,5 @@ actions are like:
 3) create file (have filename and contents)
 4) rename file (old and new name)
 */
+
+// TODO: icon for application
