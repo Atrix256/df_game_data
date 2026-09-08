@@ -6,13 +6,6 @@
 #include "../loader/loader.h"
 #include "DataItem.h"
 
-struct EditorData
-{
-    DBRoot m_dbroot;
-    std::string m_selectedTableName;
-    std::string m_selectedDataItemName;
-};
-
 static EditorData s_editorData;
 
 static bool ShowMenuBar()
@@ -149,7 +142,7 @@ bool ShowEditorWindow()
             ShowDataList();
 
             ImGui::TableNextColumn();
-            ShowDataEditor();
+            ShowDataEditor(s_editorData);
 
             ImGui::EndTable();
         }
@@ -172,4 +165,5 @@ TODO:
 * undo redo stack
 * keyboard shortcuts for open, save, exit, undo, redo
 * add text copy/paste?
+* recent files list
 */

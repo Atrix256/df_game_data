@@ -1,3 +1,5 @@
 #pragma once
 
-void ShowDataEditor();
+struct EditorData;
+
+void ShowDataEditor(EditorData& editorData);
