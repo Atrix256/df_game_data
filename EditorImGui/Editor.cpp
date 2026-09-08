@@ -4,6 +4,7 @@
 #include <nfd.h>
 
 #include "../loader/loader.h"
+#include "DataItem.h"
 
 struct EditorData
 {
@@ -148,7 +149,7 @@ bool ShowEditorWindow()
             ShowDataList();
 
             ImGui::TableNextColumn();
-            ImGui::TextUnformatted("Data Item Editor");
+            ShowDataEditor();
 
             ImGui::EndTable();
         }
@@ -162,7 +163,6 @@ bool ShowEditorWindow()
 }
 /*
 TODO:
-* load data
 * display data
 * edit data
 * save data
@@ -171,4 +171,5 @@ TODO:
 * application icon
 * undo redo stack
 * keyboard shortcuts for open, save, exit, undo, redo
+* add text copy/paste?
 */

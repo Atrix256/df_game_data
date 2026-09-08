@@ -158,6 +158,7 @@ dxgi.lib
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DataItem.cpp" />
     <ClCompile Include="Editor.cpp" />
     <ClCompile Include="imgui_demo.cpp" />
     <ClCompile Include="imgui_impl_dx12.cpp" />
@@ -165,6 +166,7 @@ dxgi.lib
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DataItem.h" />
     <ClInclude Include="Editor.h" />
     <ClInclude Include="imgui_impl_dx12.h" />
     <ClInclude Include="imgui_impl_win32.h" />
