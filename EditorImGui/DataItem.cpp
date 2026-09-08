@@ -227,7 +227,7 @@ static void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::F
         if (type.vectorSize > 0)
             arrayItemCount = type.vectorSize;
         else
-            arrayItemCount = json.value(jsonPath.to_string(), json::array()).size();
+            arrayItemCount = json.value(jsonPath, json::array()).size();
 
         if (!ImGui::CollapsingHeader(fieldDef.name.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
             return;
@@ -252,9 +252,9 @@ static void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::F
         {
             case TypeCategory::Bool:
             {
-                bool value = json.value(jsonPathItem.to_string(), GetValueFromString<bool>(fieldDef.value.constant.c_str()));
+                bool value = json.value(jsonPathItem, GetValueFromString<bool>(fieldDef.value.constant.c_str()));
                 if (ImGui::Checkbox(fieldName.c_str(), &value))
-                    json[jsonPathItem.to_string()] = value;
+                    json[jsonPathItem] = value;
                 break;
             }
             case TypeCategory::Int:
@@ -265,16 +265,16 @@ static void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::F
                 if (type.details.Int.isSigned)
                 {
                     int64_t value = GetValueFromString<int64_t>(fieldDef.value.constant.c_str());
-                    value = json.value(jsonPathItem.to_string(), value);
+                    value = json.value(jsonPathItem, value);
                     if(ImGui::InputScalar(fieldName.c_str(), ImGuiDataType_S64, &value, &step_one, &step_fast, "%zi"))
-                        json[jsonPathItem.to_string()] = value;
+                        json[jsonPathItem] = value;
                 }
                 else
                 {
                     int64_t value = GetValueFromString<int64_t>(fieldDef.value.constant.c_str());
-                    value = json.value(jsonPathItem.to_string(), value);
+                    value = json.value(jsonPathItem, value);
                     if(ImGui::InputScalar(fieldName.c_str(), ImGuiDataType_U64, &value, &step_one, &step_fast, "%zu"))
-                        json[jsonPathItem.to_string()] = value;
+                        json[jsonPathItem] = value;
                 }
 
                 break;
@@ -284,29 +284,28 @@ static void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::F
                 if (type.details.Float.isDouble)
                 {
                     double value = GetValueFromString<double>(fieldDef.value.constant.c_str());
-                    value = json.value(jsonPathItem.to_string(), value);
+                    value = json.value(jsonPathItem, value);
                     if (ImGui::InputDouble(fieldName.c_str(), &value))
-                        json[jsonPathItem.to_string()] = value;
+                        json[jsonPathItem] = value;
                 }
                 else
                 {
                     float value = GetValueFromString<float>(fieldDef.value.constant.c_str());
-                    value = json.value(jsonPathItem.to_string(), value);
+                    value = json.value(jsonPathItem, value);
                     if (ImGui::InputFloat(fieldName.c_str(), &value))
-                        json[jsonPathItem.to_string()] = value;
+                        json[jsonPathItem] = value;
                 }
                 break;
             }
             case TypeCategory::String:
             {
-                // TODO: this doesn't seem to be working correctly. why do i have to do .to_string() on all of them? i think that might be a symptom of something
-                std::string value = json.value(jsonPathItem.to_string(), fieldDef.value.constant.c_str());
+                std::string value = json.value(jsonPathItem, fieldDef.value.constant.c_str());
                 static std::vector<char> tmpBuffer;
                 tmpBuffer.resize(4096);
                 strcpy_s(tmpBuffer.data(), tmpBuffer.size(), value.c_str());
 
                 if (ImGui::InputText(fieldName.c_str(), tmpBuffer.data(), tmpBuffer.size()))
-                    json[jsonPathItem.to_string()] = value;
+                    json[jsonPathItem] = tmpBuffer;
                 break;
             }
             case TypeCategory::Struct:

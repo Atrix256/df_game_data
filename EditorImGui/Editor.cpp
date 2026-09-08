@@ -172,4 +172,5 @@ TODO:
 * explain the design decisions (each data item as a json data file for easier merging)
 * Explain how to use it
 * imgui srgb target? or do we care?
+* maybe try the light theme of imgui?
 */
