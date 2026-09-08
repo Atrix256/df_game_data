@@ -1,6 +1,52 @@
 #include "Editor.h"
 
 #include "imgui.h"
+#include <nfd.h>
+
+struct EditorData
+{
+
+};
+
+static EditorData s_editorData;
+
+static bool ShowMenuBar()
+{
+    bool ret = false;
+
+    if (ImGui::BeginMenuBar())
+    {
+        if (ImGui::BeginMenu("File"))
+        {
+            if (ImGui::MenuItem("Open", "Ctrl+O"))
+            {
+                nfdchar_t* outPath = NULL;
+
+                nfdu8filteritem_t filters[] =
+                {
+                    { "Database Root Files", "dbroot" }
+                };
+
+                nfdresult_t result = NFD_OpenDialogU8(&outPath, filters, IM_COUNTOF(filters), nullptr);
+
+                if (result == NFD_OKAY)
+                {
+                    // TODO: load using the loader
+                    NFD_FreePathU8(outPath);
+                }
+            }
+            ImGui::Separator();
+            if (ImGui::MenuItem("Exit"))
+                ret = true;
+            ImGui::EndMenu();
+        }
+
+        // Always call EndMenuBar if BeginMenuBar returns true
+        ImGui::EndMenuBar();
+    }
+
+    return ret;
+}
 
 bool ShowEditorWindow()
 {
@@ -21,27 +67,8 @@ bool ShowEditorWindow()
 
     if (ImGui::Begin("Fullscreen Window", nullptr, window_flags))
     {
-        // menu bar
-        if (ImGui::BeginMenuBar())
-        {
-            if (ImGui::BeginMenu("File"))
-            {
-                if (ImGui::MenuItem("New", "Ctrl+N")) { /* Handle action */ }
-                if (ImGui::MenuItem("Open", "Ctrl+O")) { /* Handle action */ }
-                ImGui::Separator();
-                if (ImGui::MenuItem("Exit"))
-                    ret = true;
-                ImGui::EndMenu();
-            }
-            if (ImGui::BeginMenu("Edit"))
-            {
-                if (ImGui::MenuItem("Undo", "Ctrl+Z")) { /* Handle action */ }
-                ImGui::EndMenu();
-            }
-        
-            // Always call EndMenuBar if BeginMenuBar returns true
-            ImGui::EndMenuBar(); 
-        }
+        ret = ShowMenuBar();
+
         ImGui::TextUnformatted("What is up?!");
 
         ImGui::End();
@@ -51,3 +78,12 @@ bool ShowEditorWindow()
 
     return ret;
 }
+/*
+TODO:
+* load data
+* display data
+* edit data
+* save data
+* when done: get rid of other editor app. rename this one to editor. add imgui to OSS list, remove wxwidgets. update vcpkg script.
+
+*/
