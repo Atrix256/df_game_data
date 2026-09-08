@@ -97,6 +97,24 @@ bool ShowEditorWindow()
         ret |= ShowMenuBar();
         ShowTableList();
 
+        ImGuiTableFlags flags = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollY;
+        ImVec2 outer_size = ImVec2(0.0f, -1.0f);
+        if (ImGui::BeginTable("DataItems", 2, flags, outer_size))
+        {
+            // Make left column take 20% of the width
+            ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthStretch, 0.2f);
+            ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthStretch, 0.8f);
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            ImGui::TextUnformatted("Data Item List");
+
+            ImGui::TableNextColumn();
+            ImGui::TextUnformatted("Data Item Editor");
+
+            ImGui::EndTable();
+        }
+
         ImGui::TextUnformatted("What is up?!");
 
         ImGui::End();
