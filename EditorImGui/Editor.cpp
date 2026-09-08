@@ -9,6 +9,7 @@ struct EditorData
 {
     DBRoot m_dbroot;
     std::string m_selectedTableName;
+    std::string m_selectedDataItemName;
 };
 
 static EditorData s_editorData;
@@ -65,7 +66,10 @@ static void ShowTableList()
             const bool is_selected = (s_editorData.m_selectedTableName == pair.first);
 
             if (ImGui::Selectable(pair.first.c_str(), is_selected))
+            {
                 s_editorData.m_selectedTableName = pair.first;
+                s_editorData.m_selectedDataItemName = "";
+            }
 
             if (is_selected)
                 ImGui::SetItemDefaultFocus();
@@ -73,6 +77,40 @@ static void ShowTableList()
 
         ImGui::EndCombo();
     }
+}
+
+static void ShowDataList()
+{
+    if (s_editorData.m_dbroot.m_tables.count(s_editorData.m_selectedTableName) == 0)
+    {
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.10f, 0.10f, 0.10f, 1.0f));
+        if (ImGui::BeginListBox("##MyListBox", ImVec2(-FLT_MIN, -FLT_MIN)))
+            ImGui::EndListBox();
+        ImGui::PopStyleColor();
+        return;
+    }
+
+    DBTable& table = *s_editorData.m_dbroot.m_tables[s_editorData.m_selectedTableName].get();
+
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.10f, 0.10f, 0.10f, 1.0f));
+
+    if (ImGui::BeginListBox("##MyListBox", ImVec2(-FLT_MIN, -FLT_MIN)))
+    {
+        for (auto& pair : table.m_data)
+        {
+            const bool is_selected = (s_editorData.m_selectedDataItemName == pair.first);
+
+            if (ImGui::Selectable(pair.first.c_str(), is_selected))
+                s_editorData.m_selectedDataItemName = pair.first;
+
+            if (is_selected)
+                ImGui::SetItemDefaultFocus();
+        }
+
+        ImGui::EndListBox();
+    }
+
+    ImGui::PopStyleColor();
 }
 
 bool ShowEditorWindow()
@@ -107,15 +145,13 @@ bool ShowEditorWindow()
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            ImGui::TextUnformatted("Data Item List");
+            ShowDataList();
 
             ImGui::TableNextColumn();
             ImGui::TextUnformatted("Data Item Editor");
 
             ImGui::EndTable();
         }
-
-        ImGui::TextUnformatted("What is up?!");
 
         ImGui::End();
     }
@@ -131,5 +167,8 @@ TODO:
 * edit data
 * save data
 * when done: get rid of other editor app. rename this one to editor. add imgui to OSS list, remove wxwidgets. update vcpkg script.
-
+* change window title, and include the * when dirty.
+* application icon
+* undo redo stack
+* keyboard shortcuts for open, save, exit, undo, redo
 */
