@@ -3,9 +3,12 @@
 #include "imgui.h"
 #include <nfd.h>
 
+#include "../loader/loader.h"
+
 struct EditorData
 {
-
+    DBRoot m_dbroot;
+    std::string m_selectedTableName;
 };
 
 static EditorData s_editorData;
@@ -31,7 +34,12 @@ static bool ShowMenuBar()
 
                 if (result == NFD_OKAY)
                 {
-                    // TODO: load using the loader
+                    if (!s_editorData.m_dbroot.Load(outPath))
+                    {
+                        s_editorData.m_dbroot.Clear();
+                        s_editorData = EditorData();
+                    }
+
                     NFD_FreePathU8(outPath);
                 }
             }
@@ -46,6 +54,25 @@ static bool ShowMenuBar()
     }
 
     return ret;
+}
+
+static void ShowTableList()
+{
+    if (ImGui::BeginCombo("Table", s_editorData.m_selectedTableName.c_str()))
+    {
+        for (auto& pair : s_editorData.m_dbroot.m_tables)
+        {
+            const bool is_selected = (s_editorData.m_selectedTableName == pair.first);
+
+            if (ImGui::Selectable(pair.first.c_str(), is_selected))
+                s_editorData.m_selectedTableName = pair.first;
+
+            if (is_selected)
+                ImGui::SetItemDefaultFocus();
+        }
+
+        ImGui::EndCombo();
+    }
 }
 
 bool ShowEditorWindow()
@@ -67,7 +94,8 @@ bool ShowEditorWindow()
 
     if (ImGui::Begin("Fullscreen Window", nullptr, window_flags))
     {
-        ret = ShowMenuBar();
+        ret |= ShowMenuBar();
+        ShowTableList();
 
         ImGui::TextUnformatted("What is up?!");
 

@@ -169,6 +169,11 @@ dxgi.lib
     <ClInclude Include="imgui_impl_dx12.h" />
     <ClInclude Include="imgui_impl_win32.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\loader\loader.vcxproj">
+      <Project>{306d7dd5-9b7d-4a1d-a4f6-8223b668fedf}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

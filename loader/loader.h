@@ -38,7 +38,7 @@ public:
         json m_data;
     };
 
-    std::unordered_map<std::string, std::unique_ptr<JSONData>> m_data;
+    std::map<std::string, std::unique_ptr<JSONData>> m_data;
     std::string m_rootType;
 
 private:
@@ -77,7 +77,7 @@ public:
     }
 
 public:
-    std::unordered_map<std::string, std::unique_ptr<DBTable>> m_tables;
+    std::map<std::string, std::unique_ptr<DBTable>> m_tables;
 
 private:
     std::string m_errorText;
