@@ -166,4 +166,10 @@ TODO:
 * keyboard shortcuts for open, save, exit, undo, redo
 * add text copy/paste?
 * recent files list
+* look for TODOs
+* arrays need buttons
+* new/delete/rename data records (json files)
+* explain the design decisions (each data item as a json data file for easier merging)
+* Explain how to use it
+* imgui srgb target? or do we care?
 */
