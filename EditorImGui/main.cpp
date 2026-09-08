@@ -13,6 +13,8 @@
 #include <dxgi1_5.h>
 #include <tchar.h>
 
+#include "Editor.h"
+
 #ifdef _DEBUG
 #define DX12_ENABLE_DEBUG_LAYER
 #endif
@@ -233,6 +235,8 @@ int main(int, char**)
         ImGui_ImplDX12_NewFrame();
         ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
+
+        done = ShowEditorWindow();
 
         // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
         if (show_demo_window)
