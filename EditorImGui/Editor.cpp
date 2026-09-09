@@ -32,10 +32,22 @@ static bool ShowMenuBar()
 
                 if (result == NFD_OKAY)
                 {
-                    if (!s_editorData.m_dbroot.Load(outPath))
+                    s_editorData.m_dbroot.Clear();
+                    s_editorData = EditorData();
+
+                    // select the first data item of the first table, if present
+                    if (s_editorData.m_dbroot.Load(outPath))
                     {
-                        s_editorData.m_dbroot.Clear();
-                        s_editorData = EditorData();
+                        for (auto& pair1: s_editorData.m_dbroot.m_tables)
+                        {
+                            s_editorData.m_selectedTableName = pair1.first;
+                            for (auto& pair2 : pair1.second->m_data)
+                            {
+                                s_editorData.m_selectedDataItemName = pair2.first;
+                                break;
+                            }
+                            break;
+                        }
                     }
 
                     s_editorData.m_updateWindowTitle = true;
@@ -170,7 +182,6 @@ static void OnDataListDelete()
 
 static void ShowDataList()
 {
-    // TODO: make these buttons work
     if (ImGui::Button("New"))
         OnDataListNew();
     ImGui::SameLine();
@@ -289,6 +300,5 @@ TODO:
 * Explain how to use it
 * imgui srgb target? or do we care?
 * maybe try the light theme of imgui?
-* when loading a file, select the first table, and select the first item from that table
 * watch files on disk and react to them for hot loading
 */

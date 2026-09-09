@@ -385,3 +385,4 @@ void ShowDataEditor(EditorData& editorData)
 // TODO: try ImGui::TreeNode / ImGui::TreePop instead of CollapsingHeader, so it's indented
 // TODO: mark data item and file as dirty. show in list, as well as in menu. make a right click save, and also a save all? maybe also a revert?
 // TODO: use the documentation field as tooltips
+// TODO: buttons for arrays. move up, move down, new, delete
