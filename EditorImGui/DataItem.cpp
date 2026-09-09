@@ -6,7 +6,7 @@
 #include "imgui.h"
 #include <vector>
 
-static void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::StructDef& structDef, const char* structFieldName, json& json, const json_pointer& path);
+static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& parser, const flatbuffers::StructDef& structDef, const char* structFieldName, json& json, const json_pointer& path);
 
 enum class TypeCategory
 {
@@ -210,7 +210,7 @@ float GetValueFromString<float>(const char* valueStr)
     return value;
 }
 
-static void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::FieldDef& fieldDef, json& json, const json_pointer& jsonPath)
+static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& parser, const flatbuffers::FieldDef& fieldDef, json& json, const json_pointer& jsonPath)
 {
     if (fieldDef.deprecated)
         return;
@@ -254,7 +254,10 @@ static void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::F
             {
                 bool value = json.value(jsonPathItem, GetValueFromString<bool>(fieldDef.value.constant.c_str()));
                 if (ImGui::Checkbox(fieldName.c_str(), &value))
+                {
                     json[jsonPathItem] = value;
+                    editorData.MarkDirty();
+                }
                 break;
             }
             case TypeCategory::Int:
@@ -266,15 +269,21 @@ static void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::F
                 {
                     int64_t value = GetValueFromString<int64_t>(fieldDef.value.constant.c_str());
                     value = json.value(jsonPathItem, value);
-                    if(ImGui::InputScalar(fieldName.c_str(), ImGuiDataType_S64, &value, &step_one, &step_fast, "%zi"))
+                    if (ImGui::InputScalar(fieldName.c_str(), ImGuiDataType_S64, &value, &step_one, &step_fast, "%zi"))
+                    {
                         json[jsonPathItem] = value;
+                        editorData.MarkDirty();
+                    }
                 }
                 else
                 {
                     int64_t value = GetValueFromString<int64_t>(fieldDef.value.constant.c_str());
                     value = json.value(jsonPathItem, value);
-                    if(ImGui::InputScalar(fieldName.c_str(), ImGuiDataType_U64, &value, &step_one, &step_fast, "%zu"))
+                    if (ImGui::InputScalar(fieldName.c_str(), ImGuiDataType_U64, &value, &step_one, &step_fast, "%zu"))
+                    {
                         json[jsonPathItem] = value;
+                        editorData.MarkDirty();
+                    }
                 }
 
                 break;
@@ -286,14 +295,20 @@ static void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::F
                     double value = GetValueFromString<double>(fieldDef.value.constant.c_str());
                     value = json.value(jsonPathItem, value);
                     if (ImGui::InputDouble(fieldName.c_str(), &value))
+                    {
                         json[jsonPathItem] = value;
+                        editorData.MarkDirty();
+                    }
                 }
                 else
                 {
                     float value = GetValueFromString<float>(fieldDef.value.constant.c_str());
                     value = json.value(jsonPathItem, value);
                     if (ImGui::InputFloat(fieldName.c_str(), &value))
+                    {
                         json[jsonPathItem] = value;
+                        editorData.MarkDirty();
+                    }
                 }
                 break;
             }
@@ -305,16 +320,21 @@ static void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::F
                 strcpy_s(tmpBuffer.data(), tmpBuffer.size(), value.c_str());
 
                 if (ImGui::InputText(fieldName.c_str(), tmpBuffer.data(), tmpBuffer.size()))
-                    json[jsonPathItem] = tmpBuffer;
+                {
+                    json[jsonPathItem] = tmpBuffer.data();
+                    editorData.MarkDirty();
+                }
                 break;
             }
             case TypeCategory::Struct:
             {
-                AddUIForType(parser, *type.details.Struct.structDef, fieldName.c_str(), json, jsonPathItem);
+                AddUIForType(editorData, parser, *type.details.Struct.structDef, fieldName.c_str(), json, jsonPathItem);
                 break;
             }
         }
     }
+
+    // TODO: show dirty flag in window title, and also in data record list.
 
     /*
     TODO:
@@ -322,7 +342,7 @@ static void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::F
     */
 }
 
-static void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::StructDef& structDef, const char* structFieldName, json& json, const json_pointer& path)
+static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& parser, const flatbuffers::StructDef& structDef, const char* structFieldName, json& json, const json_pointer& path)
 {
     if (ImGui::CollapsingHeader(structFieldName, ImGuiTreeNodeFlags_DefaultOpen))
     {
@@ -331,7 +351,7 @@ static void AddUIForType(const flatbuffers::Parser& parser, const flatbuffers::S
         {
             json_pointer fieldPath = path;
             fieldPath /= fieldDef->name.c_str();
-            AddUIForType(parser, *fieldDef, json, fieldPath);
+            AddUIForType(editorData, parser, *fieldDef, json, fieldPath);
         }
     }
 }
@@ -348,7 +368,7 @@ void ShowDataEditor(EditorData& editorData)
 
     const flatbuffers::Parser& parser = table.GetParser();
 
-    AddUIForType(parser, *parser.root_struct_def_, parser.root_struct_def_->name.c_str(), data.m_data, json_pointer(""));
+    AddUIForType(editorData, parser, *parser.root_struct_def_, parser.root_struct_def_->name.c_str(), data.m_data, json_pointer(""));
 }
 
 // TODO: try ImGui::TreeNode / ImGui::TreePop instead of CollapsingHeader, so it's indented

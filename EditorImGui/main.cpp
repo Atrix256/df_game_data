@@ -26,6 +26,13 @@
 #pragma comment(lib, "dxguid.lib")
 #endif
 
+HWND g_hwnd = nullptr;
+
+void SetWindowTitle(const char* text)
+{
+    SetWindowTextA(g_hwnd, text);
+}
+
 // Config for example app
 static const int APP_NUM_FRAMES_IN_FLIGHT = 2;
 static const int APP_NUM_BACK_BUFFERS = 2;
@@ -121,10 +128,10 @@ int main(int, char**)
     // Create application window
     WNDCLASSEXW wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"ImGui Example", nullptr };
     ::RegisterClassExW(&wc);
-    HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"Dear ImGui DirectX12 Example", WS_OVERLAPPEDWINDOW, 100, 100, (int)(1280 * main_scale), (int)(800 * main_scale), nullptr, nullptr, wc.hInstance, nullptr);
+    g_hwnd = ::CreateWindowW(wc.lpszClassName, L"Dear ImGui DirectX12 Example", WS_OVERLAPPEDWINDOW, 100, 100, (int)(1280 * main_scale), (int)(800 * main_scale), nullptr, nullptr, wc.hInstance, nullptr);
 
     // Initialize Direct3D
-    if (!CreateDeviceD3D(hwnd))
+    if (!CreateDeviceD3D(g_hwnd))
     {
         CleanupDeviceD3D();
         ::UnregisterClassW(wc.lpszClassName, wc.hInstance);
@@ -132,8 +139,8 @@ int main(int, char**)
     }
 
     // Show the window
-    ::ShowWindow(hwnd, SW_SHOWDEFAULT);
-    ::UpdateWindow(hwnd);
+    ::ShowWindow(g_hwnd, SW_SHOWDEFAULT);
+    ::UpdateWindow(g_hwnd);
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -168,7 +175,7 @@ int main(int, char**)
     }
 
     // Setup Platform/Renderer backends
-    ImGui_ImplWin32_Init(hwnd);
+    ImGui_ImplWin32_Init(g_hwnd);
 
     ImGui_ImplDX12_InitInfo init_info = {};
     init_info.Device = g_pd3dDevice;
@@ -226,7 +233,7 @@ int main(int, char**)
             break;
 
         // Handle window screen locked
-        if ((g_SwapChainOccluded && g_pSwapChain->Present(0, DXGI_PRESENT_TEST) == DXGI_STATUS_OCCLUDED) || ::IsIconic(hwnd))
+        if ((g_SwapChainOccluded && g_pSwapChain->Present(0, DXGI_PRESENT_TEST) == DXGI_STATUS_OCCLUDED) || ::IsIconic(g_hwnd))
         {
             ::Sleep(10);
             continue;
@@ -299,7 +306,7 @@ int main(int, char**)
     ImGui::DestroyContext();
 
     CleanupDeviceD3D();
-    ::DestroyWindow(hwnd);
+    ::DestroyWindow(g_hwnd);
     ::UnregisterClassW(wc.lpszClassName, wc.hInstance);
 
     return 0;

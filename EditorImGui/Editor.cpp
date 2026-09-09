@@ -5,6 +5,9 @@
 
 #include "../loader/loader.h"
 #include "DataItem.h"
+#include <filesystem>
+
+extern void SetWindowTitle(const char* text);
 
 static EditorData s_editorData;
 
@@ -35,9 +38,35 @@ static bool ShowMenuBar()
                         s_editorData = EditorData();
                     }
 
+                    s_editorData.m_updateWindowTitle = true;
+
                     NFD_FreePathU8(outPath);
                 }
             }
+
+            if (ImGui::MenuItem("Save", "Ctrl+S"))
+            {
+                for (auto& tableIt : s_editorData.m_dbroot.m_tables)
+                {
+                    DBTable& table = *tableIt.second.get();
+                    for (auto& dataIt : table.m_data)
+                    {
+                        DBTable::JSONData& data = *dataIt.second.get();
+                        std::string jsonString = data.m_data.dump(4);
+
+                        FILE* file = nullptr;
+                        fopen_s(&file, data.m_path.c_str(), "wb");
+                        if (file)
+                        {
+                            fwrite(jsonString.c_str(), 1, jsonString.size(), file);
+                            fclose(file);
+                        }
+                    }
+                }
+                s_editorData.m_documentDirty = false;
+                s_editorData.m_updateWindowTitle = true;
+            }
+
             ImGui::Separator();
             if (ImGui::MenuItem("Exit"))
                 ret = true;
@@ -110,6 +139,18 @@ static void ShowDataList()
 bool ShowEditorWindow()
 {
     bool ret = false;
+
+    if (s_editorData.m_updateWindowTitle)
+    {
+        char buffer[2048];
+        const char* path = s_editorData.m_dbroot.GetPath();
+        if (path && path[0])
+            sprintf_s(buffer, "df_game_data Editor - %s%s", std::filesystem::path(path).filename().string().c_str(), s_editorData.m_documentDirty ? " *" : "");
+        else
+            strcpy_s(buffer, "df_game_data Editor");
+        SetWindowTitle(buffer);
+        s_editorData.m_updateWindowTitle = false;
+    }
 
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration
         | ImGuiWindowFlags_NoMove
