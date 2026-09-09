@@ -11,6 +11,67 @@ extern void SetWindowTitle(const char* text);
 
 static EditorData s_editorData;
 
+static void OnFileOpen()
+{
+    nfdchar_t* outPath = NULL;
+
+    nfdu8filteritem_t filters[] =
+    {
+        { "Database Root Files", "dbroot" }
+    };
+
+    nfdresult_t result = NFD_OpenDialogU8(&outPath, filters, IM_COUNTOF(filters), nullptr);
+
+    if (result == NFD_OKAY)
+    {
+        s_editorData.m_dbroot.Clear();
+        s_editorData = EditorData();
+
+        // select the first data item of the first table, if present
+        if (s_editorData.m_dbroot.Load(outPath))
+        {
+            for (auto& pair1 : s_editorData.m_dbroot.m_tables)
+            {
+                s_editorData.m_selectedTableName = pair1.first;
+                for (auto& pair2 : pair1.second->m_data)
+                {
+                    s_editorData.m_selectedDataItemName = pair2.first;
+                    break;
+                }
+                break;
+            }
+        }
+
+        s_editorData.m_updateWindowTitle = true;
+
+        NFD_FreePathU8(outPath);
+    }
+}
+
+static void OnFileSaveAll()
+{
+    for (auto& tableIt : s_editorData.m_dbroot.m_tables)
+    {
+        DBTable& table = *tableIt.second.get();
+        for (auto& dataIt : table.m_data)
+        {
+            DBTable::JSONData& data = *dataIt.second.get();
+            data.m_dirty = false;
+            std::string jsonString = data.m_data.dump(4);
+
+            FILE* file = nullptr;
+            fopen_s(&file, data.m_path.c_str(), "wb");
+            if (file)
+            {
+                fwrite(jsonString.c_str(), 1, jsonString.size(), file);
+                fclose(file);
+            }
+        }
+    }
+    s_editorData.m_documentDirty = false;
+    s_editorData.m_updateWindowTitle = true;
+}
+
 static bool ShowMenuBar()
 {
     bool ret = false;
@@ -20,68 +81,13 @@ static bool ShowMenuBar()
         if (ImGui::BeginMenu("File"))
         {
             if (ImGui::MenuItem("Open", "Ctrl+O"))
-            {
-                nfdchar_t* outPath = NULL;
+                OnFileOpen();
 
-                nfdu8filteritem_t filters[] =
-                {
-                    { "Database Root Files", "dbroot" }
-                };
-
-                nfdresult_t result = NFD_OpenDialogU8(&outPath, filters, IM_COUNTOF(filters), nullptr);
-
-                if (result == NFD_OKAY)
-                {
-                    s_editorData.m_dbroot.Clear();
-                    s_editorData = EditorData();
-
-                    // select the first data item of the first table, if present
-                    if (s_editorData.m_dbroot.Load(outPath))
-                    {
-                        for (auto& pair1: s_editorData.m_dbroot.m_tables)
-                        {
-                            s_editorData.m_selectedTableName = pair1.first;
-                            for (auto& pair2 : pair1.second->m_data)
-                            {
-                                s_editorData.m_selectedDataItemName = pair2.first;
-                                break;
-                            }
-                            break;
-                        }
-                    }
-
-                    s_editorData.m_updateWindowTitle = true;
-
-                    NFD_FreePathU8(outPath);
-                }
-            }
-
-            if (ImGui::MenuItem("Save", "Ctrl+S"))
-            {
-                for (auto& tableIt : s_editorData.m_dbroot.m_tables)
-                {
-                    DBTable& table = *tableIt.second.get();
-                    for (auto& dataIt : table.m_data)
-                    {
-                        DBTable::JSONData& data = *dataIt.second.get();
-                        data.m_dirty = false;
-                        std::string jsonString = data.m_data.dump(4);
-
-                        FILE* file = nullptr;
-                        fopen_s(&file, data.m_path.c_str(), "wb");
-                        if (file)
-                        {
-                            fwrite(jsonString.c_str(), 1, jsonString.size(), file);
-                            fclose(file);
-                        }
-                    }
-                }
-                s_editorData.m_documentDirty = false;
-                s_editorData.m_updateWindowTitle = true;
-            }
+            if (ImGui::MenuItem("Save All", "Ctrl+A"))
+                OnFileSaveAll();
 
             ImGui::Separator();
-            if (ImGui::MenuItem("Exit"))
+            if (ImGui::MenuItem("Exit", "Ctrl+X"))
                 ret = true;
             ImGui::EndMenu();
         }
@@ -89,6 +95,15 @@ static bool ShowMenuBar()
         // Always call EndMenuBar if BeginMenuBar returns true
         ImGui::EndMenuBar();
     }
+
+    if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_O))
+        OnFileOpen();
+
+    if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_A))
+        OnFileSaveAll();
+
+    if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_X))
+        ret = true;
 
     return ret;
 }
@@ -105,6 +120,12 @@ static void ShowTableList()
             {
                 s_editorData.m_selectedTableName = pair.first;
                 s_editorData.m_selectedDataItemName = "";
+
+                for (auto& pair2 : pair.second->m_data)
+                {
+                    s_editorData.m_selectedDataItemName = pair2.first;
+                    break;
+                }
             }
 
             if (is_selected)
@@ -196,6 +217,8 @@ static void ShowDataList()
     ImGui::Button("Rename");
     ImGui::SameLine();
     ImGui::Button("Save");
+
+    TODO: revert or reload as an option, to go along with save?
     */
 
     ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.10f, 0.10f, 0.10f, 1.0f));

@@ -236,7 +236,7 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
         else
             arrayItemCount = jsonData.m_data.value(jsonPath, json::array()).size();
 
-        if (!ImGui::CollapsingHeader(fieldDef.name.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+        if (!ImGui::TreeNodeEx(fieldDef.name.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
             return;
     }
 
@@ -341,11 +341,8 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
         }
     }
 
-    // TODO: show dirty flag in window title, and also in data record list
-    // TODO: need buttons for adding and deleting dat aitems. also a box for rename.
-    // TODO: right click menu on data items for save, revert, clone.
-    // TODO: change save to save all.
-    // TODO: shortuct keys for file menu. ImGui::Shortcut()
+    if (type.isVector)
+        ImGui::TreePop();
 
     /*
     TODO:
@@ -355,7 +352,7 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
 
 static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& parser, const flatbuffers::StructDef& structDef, const char* structFieldName, DBTable::JSONData& jsonData, const json_pointer& path)
 {
-    if (ImGui::CollapsingHeader(structFieldName, ImGuiTreeNodeFlags_DefaultOpen))
+    if (ImGui::TreeNodeEx(structFieldName, ImGuiTreeNodeFlags_DefaultOpen))
     {
         // Add the fields
         for (const flatbuffers::FieldDef* fieldDef : structDef.fields.vec)
@@ -364,6 +361,8 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
             fieldPath /= fieldDef->name.c_str();
             AddUIForType(editorData, parser, *fieldDef, jsonData, fieldPath);
         }
+
+        ImGui::TreePop();
     }
 }
 
@@ -382,7 +381,5 @@ void ShowDataEditor(EditorData& editorData)
     AddUIForType(editorData, parser, *parser.root_struct_def_, parser.root_struct_def_->name.c_str(), data, json_pointer(""));
 }
 
-// TODO: try ImGui::TreeNode / ImGui::TreePop instead of CollapsingHeader, so it's indented
-// TODO: mark data item and file as dirty. show in list, as well as in menu. make a right click save, and also a save all? maybe also a revert?
 // TODO: use the documentation field as tooltips
 // TODO: buttons for arrays. move up, move down, new, delete
