@@ -15,6 +15,7 @@
       <Filter>imgui</Filter>
     </ClCompile>
     <ClCompile Include="DataItem.cpp" />
+    <ClCompile Include="RecentFiles.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Editor.h" />
@@ -25,6 +26,7 @@
       <Filter>imgui</Filter>
     </ClInclude>
     <ClInclude Include="DataItem.h" />
+    <ClInclude Include="RecentFiles.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

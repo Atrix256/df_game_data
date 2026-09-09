@@ -11,6 +11,31 @@ extern void SetWindowTitle(const char* text);
 
 static EditorData s_editorData;
 
+static void LoadFile(const char* fileName)
+{
+    s_editorData.m_dbroot.Clear();
+    s_editorData = EditorData();
+
+    // select the first data item of the first table, if present
+    if (s_editorData.m_dbroot.Load(fileName))
+    {
+        for (auto& pair1 : s_editorData.m_dbroot.m_tables)
+        {
+            s_editorData.m_selectedTableName = pair1.first;
+            for (auto& pair2 : pair1.second->m_data)
+            {
+                s_editorData.m_selectedDataItemName = pair2.first;
+                break;
+            }
+            break;
+        }
+    }
+
+    s_editorData.m_updateWindowTitle = true;
+
+    s_editorData.m_recentFiles.AddEntry(fileName);
+}
+
 static void OnFileOpen()
 {
     nfdchar_t* outPath = NULL;
@@ -24,26 +49,7 @@ static void OnFileOpen()
 
     if (result == NFD_OKAY)
     {
-        s_editorData.m_dbroot.Clear();
-        s_editorData = EditorData();
-
-        // select the first data item of the first table, if present
-        if (s_editorData.m_dbroot.Load(outPath))
-        {
-            for (auto& pair1 : s_editorData.m_dbroot.m_tables)
-            {
-                s_editorData.m_selectedTableName = pair1.first;
-                for (auto& pair2 : pair1.second->m_data)
-                {
-                    s_editorData.m_selectedDataItemName = pair2.first;
-                    break;
-                }
-                break;
-            }
-        }
-
-        s_editorData.m_updateWindowTitle = true;
-
+        LoadFile(outPath);
         NFD_FreePathU8(outPath);
     }
 }
@@ -72,6 +78,27 @@ static void OnFileSaveAll()
     s_editorData.m_updateWindowTitle = true;
 }
 
+void ShowRecentFiles()
+{
+    if (!s_editorData.m_recentFiles.GetEntries().empty())
+    {
+        if (ImGui::BeginMenu("Recent Files"))
+        {
+            int index = 0;
+            for (const auto& path : s_editorData.m_recentFiles.GetEntries())
+            {
+                if (ImGui::MenuItem(path.c_str()))
+                {
+                    std::string pathCopy = path;
+                    LoadFile(pathCopy.c_str());
+                    break;
+                }
+            }
+            ImGui::EndMenu();
+        }
+    }
+}
+
 static bool ShowMenuBar()
 {
     bool ret = false;
@@ -83,6 +110,8 @@ static bool ShowMenuBar()
             if (ImGui::MenuItem("Open", "Ctrl+O"))
                 OnFileOpen();
 
+            ShowRecentFiles();
+
             if (ImGui::MenuItem("Save All", "Ctrl+A"))
                 OnFileSaveAll();
 
@@ -92,7 +121,6 @@ static bool ShowMenuBar()
             ImGui::EndMenu();
         }
 
-        // Always call EndMenuBar if BeginMenuBar returns true
         ImGui::EndMenuBar();
     }
 
@@ -314,11 +342,8 @@ TODO:
 * when done: get rid of other editor app. rename this one to editor. add imgui to OSS list, remove wxwidgets. update vcpkg script.
 * application icon
 * undo redo stack
-* keyboard shortcuts for open, save, exit, undo, redo
 * add text copy/paste?
-* recent files list
 * look for TODOs
-* new/delete/rename data records (json files)
 * explain the design decisions (each data item as a json data file for easier merging. flat tables for speed. multiple tables because that's whats needed. table links)
 * Explain how to use it
 * imgui srgb target? or do we care?
