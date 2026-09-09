@@ -103,36 +103,111 @@ static void ShowTableList()
     }
 }
 
-static void ShowDataList()
+static std::string GetUniqueDataItemName(const char* baseName)
 {
     if (s_editorData.m_dbroot.m_tables.count(s_editorData.m_selectedTableName) == 0)
-    {
-        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.10f, 0.10f, 0.10f, 1.0f));
-        if (ImGui::BeginListBox("##MyListBox", ImVec2(-FLT_MIN, -FLT_MIN)))
-            ImGui::EndListBox();
-        ImGui::PopStyleColor();
-        return;
-    }
+        return baseName;
 
     DBTable& table = *s_editorData.m_dbroot.m_tables[s_editorData.m_selectedTableName].get();
 
-    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.10f, 0.10f, 0.10f, 1.0f));
+    if (!table.m_data.contains(baseName))
+        return baseName;
 
-    if (ImGui::BeginListBox("##MyListBox", ImVec2(-FLT_MIN, -FLT_MIN)))
+    char buffer[1024];
+    int index = 0;
+    while(1)
     {
-        for (auto& pair : table.m_data)
+        index++;
+        sprintf_s(buffer, "%s_%i", baseName, index);
+        if (!table.m_data.contains(buffer))
+            return buffer;
+    }
+}
+
+static void OnDataListNew()
+{
+    if (s_editorData.m_dbroot.m_tables.count(s_editorData.m_selectedTableName) == 0)
+        return;
+
+    DBTable& table = *s_editorData.m_dbroot.m_tables[s_editorData.m_selectedTableName].get();
+
+    std::string itemName = GetUniqueDataItemName("NewEntry");
+    std::filesystem::path fileName = (std::filesystem::path(table.GetPath()).remove_filename() / itemName).replace_extension(".json");
+
+    // make the file
+    {
+        FILE* file = nullptr;
+        fopen_s(&file, fileName.string().c_str(), "wb");
+        if (!file)
+            return;
+
+        fprintf(file, "{\n}\n");
+        fclose(file);
+    }
+
+    // make the entry in the data
+    table.LoadFile(fileName.string().c_str());
+}
+
+static void OnDataListDelete()
+{
+    if (s_editorData.m_dbroot.m_tables.count(s_editorData.m_selectedTableName) == 0)
+        return;
+
+    DBTable& table = *s_editorData.m_dbroot.m_tables[s_editorData.m_selectedTableName].get();
+
+    if (table.m_data.count(s_editorData.m_selectedDataItemName) == 0)
+        return;
+
+    DBTable::JSONData& data = *table.m_data[s_editorData.m_selectedDataItemName].get();
+
+    // delete file from disk
+    std::filesystem::remove(data.m_path);
+
+    // delete from the table
+    table.m_data.erase(s_editorData.m_selectedDataItemName);
+}
+
+static void ShowDataList()
+{
+    // TODO: make these buttons work
+    if (ImGui::Button("New"))
+        OnDataListNew();
+    ImGui::SameLine();
+    if (ImGui::Button("Delete"))
+        OnDataListDelete();
+
+    // TODO: too many buttons. make a right click menu
+    /*
+    ImGui::SameLine();
+    ImGui::Button("Duplicate");
+    ImGui::SameLine();
+    ImGui::Button("Rename");
+    ImGui::SameLine();
+    ImGui::Button("Save");
+    */
+
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.10f, 0.10f, 0.10f, 1.0f));
+    if (ImGui::BeginListBox("##DataListBox", ImVec2(-FLT_MIN, -FLT_MIN)))
+    {
+        if (s_editorData.m_dbroot.m_tables.count(s_editorData.m_selectedTableName) > 0)
         {
-            const bool is_selected = (s_editorData.m_selectedDataItemName == pair.first);
+            DBTable& table = *s_editorData.m_dbroot.m_tables[s_editorData.m_selectedTableName].get();
 
-            std::string label = pair.first.c_str();
-            if (pair.second->m_dirty)
-                label += " *";
+            for (auto& pair : table.m_data)
+            {
+                const bool is_selected = (s_editorData.m_selectedDataItemName == pair.first);
 
-            if (ImGui::Selectable(label.c_str(), is_selected))
-                s_editorData.m_selectedDataItemName = pair.first;
+                std::string label = pair.first.c_str();
+                if (pair.second->m_dirty)
+                    label += " *";
 
-            if (is_selected)
-                ImGui::SetItemDefaultFocus();
+                if (ImGui::Selectable(label.c_str(), is_selected))
+                    s_editorData.m_selectedDataItemName = pair.first;
+
+                if (is_selected)
+                    ImGui::SetItemDefaultFocus();
+            }
         }
 
         ImGui::EndListBox();
@@ -202,21 +277,18 @@ bool ShowEditorWindow()
 }
 /*
 TODO:
-* display data
-* edit data
-* save data
 * when done: get rid of other editor app. rename this one to editor. add imgui to OSS list, remove wxwidgets. update vcpkg script.
-* change window title, and include the * when dirty.
 * application icon
 * undo redo stack
 * keyboard shortcuts for open, save, exit, undo, redo
 * add text copy/paste?
 * recent files list
 * look for TODOs
-* arrays need buttons
 * new/delete/rename data records (json files)
-* explain the design decisions (each data item as a json data file for easier merging)
+* explain the design decisions (each data item as a json data file for easier merging. flat tables for speed. multiple tables because that's whats needed. table links)
 * Explain how to use it
 * imgui srgb target? or do we care?
 * maybe try the light theme of imgui?
+* when loading a file, select the first table, and select the first item from that table
+* watch files on disk and react to them for hot loading
 */
