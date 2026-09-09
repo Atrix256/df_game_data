@@ -36,6 +36,7 @@ public:
     {
         std::string m_path;
         json m_data;
+        bool m_dirty = false;
     };
 
     std::map<std::string, std::unique_ptr<JSONData>> m_data;

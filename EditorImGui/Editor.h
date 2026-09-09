@@ -11,12 +11,6 @@ struct EditorData
 
     bool m_documentDirty = false;
     bool m_updateWindowTitle = true;
-
-    void MarkDirty()
-    {
-        m_documentDirty = true;
-        m_updateWindowTitle = true;
-    }
 };
 
 bool ShowEditorWindow();

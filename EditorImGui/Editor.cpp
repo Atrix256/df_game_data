@@ -52,6 +52,7 @@ static bool ShowMenuBar()
                     for (auto& dataIt : table.m_data)
                     {
                         DBTable::JSONData& data = *dataIt.second.get();
+                        data.m_dirty = false;
                         std::string jsonString = data.m_data.dump(4);
 
                         FILE* file = nullptr;
@@ -123,7 +124,11 @@ static void ShowDataList()
         {
             const bool is_selected = (s_editorData.m_selectedDataItemName == pair.first);
 
-            if (ImGui::Selectable(pair.first.c_str(), is_selected))
+            std::string label = pair.first.c_str();
+            if (pair.second->m_dirty)
+                label += " *";
+
+            if (ImGui::Selectable(label.c_str(), is_selected))
                 s_editorData.m_selectedDataItemName = pair.first;
 
             if (is_selected)
