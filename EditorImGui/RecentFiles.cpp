@@ -116,6 +116,18 @@ void RecentFiles::RemoveEntry(int index)
     SaveAllEntries();
 }
 
+void RecentFiles::RemoveEntry(const char* fileName)
+{
+	for (size_t i = 0; i < m_Entries.size(); ++i)
+	{
+		if (!_stricmp(m_Entries[i].c_str(), fileName))
+		{
+			RemoveEntry((int)i);
+			return;
+		}
+	}
+}
+
 void RecentFiles::AddEntry(const char* fileName)
 {
 	assert(fileName);

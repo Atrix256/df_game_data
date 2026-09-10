@@ -33,6 +33,7 @@ public:
 
     // does nothing if outside range
     void RemoveEntry(int index);
+	void RemoveEntry(const char* fileName);
 
 	void EnsureMaxSize();
 };

@@ -30,15 +30,17 @@ static void LoadFile(const char* fileName)
             }
             break;
         }
+
+        s_editorData.m_recentFiles.AddEntry(fileName);
     }
     else
     {
         s_editorData.m_showLoadingErrors = true;
+
+        s_editorData.m_recentFiles.RemoveEntry(fileName);
     }
 
     s_editorData.m_updateWindowTitle = true;
-
-    s_editorData.m_recentFiles.AddEntry(fileName);
 }
 
 static void OnFileOpen()
@@ -583,6 +585,5 @@ TODO:
 // TODO: make a test dataset that has all the things in it. move example into DataSets and have this other one be "Test"
 // test data set has all types exhaustively
 // TODO: note in the docs that this acts as a flatbuffer editor too because of how it works
-// TODO: remove file from recent if loading fails
 // TODO: support drag/drop of fbs and dbroot files onto window
 // TODO: why does a string without a default just default to "0"? should figure that out and maybe give a fix patch
