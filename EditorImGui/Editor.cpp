@@ -6,6 +6,7 @@
 #include "../loader/loader.h"
 #include "DataItem.h"
 #include <filesystem>
+#include "UIShared.h"
 
 extern void SetWindowTitle(const char* text);
 
@@ -54,6 +55,29 @@ static void OnFileOpen()
     }
 }
 
+static void OnFileSave()
+{
+    if (s_editorData.m_dbroot.m_tables.count(s_editorData.m_selectedTableName) == 0)
+        return;
+    DBTable& table = *s_editorData.m_dbroot.m_tables[s_editorData.m_selectedTableName].get();
+
+    if (table.m_data.count(s_editorData.m_selectedDataItemName) == 0)
+        return;
+    DBTable::JSONData& data = *table.m_data[s_editorData.m_selectedDataItemName].get();
+
+    data.m_dirty = false;
+
+    std::string jsonString = data.m_data.dump(4);
+
+    FILE* file = nullptr;
+    fopen_s(&file, data.m_path.c_str(), "wb");
+    if (file)
+    {
+        fwrite(jsonString.c_str(), 1, jsonString.size(), file);
+        fclose(file);
+    }
+}
+
 static void OnFileSaveAll()
 {
     for (auto& tableIt : s_editorData.m_dbroot.m_tables)
@@ -80,11 +104,10 @@ static void OnFileSaveAll()
 
 void ShowRecentFiles()
 {
-    if (!s_editorData.m_recentFiles.GetEntries().empty())
+    if (ImGui::BeginMenu("Recent Files", !s_editorData.m_recentFiles.GetEntries().empty()))
     {
-        if (ImGui::BeginMenu("Recent Files"))
+        if (!s_editorData.m_recentFiles.GetEntries().empty())
         {
-            int index = 0;
             for (const auto& path : s_editorData.m_recentFiles.GetEntries())
             {
                 if (ImGui::MenuItem(path.c_str()))
@@ -94,8 +117,8 @@ void ShowRecentFiles()
                     break;
                 }
             }
-            ImGui::EndMenu();
         }
+        ImGui::EndMenu();
     }
 }
 
@@ -110,10 +133,15 @@ static bool ShowMenuBar()
             if (ImGui::MenuItem("Open", "Ctrl+O"))
                 OnFileOpen();
 
-            ShowRecentFiles();
+            if (ImGui::MenuItem("Save", "Ctrl+S"))
+                OnFileSave();
 
             if (ImGui::MenuItem("Save All", "Ctrl+A"))
                 OnFileSaveAll();
+
+            ImGui::Separator();
+
+            ShowRecentFiles();
 
             ImGui::Separator();
             if (ImGui::MenuItem("Exit", "Ctrl+X"))
@@ -129,6 +157,9 @@ static bool ShowMenuBar()
 
     if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_A))
         OnFileSaveAll();
+
+    if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S))
+        OnFileSave();
 
     if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_X))
         ret = true;

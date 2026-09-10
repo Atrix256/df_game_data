@@ -28,6 +28,7 @@
     <ClInclude Include="DataItem.h" />
     <ClInclude Include="RecentFiles.h" />
     <ClInclude Include="FontAwesome\IconsFontAwesome7.h" />
+    <ClInclude Include="UIShared.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

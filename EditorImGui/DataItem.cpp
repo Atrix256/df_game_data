@@ -5,25 +5,7 @@
 #include "Editor.h"
 #include "imgui.h"
 #include <vector>
-#include "FontAwesome/IconsFontAwesome7.h"
-
-class ImGui_Enabled
-{
-private:
-    bool enabled;
-public:
-    ImGui_Enabled(bool inEnabled)
-        : enabled(inEnabled)
-    {
-        if (!enabled)
-            ImGui::BeginDisabled();
-    }
-    ~ImGui_Enabled()
-    {
-        if (!enabled)
-            ImGui::EndDisabled();
-    }
-};
+#include "UIShared.h"
 
 template <typename T>
 T GetOrDefault(const json& json, const json_pointer& path, T& defaultValue)

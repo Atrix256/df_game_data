@@ -173,6 +173,7 @@ dxgi.lib
     <ClInclude Include="imgui_impl_dx12.h" />
     <ClInclude Include="imgui_impl_win32.h" />
     <ClInclude Include="RecentFiles.h" />
+    <ClInclude Include="UIShared.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\loader\loader.vcxproj">
