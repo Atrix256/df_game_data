@@ -31,6 +31,10 @@ static void LoadFile(const char* fileName)
             break;
         }
     }
+    else
+    {
+        // TODO: show error message in a popup window
+    }
 
     s_editorData.m_updateWindowTitle = true;
 
@@ -514,7 +518,7 @@ bool ShowEditorWindow()
 
     if (ImGui::BeginPopupModal("Exit Confirmation", &showConfirmExit, ImGuiWindowFlags_AlwaysAutoResize))
     {
-        ImGui::Text("Are you sure you want to exit?");
+        ImGui::Text("Data is unsaved, exit anyway?");
         ImGui::Separator();
 
         if (ImGui::Button("Yes", ImVec2(120, 0)))
@@ -550,9 +554,12 @@ TODO:
 * maybe try the light theme of imgui?
 * watch files on disk and react to them for hot loading
 */
-// TODO: ALso able to open schema (fbs) instead of dbroot if desired and have it work like a dbroot with one item
 // TODO: Maybe dbroot is json with a hard coded schema and make file menu options to.make.a new one, save, save as? and edit in the editor in a window
-// no: Have a user file next to dbroot or other file extension. with a hard coded schema and a window to edit it
+// * no: Have a user file next to dbroot or other file extension. with a hard coded schema and a window to edit it
+// * this is for settings like "where do we compile the output to?" etc
 // TODO: make a test dataset that has all the things in it. move example into DataSets and have this other one be "Test"
 // test data set has all types exhaustively
 // TODO: note in the docs that this acts as a flatbuffer editor too because of how it works
+// TODO: remove file from recent if loading fails
+// TODO: support drag/drop of fbs and dbroot files onto window
+// TODO: why does a string without a default just default to "0"? should figure that out and maybe give a fix patch

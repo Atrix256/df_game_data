@@ -1,0 +1,51 @@
+namespace TestData;
+
+enum Color : byte
+{
+    Brown,
+    Hazel,
+    Blue,
+    Green
+}
+
+table Point2D { x:float; y:float; }
+table Point3D { x:float; y:float; z:float; }
+union Point {
+  point_2D:Point2D,
+  point_3D:Point3D,
+  vector_2D:Point2D,
+  vector_3D:Point3D,
+}
+
+// Root Type
+table TableEntry
+{
+    //8 bits
+    _bool: bool;
+    _byte: byte;
+    _ubyte: ubyte;
+
+    // 16 bits
+    _short:short;
+    _ushort:ushort;
+
+    // 32 bits
+    _int:int;
+    _uint:uint;
+
+    // 64 bits
+    _long:long;
+    _ulong:ulong;
+
+    // floating point
+    _float:float;
+    _double:double;
+
+    _string:string = "test";
+    _color:Color;
+    _union:Point;
+
+    // todo: array of struct, array of union, array of array?
+}
+
+root_type TableEntry;
