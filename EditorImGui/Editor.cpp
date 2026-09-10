@@ -549,3 +549,9 @@ TODO:
 * maybe try the light theme of imgui?
 * watch files on disk and react to them for hot loading
 */
+// TODO: ALso able to open schema (fbs) instead of dbroot if desired and have it work like a dbroot with one item
+// TODO: Maybe dbroot is json with a hard coded schema and make file menu options to.make.a new one, save, save as? and edit in the editor in a window
+// no: Have a user file next to dbroot or other file extension. with a hard coded schema and a window to edit it
+// TODO: make a test dataset that has all the things in it. move example into DataSets and have this other one be "Test"
+// test data set has all types exhaustively
+// TODO: note in the docs that this acts as a flatbuffer editor too because of how it works

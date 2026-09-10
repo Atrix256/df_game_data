@@ -307,90 +307,126 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
             fieldName = buffer;
         }
 
-        switch (type.category)
+        // If this is an enum
+        if (fieldDef.value.type.enum_def)
         {
-            case TypeCategory::Bool:
-            {
-                bool dflt = GetValueFromString<bool>(fieldDef.value.constant.c_str());
-                bool value = GetOrDefault(jsonData.m_data, jsonPathItem, dflt);
-                if (ImGui::Checkbox(fieldName.c_str(), &value))
-                {
-                    jsonData.m_data[jsonPathItem] = value;
-                    MarkDirty(editorData, jsonData);
-                }
-                break;
-            }
-            case TypeCategory::Int:
-            {
-                unsigned int step_one = 1;
-                unsigned int step_fast = 10;
+            int64_t value = GetValueFromString<int64_t>(fieldDef.value.constant.c_str());
 
-                if (type.details.Int.isSigned)
+            const auto& enumVals = fieldDef.value.type.enum_def->Vals();
+
+            std::string selectedValue = "";
+            if (value >= 0 && value < (int64_t)enumVals.size())
+                selectedValue = enumVals[value]->name;
+
+            if (ImGui::BeginCombo(fieldName.c_str(), selectedValue.c_str()))
+            {
+                int64_t index = -1;
+                for (const flatbuffers::EnumVal* enumItem : fieldDef.value.type.enum_def->Vals())
                 {
-                    int64_t value = GetValueFromString<int64_t>(fieldDef.value.constant.c_str());
-                    value = GetOrDefault(jsonData.m_data, jsonPathItem, value);
-                    if (ImGui::InputScalar(fieldName.c_str(), ImGuiDataType_S64, &value, &step_one, &step_fast, "%zi"))
+                    index++;
+                    const bool selected = (value == index);
+
+                    if (ImGui::Selectable(enumItem->name.c_str(), selected))
                     {
-                        jsonData.m_data[jsonPathItem] = value;
+                        jsonData.m_data[jsonPathItem] = index;
                         MarkDirty(editorData, jsonData);
                     }
-                }
-                else
-                {
-                    int64_t value = GetValueFromString<int64_t>(fieldDef.value.constant.c_str());
-                    value = GetOrDefault(jsonData.m_data, jsonPathItem, value);
-                    if (ImGui::InputScalar(fieldName.c_str(), ImGuiDataType_U64, &value, &step_one, &step_fast, "%zu"))
-                    {
-                        jsonData.m_data[jsonPathItem] = value;
-                        MarkDirty(editorData, jsonData);
-                    }
+
+                    if (selected)
+                        ImGui::SetItemDefaultFocus();
                 }
 
-                break;
+                ImGui::EndCombo();
             }
-            case TypeCategory::Float:
+        }
+        // else it is not an enum
+        else
+        {
+            switch (type.category)
             {
-                if (type.details.Float.isDouble)
+                case TypeCategory::Bool:
                 {
-                    double value = GetValueFromString<double>(fieldDef.value.constant.c_str());
-                    value = GetOrDefault(jsonData.m_data, jsonPathItem, value);
-                    if (ImGui::InputDouble(fieldName.c_str(), &value))
+                    bool dflt = GetValueFromString<bool>(fieldDef.value.constant.c_str());
+                    bool value = GetOrDefault(jsonData.m_data, jsonPathItem, dflt);
+                    if (ImGui::Checkbox(fieldName.c_str(), &value))
                     {
                         jsonData.m_data[jsonPathItem] = value;
                         MarkDirty(editorData, jsonData);
                     }
+                    break;
                 }
-                else
+                case TypeCategory::Int:
                 {
-                    float value = GetValueFromString<float>(fieldDef.value.constant.c_str());
-                    value = GetOrDefault(jsonData.m_data, jsonPathItem, value);
-                    if (ImGui::InputFloat(fieldName.c_str(), &value))
-                    {
-                        jsonData.m_data[jsonPathItem] = value;
-                        MarkDirty(editorData, jsonData);
-                    }
-                }
-                break;
-            }
-            case TypeCategory::String:
-            {
-                std::string dflt = fieldDef.value.constant.c_str();
-                std::string value = GetOrDefault(jsonData.m_data, jsonPathItem, dflt);
-                static std::vector<char> tmpBuffer;
-                tmpBuffer.resize(4096);
-                strcpy_s(tmpBuffer.data(), tmpBuffer.size(), value.c_str());
+                    unsigned int step_one = 1;
+                    unsigned int step_fast = 10;
 
-                if (ImGui::InputText(fieldName.c_str(), tmpBuffer.data(), tmpBuffer.size()))
-                {
-                    jsonData.m_data[jsonPathItem] = tmpBuffer.data();
-                    MarkDirty(editorData, jsonData);
+                    if (type.details.Int.isSigned)
+                    {
+                        int64_t value = GetValueFromString<int64_t>(fieldDef.value.constant.c_str());
+                        value = GetOrDefault(jsonData.m_data, jsonPathItem, value);
+                        if (ImGui::InputScalar(fieldName.c_str(), ImGuiDataType_S64, &value, &step_one, &step_fast, "%zi"))
+                        {
+                            jsonData.m_data[jsonPathItem] = value;
+                            MarkDirty(editorData, jsonData);
+                        }
+                    }
+                    else
+                    {
+                        uint64_t value = GetValueFromString<uint64_t>(fieldDef.value.constant.c_str());
+                        value = GetOrDefault(jsonData.m_data, jsonPathItem, value);
+                        if (ImGui::InputScalar(fieldName.c_str(), ImGuiDataType_U64, &value, &step_one, &step_fast, "%zu"))
+                        {
+                            jsonData.m_data[jsonPathItem] = value;
+                            MarkDirty(editorData, jsonData);
+                        }
+                    }
+
+                    break;
                 }
-                break;
-            }
-            case TypeCategory::Struct:
-            {
-                AddUIForType(editorData, parser, *type.details.Struct.structDef, fieldName.c_str(), jsonData, jsonPathItem);
-                break;
+                case TypeCategory::Float:
+                {
+                    if (type.details.Float.isDouble)
+                    {
+                        double value = GetValueFromString<double>(fieldDef.value.constant.c_str());
+                        value = GetOrDefault(jsonData.m_data, jsonPathItem, value);
+                        if (ImGui::InputDouble(fieldName.c_str(), &value))
+                        {
+                            jsonData.m_data[jsonPathItem] = value;
+                            MarkDirty(editorData, jsonData);
+                        }
+                    }
+                    else
+                    {
+                        float value = GetValueFromString<float>(fieldDef.value.constant.c_str());
+                        value = GetOrDefault(jsonData.m_data, jsonPathItem, value);
+                        if (ImGui::InputFloat(fieldName.c_str(), &value))
+                        {
+                            jsonData.m_data[jsonPathItem] = value;
+                            MarkDirty(editorData, jsonData);
+                        }
+                    }
+                    break;
+                }
+                case TypeCategory::String:
+                {
+                    std::string dflt = fieldDef.value.constant.c_str();
+                    std::string value = GetOrDefault(jsonData.m_data, jsonPathItem, dflt);
+                    static std::vector<char> tmpBuffer;
+                    tmpBuffer.resize(4096);
+                    strcpy_s(tmpBuffer.data(), tmpBuffer.size(), value.c_str());
+
+                    if (ImGui::InputText(fieldName.c_str(), tmpBuffer.data(), tmpBuffer.size()))
+                    {
+                        jsonData.m_data[jsonPathItem] = tmpBuffer.data();
+                        MarkDirty(editorData, jsonData);
+                    }
+                    break;
+                }
+                case TypeCategory::Struct:
+                {
+                    AddUIForType(editorData, parser, *type.details.Struct.structDef, fieldName.c_str(), jsonData, jsonPathItem);
+                    break;
+                }
             }
         }
 
@@ -491,7 +527,7 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
 
     /*
     TODO:
-    * all the types. union, enum, arrays of structs, etc
+    * all the types. union, arrays of structs, etc
     */
 }
 
@@ -525,6 +561,3 @@ void ShowDataEditor(EditorData& editorData)
 
     AddUIForType(editorData, parser, *parser.root_struct_def_, parser.root_struct_def_->name.c_str(), data, json_pointer(""));
 }
-
-// TODO: ALso able to open schema instead of dbroot if desired.
-// TODO: Maybe dbroot is json with a hard coded schema and make file menu options to.make.a new one, save, save as? and edit in the editor in a window
