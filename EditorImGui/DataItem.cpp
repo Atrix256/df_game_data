@@ -310,34 +310,72 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
         // If this is an enum
         if (fieldDef.value.type.enum_def)
         {
-            int64_t value = GetValueFromString<int64_t>(fieldDef.value.constant.c_str());
-            value = GetOrDefault(jsonData.m_data, jsonPathItem, value);
-
-            const auto& enumVals = fieldDef.value.type.enum_def->Vals();
-
-            std::string selectedValue = "";
-            if (value >= 0 && value < (int64_t)enumVals.size())
-                selectedValue = enumVals[value]->name;
-
-            if (ImGui::BeginCombo(fieldName.c_str(), selectedValue.c_str()))
+            if (fieldDef.value.type.enum_def->attributes.Lookup("bit_flags") == nullptr)
             {
-                int64_t index = -1;
-                for (const flatbuffers::EnumVal* enumItem : fieldDef.value.type.enum_def->Vals())
-                {
-                    index++;
-                    const bool selected = (value == index);
+                int64_t value = GetValueFromString<int64_t>(fieldDef.value.constant.c_str());
+                value = GetOrDefault(jsonData.m_data, jsonPathItem, value);
 
-                    if (ImGui::Selectable(enumItem->name.c_str(), selected))
+                const auto& enumVals = fieldDef.value.type.enum_def->Vals();
+
+                std::string selectedValue = "";
+                if (value >= 0 && value < (int64_t)enumVals.size())
+                    selectedValue = enumVals[value]->name;
+
+                if (ImGui::BeginCombo(fieldName.c_str(), selectedValue.c_str()))
+                {
+                    for (const flatbuffers::EnumVal* enumItem : fieldDef.value.type.enum_def->Vals())
                     {
-                        jsonData.m_data[jsonPathItem] = index;
-                        MarkDirty(editorData, jsonData);
+                        int64_t enumValue = enumItem->GetAsInt64();
+
+                        const bool selected = (value == enumValue);
+
+                        if (ImGui::Selectable(enumItem->name.c_str(), selected))
+                        {
+                            jsonData.m_data[jsonPathItem] = enumValue;
+                            MarkDirty(editorData, jsonData);
+                        }
+
+                        if (selected)
+                            ImGui::SetItemDefaultFocus();
                     }
 
-                    if (selected)
-                        ImGui::SetItemDefaultFocus();
+                    ImGui::EndCombo();
+                }
+            }
+            else
+            {
+                uint64_t value = GetValueFromString<uint64_t>(fieldDef.value.constant.c_str());
+                value = GetOrDefault(jsonData.m_data, jsonPathItem, value);
+
+                bool valueChanged = false;
+
+                ImGui::TextUnformatted(fieldName.c_str());
+
+                for (const flatbuffers::EnumVal* enumItem : fieldDef.value.type.enum_def->Vals())
+                {
+                    ImGui::PushID(enumItem);
+
+                    uint64_t enumValue = enumItem->GetAsUInt64();
+
+                    bool checked = ((value & enumValue) != 0);
+                    if (ImGui::Checkbox(enumItem->name.c_str(), &checked))
+                    {
+                        if (checked)
+                            value = value | enumValue;
+                        else
+                            value = value & (~enumValue);
+
+                        valueChanged = true;
+                    }
+
+                    ImGui::PopID();
                 }
 
-                ImGui::EndCombo();
+                if (valueChanged)
+                {
+                    jsonData.m_data[jsonPathItem] = value;
+                    MarkDirty(editorData, jsonData);
+                }
             }
         }
         // else it is not an enum

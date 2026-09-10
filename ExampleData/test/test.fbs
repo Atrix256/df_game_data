@@ -2,10 +2,18 @@ namespace TestData;
 
 enum Color : byte
 {
-    Brown,
-    Hazel,
-    Blue,
-    Green
+    Brown = 2,
+    Hazel = 7,
+    Blue = 4,
+    Green = 0
+}
+
+enum Flags : ubyte (bit_flags)
+{
+    Flag_1,
+    Flag_2,
+    Flag_3,
+    Flag_4,
 }
 
 table Point2D { x:float; y:float; }
@@ -42,8 +50,10 @@ table TableEntry
     _double:double;
 
     _string:string = "test";
+    _string_deprecated:string = "test" (deprecated);
     _color:Color;
     _union:Point;
+    _flags:Flags;
 
     // todo: array of struct, array of union, array of array?
 }

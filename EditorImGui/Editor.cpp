@@ -587,3 +587,8 @@ TODO:
 // TODO: note in the docs that this acts as a flatbuffer editor too because of how it works
 // TODO: support drag/drop of fbs and dbroot files onto window
 // TODO: why does a string without a default just default to "0"? should figure that out and maybe give a fix patch
+
+// TODO: only write files if they are different than what's on disk?
+// TOOD: don't remove recent file if it fails to load. remove it if the file doesn't exist!
+// TODO: when deleting an item, set the selection to... the first item in the table?
+// TODO: when making a new item, select it.
