@@ -7,6 +7,7 @@
 // - Introduction, links and more at the top of imgui.cpp
 
 #include "Editor.h"
+#include "FontAwesome/IconsFontAwesome7.h"
 
 #define NOMINMAX
 
@@ -210,6 +211,24 @@ int main(int, char**)
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf");
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf");
     //IM_ASSERT(font != nullptr);
+
+    // Load Font Awesome icons
+    {
+        ImFontConfig base_config;
+        base_config.SizePixels = 13.0f;
+        io.Fonts->AddFontDefault(&base_config);
+
+        static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_16_FA, 0 };
+        ImFontConfig icons_config;
+        icons_config.MergeMode = true;
+        icons_config.PixelSnapH = true;
+        icons_config.GlyphMinAdvanceX = 16.0f;
+
+        const char* fontName = "FontAwesome/fontawesome-webfont.ttf";
+
+        // Use an actual pixel size here, matching base_config.SizePixels (or close to it)
+        io.Fonts->AddFontFromFileTTF(fontName, 13.0f, &icons_config, icons_ranges);
+    }
 
     // Our state
     bool show_demo_window = false;

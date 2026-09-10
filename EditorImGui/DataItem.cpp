@@ -5,19 +5,54 @@
 #include "Editor.h"
 #include "imgui.h"
 #include <vector>
+#include "FontAwesome/IconsFontAwesome7.h"
 
-static void ShowToolTip(const char* tooltip)
+class ImGui_Enabled
+{
+private:
+    bool enabled;
+public:
+    ImGui_Enabled(bool inEnabled)
+        : enabled(inEnabled)
+    {
+        if (!enabled)
+            ImGui::BeginDisabled();
+    }
+    ~ImGui_Enabled()
+    {
+        if (!enabled)
+            ImGui::EndDisabled();
+    }
+};
+
+template <typename T>
+T GetOrDefault(const json& json, const json_pointer& path, T& defaultValue)
+{
+    if (!json.contains(path))
+        return defaultValue;
+
+    const auto& v = json.at(path);
+    if (v.is_null())
+        return defaultValue;
+
+    return json.value<T>(path, defaultValue);
+}
+
+static void ShowToolTip(const char* tooltip, bool showQ = true)
 {
     if (!tooltip || !tooltip[0])
         return;
 
-    ImGui::SameLine();
-    ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "[?]");
+    if (showQ)
+    {
+        ImGui::SameLine();
+        ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "[?]");
+    }
     if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
         ImGui::SetTooltip("%s", tooltip);
 }
 
-static void ShowToolTip(const std::vector<std::string>& comments)
+static void ShowToolTip(const std::vector<std::string>& comments, bool showQ = true)
 {
     std::string text;
     for (const std::string& s : comments)
@@ -25,7 +60,7 @@ static void ShowToolTip(const std::vector<std::string>& comments)
         text += s;
         text += "\n";
     }
-    ShowToolTip(text.c_str());
+    ShowToolTip(text.c_str(), showQ);
 }
 
 static void MarkDirty(EditorData& editorData, DBTable::JSONData& jsonData)
@@ -266,9 +301,18 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
             return;
     }
 
+    size_t deleteIndex = arrayItemCount;
+    size_t moveUpIndex = arrayItemCount;
+    size_t moveDownIndex = arrayItemCount;
+    size_t moveTopIndex = arrayItemCount;
+    size_t moveBottomIndex = arrayItemCount;
+    size_t duplicateIndex = arrayItemCount;
+
     // Add the controls
     for (size_t arrayIndex = 0; arrayIndex < arrayItemCount; ++arrayIndex)
     {
+        ImGui::PushID((int)arrayIndex);
+
         json_pointer jsonPathItem = jsonPath;
         std::string fieldName = fieldDef.name;
 
@@ -285,7 +329,8 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
         {
             case TypeCategory::Bool:
             {
-                bool value = jsonData.m_data.value(jsonPathItem, GetValueFromString<bool>(fieldDef.value.constant.c_str()));
+                bool dflt = GetValueFromString<bool>(fieldDef.value.constant.c_str());
+                bool value = GetOrDefault(jsonData.m_data, jsonPathItem, dflt);
                 if (ImGui::Checkbox(fieldName.c_str(), &value))
                 {
                     jsonData.m_data[jsonPathItem] = value;
@@ -301,7 +346,7 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
                 if (type.details.Int.isSigned)
                 {
                     int64_t value = GetValueFromString<int64_t>(fieldDef.value.constant.c_str());
-                    value = jsonData.m_data.value(jsonPathItem, value);
+                    value = GetOrDefault(jsonData.m_data, jsonPathItem, value);
                     if (ImGui::InputScalar(fieldName.c_str(), ImGuiDataType_S64, &value, &step_one, &step_fast, "%zi"))
                     {
                         jsonData.m_data[jsonPathItem] = value;
@@ -311,7 +356,7 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
                 else
                 {
                     int64_t value = GetValueFromString<int64_t>(fieldDef.value.constant.c_str());
-                    value = jsonData.m_data.value(jsonPathItem, value);
+                    value = GetOrDefault(jsonData.m_data, jsonPathItem, value);
                     if (ImGui::InputScalar(fieldName.c_str(), ImGuiDataType_U64, &value, &step_one, &step_fast, "%zu"))
                     {
                         jsonData.m_data[jsonPathItem] = value;
@@ -326,7 +371,7 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
                 if (type.details.Float.isDouble)
                 {
                     double value = GetValueFromString<double>(fieldDef.value.constant.c_str());
-                    value = jsonData.m_data.value(jsonPathItem, value);
+                    value = GetOrDefault(jsonData.m_data, jsonPathItem, value);
                     if (ImGui::InputDouble(fieldName.c_str(), &value))
                     {
                         jsonData.m_data[jsonPathItem] = value;
@@ -336,7 +381,7 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
                 else
                 {
                     float value = GetValueFromString<float>(fieldDef.value.constant.c_str());
-                    value = jsonData.m_data.value(jsonPathItem, value);
+                    value = GetOrDefault(jsonData.m_data, jsonPathItem, value);
                     if (ImGui::InputFloat(fieldName.c_str(), &value))
                     {
                         jsonData.m_data[jsonPathItem] = value;
@@ -347,7 +392,8 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
             }
             case TypeCategory::String:
             {
-                std::string value = jsonData.m_data.value(jsonPathItem, fieldDef.value.constant.c_str());
+                std::string dflt = fieldDef.value.constant.c_str();
+                std::string value = GetOrDefault(jsonData.m_data, jsonPathItem, dflt);
                 static std::vector<char> tmpBuffer;
                 tmpBuffer.resize(4096);
                 strcpy_s(tmpBuffer.data(), tmpBuffer.size(), value.c_str());
@@ -368,10 +414,98 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
 
         if (!type.isVector)
             ShowToolTip(fieldDef.doc_comment);
+
+        if (type.isVector)
+        {
+            ImGui::SameLine();
+            if (ImGui::SmallButton("X"))
+                deleteIndex = arrayIndex;
+            ShowToolTip("Delete", false);
+            ImGui::SameLine();
+            {
+                ImGui_Enabled enabled(arrayIndex != 0);
+                if (ImGui::SmallButton(ICON_FA_ANGLE_UP "##Up"))
+                    moveUpIndex = arrayIndex;
+                ShowToolTip("Up", false);
+                ImGui::SameLine();
+            }
+            {
+                ImGui_Enabled enabled(arrayIndex + 1 != arrayItemCount);
+                if (ImGui::SmallButton(ICON_FA_ANGLE_DOWN "##Down"))
+                    moveDownIndex = arrayIndex;
+                ShowToolTip("Down", false);
+                ImGui::SameLine();
+            }
+            {
+                ImGui_Enabled enabled(arrayIndex != 0);
+                if (ImGui::SmallButton(ICON_FA_ANGLES_UP "##Up to Top"))
+                    moveTopIndex = arrayIndex;
+                ShowToolTip("Up To Top", false);
+                ImGui::SameLine();
+            }
+            {
+                ImGui_Enabled enabled(arrayIndex + 1 != arrayItemCount);
+                if (ImGui::SmallButton(ICON_FA_ANGLES_DOWN "##Down to Bottom"))
+                    moveBottomIndex = arrayIndex;
+                ShowToolTip("Down to Bottom", false);
+            }
+
+            {
+                ImGui::SameLine();
+                if (ImGui::SmallButton("Duplicate"))
+                    duplicateIndex = arrayIndex;
+                ShowToolTip("Duplicate", false);
+            }
+        }
+
+        ImGui::PopID();
     }
 
     if (type.isVector)
+    {
+        if (ImGui::Button("Add Item"))
+        {
+            jsonData.m_data[jsonPath].push_back(nullptr);
+        }
+
         ImGui::TreePop();
+    }
+
+    if (deleteIndex < arrayItemCount)
+    {
+        jsonData.m_data[jsonPath].erase(deleteIndex);
+        MarkDirty(editorData, jsonData);
+    }
+
+    if (moveUpIndex < arrayItemCount)
+    {
+        std::swap(jsonData.m_data[jsonPath].at(moveUpIndex), jsonData.m_data[jsonPath].at(moveUpIndex - 1));
+        MarkDirty(editorData, jsonData);
+    }
+
+    if (moveDownIndex < arrayItemCount)
+    {
+        std::swap(jsonData.m_data[jsonPath].at(moveDownIndex), jsonData.m_data[jsonPath].at(moveDownIndex + 1));
+        MarkDirty(editorData, jsonData);
+    }
+
+    if (moveTopIndex < arrayItemCount)
+    {
+        std::swap(jsonData.m_data[jsonPath].at(moveTopIndex), jsonData.m_data[jsonPath].at(0));
+        MarkDirty(editorData, jsonData);
+    }
+
+    if (moveBottomIndex < arrayItemCount)
+    {
+        std::swap(jsonData.m_data[jsonPath].at(moveBottomIndex), jsonData.m_data[jsonPath].at(arrayItemCount-1));
+        MarkDirty(editorData, jsonData);
+    }
+
+    if (duplicateIndex < arrayItemCount)
+    {
+        jsonData.m_data[jsonPath].push_back(jsonData.m_data[jsonPath][duplicateIndex]);
+        MarkDirty(editorData, jsonData);
+    }
 
     /*
     TODO:
@@ -411,3 +545,8 @@ void ShowDataEditor(EditorData& editorData)
 }
 
 // TODO: buttons for arrays. move up, move down, new, delete
+// TODO: ALso able to open schema instead of dbroot if desired
+// TODO: confirm exit when there are unsaved changes
+// TODO: Maybe dbroot is json with a hard coded schema and make file menu options to.make.a new one, save, save as? and edit in the editor in a window
+// TODO: add font awesome to oss list
+// TODO: control+s to save current selected data item and clera the data flag. add it as a file menu option too

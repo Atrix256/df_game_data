@@ -27,6 +27,7 @@
     </ClInclude>
     <ClInclude Include="DataItem.h" />
     <ClInclude Include="RecentFiles.h" />
+    <ClInclude Include="FontAwesome\IconsFontAwesome7.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

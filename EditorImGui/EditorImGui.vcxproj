@@ -169,6 +169,7 @@ dxgi.lib
   <ItemGroup>
     <ClInclude Include="DataItem.h" />
     <ClInclude Include="Editor.h" />
+    <ClInclude Include="FontAwesome\IconsFontAwesome7.h" />
     <ClInclude Include="imgui_impl_dx12.h" />
     <ClInclude Include="imgui_impl_win32.h" />
     <ClInclude Include="RecentFiles.h" />
