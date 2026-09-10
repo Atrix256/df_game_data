@@ -43,7 +43,8 @@ static void OnFileOpen()
 
     nfdu8filteritem_t filters[] =
     {
-        { "Database Root Files", "dbroot" }
+        { "Database Root Files", "dbroot" },
+        { "FlatBuffers Schema", "fbs" }
     };
 
     nfdresult_t result = NFD_OpenDialogU8(&outPath, filters, IM_COUNTOF(filters), nullptr);

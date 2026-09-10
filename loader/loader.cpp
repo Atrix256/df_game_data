@@ -144,49 +144,78 @@ bool DBRoot::Load(const char* path)
 {
     Clear();
 
-    // Load m_tables
+    std::string extension = std::filesystem::path(path).extension().string();
+    std::filesystem::path base_path = std::filesystem::absolute(path).remove_filename();
+
+    if (extension == ".dbroot")
     {
-        std::ifstream file(path);
-        if (!file.is_open())
+        // Load m_tables
         {
-            m_errorText = "Failed to open dbroot file: " + std::string(path);
-            return false;
-        }
-        m_path = path;
-
-        m_fileWatcher.AddFile(path, nullptr);
-
-        std::filesystem::path base_path = std::filesystem::absolute(path).remove_filename();
-
-        std::string line;
-        while (std::getline(file, line))
-        {
-            std::filesystem::path full_path = std::filesystem::weakly_canonical(base_path / line);
-
-            std::unique_ptr<DBTable> newTable = std::make_unique<DBTable>();
-            if (!newTable->Load(full_path.string().c_str()))
+            std::ifstream file(path);
+            if (!file.is_open())
             {
-                m_errorText = newTable->GetErrorText();
-                Clear();
-                file.close();
+                m_errorText = "Failed to open dbroot file: " + std::string(path);
                 return false;
             }
+            m_path = path;
 
-            m_fileWatcher.AddDirectory(full_path.remove_filename().string().c_str(), nullptr);
+            m_fileWatcher.AddFile(path, nullptr);
 
-            // accumulate warnings
-            std::string warningText = newTable->GetErrorText();
-            if (!warningText.empty())
+            std::string line;
+            while (std::getline(file, line))
             {
-                if (!m_errorText.empty())
-                    m_errorText += std::string("\n\n");
-                m_errorText += warningText;
+                std::filesystem::path full_path = std::filesystem::weakly_canonical(base_path / line);
+
+                std::unique_ptr<DBTable> newTable = std::make_unique<DBTable>();
+                if (!newTable->Load(full_path.string().c_str()))
+                {
+                    m_errorText = newTable->GetErrorText();
+                    Clear();
+                    file.close();
+                    return false;
+                }
+
+                m_fileWatcher.AddDirectory(full_path.remove_filename().string().c_str(), nullptr);
+
+                // accumulate warnings
+                std::string warningText = newTable->GetErrorText();
+                if (!warningText.empty())
+                {
+                    if (!m_errorText.empty())
+                        m_errorText += std::string("\n\n");
+                    m_errorText += warningText;
+                }
+
+                m_tables[newTable->m_rootType] = std::move(newTable);
             }
 
-            m_tables[newTable->m_rootType] = std::move(newTable);
+            file.close();
+        }
+    }
+    else if (extension == ".fbs")
+    {
+        m_path = path;
+
+        std::unique_ptr<DBTable> newTable = std::make_unique<DBTable>();
+        if (!newTable->Load(path))
+        {
+            m_errorText = newTable->GetErrorText();
+            Clear();
+            return false;
         }
 
-        file.close();
+        m_fileWatcher.AddDirectory(base_path.string().c_str(), nullptr);
+
+        // accumulate warnings
+        std::string warningText = newTable->GetErrorText();
+        if (!warningText.empty())
+        {
+            if (!m_errorText.empty())
+                m_errorText += std::string("\n\n");
+            m_errorText += warningText;
+        }
+
+        m_tables[newTable->m_rootType] = std::move(newTable);
     }
 
     return true;
