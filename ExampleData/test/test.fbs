@@ -25,6 +25,18 @@ union Point {
   vector_3D:Point3D,
 }
 
+table TestTable
+{
+    scalar: bool;
+    numbers_dynamic: [uint]; // dynamic arrays can only be in tables
+}
+
+struct TestStruct
+{
+    scalar: bool;
+    numbers_3: [uint:3]; // fixed arrays can only be in structs
+}
+
 // Root Type
 table TableEntry
 {
@@ -55,7 +67,8 @@ table TableEntry
     _union:Point;
     _flags:Flags;
 
-    // todo: array of struct, array of union, array of array?
+    _aos1:[TestTable];
+    _aos2:[TestStruct];
 }
 
 root_type TableEntry;

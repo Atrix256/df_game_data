@@ -568,6 +568,7 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
     TODO:
     * union needs to show the union thing itself too, not just the type selector
     * hitting +/- buttons on byte/ubyte and others make it go nuts. look into it
+    * fixed sized arrays need to have their size honored.
     */
 }
 
