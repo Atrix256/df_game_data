@@ -33,7 +33,7 @@ static void LoadFile(const char* fileName)
     }
     else
     {
-        // TODO: show error message in a popup window
+        s_editorData.m_showLoadingErrors = true;
     }
 
     s_editorData.m_updateWindowTitle = true;
@@ -534,6 +534,29 @@ bool ShowEditorWindow()
         {
             ImGui::CloseCurrentPopup();
             showConfirmExit = false;
+        }
+
+        ImGui::EndPopup();
+    }
+
+    static bool showLoadingErrors = false;
+    if (s_editorData.m_showLoadingErrors)
+    {
+        s_editorData.m_showLoadingErrors = false;
+        showLoadingErrors = true;
+        ImGui::OpenPopup("Loading Error");
+    }
+
+    if (ImGui::BeginPopupModal("Loading Error", &showLoadingErrors, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::Text("Error:\n%s", s_editorData.m_dbroot.GetErrorText());
+
+        ImGui::Separator();
+
+        if (ImGui::Button("OK", ImVec2(120, 0)))
+        {
+            ImGui::CloseCurrentPopup();
+            showLoadingErrors = false;
         }
 
         ImGui::EndPopup();

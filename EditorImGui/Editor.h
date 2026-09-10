@@ -18,6 +18,7 @@ struct EditorData
 
     bool m_documentDirty = false;
     bool m_updateWindowTitle = true;
+    bool m_showLoadingErrors = false;
 
     RecentFiles m_recentFiles;
 };
