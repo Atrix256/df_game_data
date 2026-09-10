@@ -311,6 +311,7 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
         if (fieldDef.value.type.enum_def)
         {
             int64_t value = GetValueFromString<int64_t>(fieldDef.value.constant.c_str());
+            value = GetOrDefault(jsonData.m_data, jsonPathItem, value);
 
             const auto& enumVals = fieldDef.value.type.enum_def->Vals();
 
