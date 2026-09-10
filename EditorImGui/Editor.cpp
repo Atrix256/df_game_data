@@ -216,6 +216,89 @@ static std::string GetUniqueDataItemName(const char* baseName)
     }
 }
 
+static void OnDataListReload()
+{
+    if (s_editorData.m_dbroot.m_tables.count(s_editorData.m_selectedTableName) == 0)
+        return;
+
+    DBTable& table = *s_editorData.m_dbroot.m_tables[s_editorData.m_selectedTableName].get();
+
+    if (table.m_data.count(s_editorData.m_selectedDataItemName) == 0)
+        return;
+
+    DBTable::JSONData& data = *table.m_data[s_editorData.m_selectedDataItemName].get();
+
+    std::filesystem::path src(data.m_path);
+
+    table.m_data.erase(s_editorData.m_selectedDataItemName);
+
+    table.Load(src.string().c_str());
+}
+
+static void OnDataListRename(const char* newName)
+{
+    if (s_editorData.m_dbroot.m_tables.count(s_editorData.m_selectedTableName) == 0)
+        return;
+
+    DBTable& table = *s_editorData.m_dbroot.m_tables[s_editorData.m_selectedTableName].get();
+
+    if (table.m_data.count(s_editorData.m_selectedDataItemName) == 0)
+        return;
+
+    DBTable::JSONData& data = *table.m_data[s_editorData.m_selectedDataItemName].get();
+
+    // Copy the file
+    std::filesystem::path src(data.m_path);
+
+    std::filesystem::path dst = src;
+    dst.replace_filename(newName).replace_extension(".json");
+
+    std::error_code ec;
+    std::filesystem::copy_file(src, dst, std::filesystem::copy_options::overwrite_existing, ec);
+
+    // Load the file
+    table.Load(src.string().c_str());
+
+    // delete old file from disk
+    std::filesystem::remove(src);
+
+    // delete old from the table
+    table.m_data.erase(s_editorData.m_selectedDataItemName);
+
+    // select the new item
+    s_editorData.m_selectedDataItemName = newName;
+}
+
+static void OnDataListDuplicate()
+{
+    if (s_editorData.m_dbroot.m_tables.count(s_editorData.m_selectedTableName) == 0)
+        return;
+
+    DBTable& table = *s_editorData.m_dbroot.m_tables[s_editorData.m_selectedTableName].get();
+
+    if (table.m_data.count(s_editorData.m_selectedDataItemName) == 0)
+        return;
+
+    DBTable::JSONData& data = *table.m_data[s_editorData.m_selectedDataItemName].get();
+
+    std::string newItemName = GetUniqueDataItemName(s_editorData.m_selectedDataItemName.c_str());
+
+    // Copy the file
+    std::filesystem::path src(data.m_path);
+
+    std::filesystem::path dst = src;
+    dst.replace_filename(newItemName).replace_extension(".json");
+
+    std::error_code ec;
+    std::filesystem::copy_file(src, dst, std::filesystem::copy_options::overwrite_existing, ec);
+
+    // Load the file
+    table.Load(src.string().c_str());
+
+    // select the new item
+    s_editorData.m_selectedDataItemName = newItemName;
+}
+
 static void OnDataListNew()
 {
     if (s_editorData.m_dbroot.m_tables.count(s_editorData.m_selectedTableName) == 0)
@@ -268,18 +351,6 @@ static void ShowDataList()
     if (ImGui::Button("Delete"))
         OnDataListDelete();
 
-    // TODO: too many buttons. make a right click menu
-    /*
-    ImGui::SameLine();
-    ImGui::Button("Duplicate");
-    ImGui::SameLine();
-    ImGui::Button("Rename");
-    ImGui::SameLine();
-    ImGui::Button("Save");
-
-    TODO: revert or reload as an option, to go along with save?
-    */
-
     ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.10f, 0.10f, 0.10f, 1.0f));
     if (ImGui::BeginListBox("##DataListBox", ImVec2(-FLT_MIN, -FLT_MIN)))
     {
@@ -307,6 +378,70 @@ static void ShowDataList()
     }
 
     ImGui::PopStyleColor();
+
+    static bool showRename = false;
+    static std::string newName;
+    bool wantShowRename = false;
+    if (ImGui::BeginPopupContextItem("my_item_context"))
+    {
+        if (ImGui::Selectable("New"))
+            OnDataListNew();
+
+        if (ImGui::Selectable("Duplicate"))
+            OnDataListDuplicate();
+
+        if (ImGui::Selectable("Rename"))
+            wantShowRename = true;
+
+        if (ImGui::Selectable("Save"))
+            OnFileSave();
+
+        if (ImGui::Selectable("Delete"))
+            OnDataListDelete();
+
+        if (ImGui::Selectable("Reload"))
+            OnDataListReload();
+
+        ImGui::EndPopup();
+    }
+
+    if (wantShowRename)
+    {
+        showRename = true;
+        ImGui::OpenPopup("Rename Item");
+        newName = s_editorData.m_selectedDataItemName;
+    }
+
+    if (ImGui::BeginPopupModal("Rename Item", &showRename, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::Text("Please enter new name");
+
+        static std::vector<char> tmpBuffer;
+        tmpBuffer.resize(4096);
+        strcpy_s(tmpBuffer.data(), tmpBuffer.size(), newName.c_str());
+
+        if (ImGui::InputText("##RenameDataItem", tmpBuffer.data(), tmpBuffer.size()))
+            newName = tmpBuffer.data();
+
+        ImGui::Separator();
+
+        if (ImGui::Button("OK", ImVec2(120, 0)))
+        {
+            OnDataListRename(newName.c_str());
+            ImGui::CloseCurrentPopup();
+            showRename = false;
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Cancel", ImVec2(120, 0)))
+        {
+            ImGui::CloseCurrentPopup();
+            showRename = false;
+        }
+
+        ImGui::EndPopup();
+    }
 }
 
 bool ShowEditorWindow()
