@@ -11,6 +11,7 @@ enum Class : byte { Warrior, Wizard, Cleric, Druid }
 table Character
 {
   name: string;
+  /// eye color is important!
   eye_color:EyeColor = Brown;
   alignment:Alignment = Good;
   class:Class = Warrior;
@@ -20,6 +21,7 @@ table Character
   playable:bool = true;
   favorite_numbers:[uint16];
 
+  /// A list of "Item" table links
   inventory:[string] (link:"Item");
 }
 

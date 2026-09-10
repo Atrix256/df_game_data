@@ -6,6 +6,28 @@
 #include "imgui.h"
 #include <vector>
 
+static void ShowToolTip(const char* tooltip)
+{
+    if (!tooltip || !tooltip[0])
+        return;
+
+    ImGui::SameLine();
+    ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "[?]");
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+        ImGui::SetTooltip("%s", tooltip);
+}
+
+static void ShowToolTip(const std::vector<std::string>& comments)
+{
+    std::string text;
+    for (const std::string& s : comments)
+    {
+        text += s;
+        text += "\n";
+    }
+    ShowToolTip(text.c_str());
+}
+
 static void MarkDirty(EditorData& editorData, DBTable::JSONData& jsonData)
 {
     editorData.m_documentDirty = true;
@@ -236,7 +258,11 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
         else
             arrayItemCount = jsonData.m_data.value(jsonPath, json::array()).size();
 
-        if (!ImGui::TreeNodeEx(fieldDef.name.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+        bool treeNodeOpened = ImGui::TreeNodeEx(fieldDef.name.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
+
+        ShowToolTip(fieldDef.doc_comment);
+
+        if (!treeNodeOpened)
             return;
     }
 
@@ -339,6 +365,9 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
                 break;
             }
         }
+
+        if (!type.isVector)
+            ShowToolTip(fieldDef.doc_comment);
     }
 
     if (type.isVector)
@@ -381,5 +410,4 @@ void ShowDataEditor(EditorData& editorData)
     AddUIForType(editorData, parser, *parser.root_struct_def_, parser.root_struct_def_->name.c_str(), data, json_pointer(""));
 }
 
-// TODO: use the documentation field as tooltips
 // TODO: buttons for arrays. move up, move down, new, delete
