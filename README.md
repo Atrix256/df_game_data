@@ -27,6 +27,7 @@ TODO: fill out and continue
 
 | Software | Comment | URL |
 | -- | -- | -- |
-| wxWidgets | For editor UI | https://wxwidgets.org/ |
 | FlatBuffers | To make binary data and static loaders | https://flatbuffers.dev/ |
 | rapidjson | To load json data | https://rapidjson.org/ |
+| Dear ImGui | For editor UI | https://github.com/ocornut/imgui |
+| Font Awesome | Editor button icons | https://github.com/FortAwesome/Font-Awesome |

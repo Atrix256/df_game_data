@@ -366,6 +366,39 @@ bool ShowEditorWindow()
 
     ImGui::PopStyleVar(2);
 
+    ret |= ImGui::GetMainViewport()->PlatformRequestClose;
+    static bool showConfirmExit = false;
+    if (ret && s_editorData.m_documentDirty)
+    {
+        ImGui::GetMainViewport()->PlatformRequestClose = false;
+        ret = false;
+        showConfirmExit = true;
+        ImGui::OpenPopup("Exit Confirmation");
+    }
+
+    if (ImGui::BeginPopupModal("Exit Confirmation", &showConfirmExit, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::Text("Are you sure you want to exit?");
+        ImGui::Separator();
+
+        if (ImGui::Button("Yes", ImVec2(120, 0)))
+        {
+            ret = true;
+            ImGui::CloseCurrentPopup();
+            showConfirmExit = false;
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("No", ImVec2(120, 0)))
+        {
+            ImGui::CloseCurrentPopup();
+            showConfirmExit = false;
+        }
+
+        ImGui::EndPopup();
+    }
+
     return ret;
 }
 /*

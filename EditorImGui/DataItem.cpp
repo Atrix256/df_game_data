@@ -526,9 +526,5 @@ void ShowDataEditor(EditorData& editorData)
     AddUIForType(editorData, parser, *parser.root_struct_def_, parser.root_struct_def_->name.c_str(), data, json_pointer(""));
 }
 
-// TODO: buttons for arrays. move up, move down, new, delete
-// TODO: ALso able to open schema instead of dbroot if desired
-// TODO: confirm exit when there are unsaved changes
+// TODO: ALso able to open schema instead of dbroot if desired.
 // TODO: Maybe dbroot is json with a hard coded schema and make file menu options to.make.a new one, save, save as? and edit in the editor in a window
-// TODO: add font awesome to oss list
-// TODO: control+s to save current selected data item and clera the data flag. add it as a file menu option too
