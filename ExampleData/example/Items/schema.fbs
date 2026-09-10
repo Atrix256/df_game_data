@@ -10,3 +10,4 @@ table Item
 
 root_type Item;
 
+// TODO: make item a union of different item types, with some shared data, and some item specific data
