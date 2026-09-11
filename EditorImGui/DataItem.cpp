@@ -522,14 +522,44 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
                 {
                     std::string dflt = fieldDef.value.constant.c_str();
                     std::string value = GetOrDefault(jsonData.m_data, jsonPathItem, dflt);
-                    static std::vector<char> tmpBuffer;
-                    tmpBuffer.resize(4096);
-                    strcpy_s(tmpBuffer.data(), tmpBuffer.size(), value.c_str());
 
-                    if (ImGui::InputText(fieldName.c_str(), tmpBuffer.data(), tmpBuffer.size()))
+                    // links have a drop down menu
+                    flatbuffers::Value* linkAttribute = fieldDef.attributes.Lookup("link");
+                    if (linkAttribute != nullptr && linkAttribute->type.base_type == flatbuffers::BASE_TYPE_STRING && editorData.m_dbroot.m_tables.contains(linkAttribute->constant.c_str()))
                     {
-                        jsonData.m_data[jsonPathItem] = tmpBuffer.data();
-                        MarkDirty(editorData, jsonData);
+                        const DBTable& table = *editorData.m_dbroot.m_tables[linkAttribute->constant.c_str()];
+
+                        if (ImGui::BeginCombo("Type", value.c_str()))
+                        {
+                            for (auto& pair : table.m_data)
+                            {
+                                const bool selected = (value == pair.first);
+
+                                if (ImGui::Selectable(pair.first.c_str(), selected))
+                                {
+                                    jsonData.m_data[jsonPathItem] = pair.first;
+                                    MarkDirty(editorData, jsonData);
+                                }
+
+                                if (selected)
+                                    ImGui::SetItemDefaultFocus();
+                            }
+
+                            ImGui::EndCombo();
+                        }
+                    }
+                    // otherwise enter the string
+                    else
+                    {
+                        static std::vector<char> tmpBuffer;
+                        tmpBuffer.resize(4096);
+                        strcpy_s(tmpBuffer.data(), tmpBuffer.size(), value.c_str());
+
+                        if (ImGui::InputText(fieldName.c_str(), tmpBuffer.data(), tmpBuffer.size()))
+                        {
+                            jsonData.m_data[jsonPathItem] = tmpBuffer.data();
+                            MarkDirty(editorData, jsonData);
+                        }
                     }
                     break;
                 }
@@ -757,8 +787,4 @@ void ShowDataEditor(EditorData& editorData)
     AddUIForType(editorData, parser, *parser.root_struct_def_, parser.root_struct_def_->name.c_str(), data, json_pointer(""), true);
 }
 
-/*
-TODO:
-* get table links working
- * just a combo box of the records of the other table, and store as a string. in fact, make links only be checked for if they are string types.
-*/
+// TODO: make a "goto" button on links that changes table / selection to what is linked

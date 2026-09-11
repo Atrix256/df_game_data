@@ -1,3 +1,7 @@
 {
-    "name": "Curly"
+    "name": "Curly",
+    "inventory": [
+        "Dagger",
+        "Sword"
+    ]
 }
