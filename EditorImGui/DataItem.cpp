@@ -451,11 +451,11 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
                 }
                 case TypeCategory::Int:
                 {
-                    unsigned int step_one = 1;
-                    unsigned int step_fast = 10;
-
                     if (type.details.Int.isSigned)
                     {
+                        int64_t step_one = 1;
+                        int64_t step_fast = 10;
+
                         int64_t value = GetValueFromString<int64_t>(fieldDef.value.constant.c_str());
                         value = GetOrDefault(jsonData.m_data, jsonPathItem, value);
                         if (ImGui::InputScalar(fieldName.c_str(), ImGuiDataType_S64, &value, &step_one, &step_fast, "%zi"))
@@ -466,6 +466,9 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
                     }
                     else
                     {
+                        uint64_t step_one = 1;
+                        uint64_t step_fast = 10;
+
                         uint64_t value = GetValueFromString<uint64_t>(fieldDef.value.constant.c_str());
                         value = GetOrDefault(jsonData.m_data, jsonPathItem, value);
                         if (ImGui::InputScalar(fieldName.c_str(), ImGuiDataType_U64, &value, &step_one, &step_fast, "%zu"))
@@ -692,7 +695,6 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
 
     /*
     TODO:
-    * hitting +/- buttons on byte/ubyte and others make it go nuts. look into it
     * fixed sized arrays need to have their size honored.
     * get table links working
     */
