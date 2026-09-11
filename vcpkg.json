@@ -1,7 +1,6 @@
 {
   "dependencies": [
     "flatbuffers",
-    "wxwidgets",
     "nlohmann-json",
     {
       "name": "imgui",
