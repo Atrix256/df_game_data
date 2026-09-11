@@ -547,6 +547,14 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
 
                             ImGui::EndCombo();
                         }
+
+                        ImGui::SameLine();
+                        if (ImGui::SmallButton(ICON_FA_CIRCLE_ARROW_RIGHT "##GoToLink"))
+                        {
+                            editorData.m_selectedTableName = linkAttribute->constant;
+                            editorData.m_selectedDataItemName = value;
+                        }
+                        ShowToolTip("Go To Link", false);
                     }
                     // otherwise enter the string
                     else
@@ -786,5 +794,3 @@ void ShowDataEditor(EditorData& editorData)
 
     AddUIForType(editorData, parser, *parser.root_struct_def_, parser.root_struct_def_->name.c_str(), data, json_pointer(""), true);
 }
-
-// TODO: make a "goto" button on links that changes table / selection to what is linked
