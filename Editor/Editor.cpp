@@ -442,7 +442,7 @@ static void ShowDataList()
     if (ImGui::Button("Delete"))
         OnDataListDelete();
 
-    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.10f, 0.10f, 0.10f, 1.0f));
+    //ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.10f, 0.10f, 0.10f, 1.0f));
     if (ImGui::BeginListBox("##DataListBox", ImVec2(-FLT_MIN, -FLT_MIN)))
     {
         if (s_editorData.m_dbroot.m_tables.count(s_editorData.m_selectedTableName) > 0)
@@ -468,7 +468,7 @@ static void ShowDataList()
         ImGui::EndListBox();
     }
 
-    ImGui::PopStyleColor();
+    //ImGui::PopStyleColor();
 
     static bool showRename = false;
     static std::string newName;
@@ -652,11 +652,9 @@ bool ShowEditorWindow()
 }
 /*
 TODO:
-* undo redo stack - make a task talking about it. each modification is an action with enough state to undo and redo it. No direct modifications. Every modification goes through that system which does it and puts it on the stack.
 * add text copy/paste?
 * look for TODOs
-* imgui srgb target? or do we care?
-* maybe try the light theme of imgui?
+* ask claude how to make it prettier. something said replacing the font is a good step.
 * watch files on disk and react to them for hot loading. The game will use this functionality too. make it part of the loader
 */
 // TODO: Maybe dbroot is json with a hard coded schema and make file menu options to.make.a new one, save, save as? and edit in the editor in a window

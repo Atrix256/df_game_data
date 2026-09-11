@@ -69,7 +69,7 @@ static void ShowToolTip(const char* tooltip, bool showQ = true)
     if (showQ)
     {
         ImGui::SameLine();
-        ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "[?]");
+        ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.0f, 1.0f), "[?]");
     }
     if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
         ImGui::SetTooltip("%s", tooltip);
