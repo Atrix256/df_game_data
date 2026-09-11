@@ -17,6 +17,18 @@ static void LoadFile(const char* fileName)
     s_editorData.m_dbroot.Clear();
     s_editorData = EditorData();
 
+    // If the file doesn't exist, remove it from recent files, else add it
+    std::error_code ec;
+    if (!std::filesystem::exists(fileName, ec))
+    {
+        s_editorData.m_recentFiles.RemoveEntry(fileName);
+        s_editorData.m_showLoadingErrors = true;
+        std::string errMsg = "File Doesn't Exist: " + std::string(fileName);
+        s_editorData.m_dbroot.SetErrorText(errMsg.c_str());
+        return;
+    }
+    s_editorData.m_recentFiles.AddEntry(fileName);
+
     // select the first data item of the first table, if present
     if (s_editorData.m_dbroot.Load(fileName))
     {
@@ -30,14 +42,10 @@ static void LoadFile(const char* fileName)
             }
             break;
         }
-
-        s_editorData.m_recentFiles.AddEntry(fileName);
     }
     else
     {
         s_editorData.m_showLoadingErrors = true;
-
-        s_editorData.m_recentFiles.RemoveEntry(fileName);
     }
 
     s_editorData.m_updateWindowTitle = true;
@@ -633,8 +641,6 @@ TODO:
 * undo redo stack
 * add text copy/paste?
 * look for TODOs
-* explain the design decisions (each data item as a json data file for easier merging. flat tables for speed. multiple tables because that's whats needed. table links)
-* Explain how to use it
 * imgui srgb target? or do we care?
 * maybe try the light theme of imgui?
 * watch files on disk and react to them for hot loading
@@ -646,11 +652,12 @@ TODO:
 // TODO: why does a string without a default just default to "0"? should figure that out and maybe give a fix patch
 
 // TODO: only write files if they are different than what's on disk?
-// TOOD: don't remove recent file if it fails to load. remove it if the file doesn't exist!
-// TODO: when making a new item, select it.
 // TODO: when saving a data item, only keep the document dirty flag if there are any other dirty data items left.
 
 /*
 Notes:
 * This works as a flatbuffer data editor too
+* explain the design decisions (each data item as a json data file for easier merging. flat tables for speed. multiple tables because that's whats needed. table links)
+* Explain how to use it
+
 */

@@ -67,6 +67,11 @@ public:
 
     void Clear();
 
+    void SetErrorText(const char* text)
+    {
+        m_errorText = text;
+    }
+
     const char* GetErrorText() const
     {
         return m_errorText.c_str();
