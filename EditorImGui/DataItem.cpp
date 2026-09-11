@@ -7,6 +7,47 @@
 #include <vector>
 #include "UIShared.h"
 
+json MakeDefaultArrayItem(const flatbuffers::FieldDef& field)
+{
+    using namespace flatbuffers;
+    const flatbuffers::Type& type = field.value.type;
+    const std::string& constant = field.value.constant;
+
+    switch (type.element)
+    {
+        case BASE_TYPE_STRUCT:
+            return json::object();
+
+        case BASE_TYPE_VECTOR:
+        case BASE_TYPE_VECTOR64:
+            return json::array();
+
+        case BASE_TYPE_UNION:
+            return nullptr;
+
+        case BASE_TYPE_BOOL:
+            return constant == "1" || constant == "true";
+
+        case BASE_TYPE_FLOAT:
+        case BASE_TYPE_DOUBLE:
+            return std::stof(constant.c_str());
+
+        case BASE_TYPE_STRING:
+            return "";
+
+        default: // integral types, including enums (UType shares this path)
+        {
+            int64_t intVal = flatbuffers::StringToInt(constant.c_str());
+            if (type.enum_def)
+            {
+                if (auto* enumVal = type.enum_def->ReverseLookup(intVal, false))
+                    return enumVal->name;
+            }
+            return intVal;
+        }
+    }
+}
+
 template <typename T>
 T GetOrDefault(const json& json, const json_pointer& path, T& defaultValue)
 {
@@ -484,13 +525,15 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
                 {
                     if (unionTypeFieldDef && type.details.Union.enumDef && ImGui::TreeNodeEx(fieldName.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
                     {
+                        json_pointer unionTypeJsonPathItem = unionTypeFieldJsonPath;
+                        if (type.isVector)
+                            unionTypeJsonPathItem /= arrayIndex;
+
                         // Show the union type field
                         {
-                            // TODO: i think we need to append the index to unionTypeFieldJsonPath for arrays
-                            // TODO: same with "fieldName" in beginCombo, and above, actually
                             std::string fieldName = unionTypeFieldDef->name;
                             int64_t value = GetValueFromString<int64_t>(unionTypeFieldDef->value.constant.c_str());
-                            value = GetOrDefault(jsonData.m_data, unionTypeFieldJsonPath, value);
+                            value = GetOrDefault(jsonData.m_data, unionTypeJsonPathItem, value);
 
                             const auto& enumVals = unionTypeFieldDef->value.type.enum_def->Vals();
 
@@ -508,7 +551,7 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
 
                                     if (ImGui::Selectable(enumItem->name.c_str(), selected))
                                     {
-                                        jsonData.m_data[unionTypeFieldJsonPath] = enumValue;
+                                        jsonData.m_data[unionTypeJsonPathItem] = enumValue;
                                         MarkDirty(editorData, jsonData);
                                     }
 
@@ -523,13 +566,12 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
                         // Show the union itself
                         {
                             int64_t value = GetValueFromString<int64_t>(unionTypeFieldDef->value.constant.c_str());
-                            value = GetOrDefault(jsonData.m_data, unionTypeFieldJsonPath, value);
+                            value = GetOrDefault(jsonData.m_data, unionTypeJsonPathItem, value);
 
                             for (const flatbuffers::EnumVal* enumItem : type.details.Union.enumDef->Vals())
                             {
                                 if (value == enumItem->GetAsInt64() && enumItem->union_type.struct_def)
                                 {
-                                    // TODO: is this fieldname right? what if it's in an array?
                                     AddUIForType(editorData, parser, *enumItem->union_type.struct_def, fieldName.c_str(), jsonData, jsonPathItem, false);
                                     break;
                                 }
@@ -597,7 +639,16 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
     {
         if (ImGui::Button("Add Item"))
         {
-            jsonData.m_data[jsonPath].push_back(nullptr);
+            if (type.category == TypeCategory::Union)
+            {
+                jsonData.m_data[jsonPath].push_back(json::object());
+                jsonData.m_data[unionTypeFieldJsonPath].push_back(0);
+            }
+            else
+            {
+                jsonData.m_data[jsonPath].push_back(MakeDefaultArrayItem(fieldDef));
+            }
+            MarkDirty(editorData, jsonData);
         }
 
         ImGui::TreePop();
@@ -643,7 +694,6 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
     TODO:
     * hitting +/- buttons on byte/ubyte and others make it go nuts. look into it
     * fixed sized arrays need to have their size honored.
-    * array of unions is screwed up in the editor, as 2 parallel arrays. Maybe have unions also display their type field, so they get to be next to each other?
     * get table links working
     */
 }

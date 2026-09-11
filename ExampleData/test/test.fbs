@@ -18,7 +18,8 @@ enum Flags : ubyte (bit_flags)
 
 table Point2D { x:float; y:float; }
 table Point3D { x:float; y:float; z:float; }
-union Point {
+union Point
+{
   point_2D:Point2D,
   point_3D:Point3D,
   vector_2D:Point2D,
@@ -66,6 +67,7 @@ table TableEntry
     _color:Color;
     _union:Point;
     _flags:Flags;
+    _unions:[Point];
 
     _aos1:[TestTable];
     _aos2:[TestStruct];

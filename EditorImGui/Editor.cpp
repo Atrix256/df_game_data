@@ -62,6 +62,71 @@ static void OnFileOpen()
     }
 }
 
+// Make the JSON items be in the order that they are defined in the schema.
+// Useful for making sure union types come before union fields
+void CanonicalizeFieldOrder(nlohmann::ordered_json& value, const flatbuffers::StructDef& structDef)
+{
+    if (!value.is_object())
+        return;
+
+    nlohmann::ordered_json reordered = nlohmann::ordered_json::object();
+
+    // put things in order
+    for (auto* field : structDef.fields.vec)
+    {
+        auto it = value.find(field->name);
+        if (it == value.end())
+            continue;
+        reordered[field->name] = std::move(it.value());
+    }
+
+    // Anything not in the schema (shouldn't normally exist) goes last.
+    for (auto it = value.begin(); it != value.end(); ++it)
+    {
+        if (!reordered.contains(it.key()))
+            reordered[it.key()] = std::move(it.value());
+    }
+
+    value = std::move(reordered);
+
+    // Recurse into nested structs/tables and arrays thereof.
+    for (auto* field : structDef.fields.vec)
+    {
+        auto it = value.find(field->name);
+        if (it == value.end())
+            continue;
+
+        const flatbuffers::Type& type = field->value.type;
+
+        if (type.base_type == flatbuffers::BASE_TYPE_STRUCT && type.struct_def)
+        {
+            CanonicalizeFieldOrder(it.value(), *type.struct_def);
+        }
+        else if (type.base_type == flatbuffers::BASE_TYPE_VECTOR &&
+                 type.element == flatbuffers::BASE_TYPE_STRUCT && type.struct_def)
+        {
+            for (auto& element : it.value())
+                CanonicalizeFieldOrder(element, *type.struct_def);
+        }
+    }
+}
+
+static void SaveJSON(DBTable& table, const json& jsonIn, const char* fileName)
+{
+    json jsonOut = jsonIn;
+    CanonicalizeFieldOrder(jsonOut, *table.GetParser().root_struct_def_);
+
+    std::string jsonString = jsonOut.dump(4);
+
+    FILE* file = nullptr;
+    fopen_s(&file, fileName, "wb");
+    if (file)
+    {
+        fwrite(jsonString.c_str(), 1, jsonString.size(), file);
+        fclose(file);
+    }
+}
+
 static void OnFileSave()
 {
     if (s_editorData.m_dbroot.m_tables.count(s_editorData.m_selectedTableName) == 0)
@@ -74,15 +139,7 @@ static void OnFileSave()
 
     data.m_dirty = false;
 
-    std::string jsonString = data.m_data.dump(4);
-
-    FILE* file = nullptr;
-    fopen_s(&file, data.m_path.c_str(), "wb");
-    if (file)
-    {
-        fwrite(jsonString.c_str(), 1, jsonString.size(), file);
-        fclose(file);
-    }
+    SaveJSON(table, data.m_data, data.m_path.c_str());
 }
 
 static void OnFileSaveAll()
@@ -94,15 +151,8 @@ static void OnFileSaveAll()
         {
             DBTable::JSONData& data = *dataIt.second.get();
             data.m_dirty = false;
-            std::string jsonString = data.m_data.dump(4);
 
-            FILE* file = nullptr;
-            fopen_s(&file, data.m_path.c_str(), "wb");
-            if (file)
-            {
-                fwrite(jsonString.c_str(), 1, jsonString.size(), file);
-                fclose(file);
-            }
+            SaveJSON(table, data.m_data, data.m_path.c_str());
         }
     }
     s_editorData.m_documentDirty = false;
