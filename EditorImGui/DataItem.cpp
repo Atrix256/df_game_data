@@ -62,6 +62,7 @@ enum class TypeCategory
     Float,
     String,
     Struct,
+    Union,
 };
 
 union TypeDetails
@@ -84,6 +85,12 @@ union TypeDetails
         flatbuffers::StructDef* structDef;
     }
     Struct;
+
+    struct
+    {
+        flatbuffers::EnumDef* enumDef;
+    }
+    Union;
 };
 
 struct Type
@@ -194,6 +201,12 @@ void FlatBufferBaseTypeToOurType(const flatbuffers::Type& type, const flatbuffer
             details.Struct.structDef = type.struct_def;
             break;
         }
+        case flatbuffers::BaseType::BASE_TYPE_UNION:
+        {
+            category = TypeCategory::Union;
+            details.Union.enumDef = type.enum_def;
+            break;
+        }
     }
 }
 
@@ -256,7 +269,7 @@ float GetValueFromString<float>(const char* valueStr)
     return value;
 }
 
-static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& parser, const flatbuffers::FieldDef& fieldDef, DBTable::JSONData& jsonData, const json_pointer& jsonPath)
+static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& parser, const flatbuffers::FieldDef& fieldDef, DBTable::JSONData& jsonData, const json_pointer& jsonPath, const flatbuffers::FieldDef* unionTypeFieldDef, const json_pointer& unionTypeFieldJsonPath)
 {
     if (fieldDef.deprecated)
         return;
@@ -308,7 +321,7 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
         }
 
         // If this is an enum
-        if (fieldDef.value.type.enum_def)
+        if (fieldDef.value.type.enum_def && type.category != TypeCategory::Union)
         {
             if (fieldDef.value.type.enum_def->attributes.Lookup("bit_flags") == nullptr)
             {
@@ -466,6 +479,26 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
                     AddUIForType(editorData, parser, *type.details.Struct.structDef, fieldName.c_str(), jsonData, jsonPathItem);
                     break;
                 }
+                case TypeCategory::Union:
+                {
+                    if (unionTypeFieldDef && type.details.Union.enumDef)
+                    {
+                        int64_t value = GetValueFromString<int64_t>(unionTypeFieldDef->value.constant.c_str());
+                        value = GetOrDefault(jsonData.m_data, unionTypeFieldJsonPath, value);
+
+                        for (const flatbuffers::EnumVal* enumItem : type.details.Union.enumDef->Vals())
+                        {
+                            if (value == enumItem->GetAsInt64() && enumItem->union_type.struct_def)
+                            {
+                                // TODO: is this fieldname right? what if it's in an array?
+                                AddUIForType(editorData, parser, *enumItem->union_type.struct_def, fieldName.c_str(), jsonData, jsonPathItem);
+                                break;
+                            }
+                        }
+                    }
+
+                    break;
+                }
             }
         }
 
@@ -566,9 +599,10 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
 
     /*
     TODO:
-    * union needs to show the union thing itself too, not just the type selector
     * hitting +/- buttons on byte/ubyte and others make it go nuts. look into it
     * fixed sized arrays need to have their size honored.
+    * array of unions is screwed up in the editor, as 2 parallel arrays. Maybe have unions also display their type field, so they get to be next to each other?
+    * get table links working
     */
 }
 
@@ -581,7 +615,17 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
         {
             json_pointer fieldPath = path;
             fieldPath /= fieldDef->name.c_str();
-            AddUIForType(editorData, parser, *fieldDef, jsonData, fieldPath);
+
+            // If this is a union field, find the union type field
+            flatbuffers::FieldDef* unionTypeFieldDef = structDef.fields.Lookup(fieldDef->name + "_type");
+            json_pointer unionTypeFieldJsonPath;
+            if (unionTypeFieldDef)
+            {
+                unionTypeFieldJsonPath = path;
+                unionTypeFieldJsonPath /= unionTypeFieldDef->name.c_str();
+            }
+
+            AddUIForType(editorData, parser, *fieldDef, jsonData, fieldPath, unionTypeFieldDef, unionTypeFieldJsonPath);
         }
 
         ImGui::TreePop();

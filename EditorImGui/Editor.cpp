@@ -592,3 +592,4 @@ TODO:
 // TOOD: don't remove recent file if it fails to load. remove it if the file doesn't exist!
 // TODO: when deleting an item, set the selection to... the first item in the table?
 // TODO: when making a new item, select it.
+// TODO: when saving a data item, only keep the document dirty flag if there are any other dirty data items left.
