@@ -133,6 +133,22 @@ static void SaveJSON(DBTable& table, const json& jsonIn, const char* fileName)
         fwrite(jsonString.c_str(), 1, jsonString.size(), file);
         fclose(file);
     }
+
+    // Figure out if the document is dirty or not
+    s_editorData.m_documentDirty = false;
+    for (const auto& pair1 : s_editorData.m_dbroot.m_tables)
+    {
+        for (const auto& pair2 : pair1.second->m_data)
+        {
+            s_editorData.m_documentDirty |= pair2.second->m_dirty;
+
+            if (s_editorData.m_documentDirty)
+                break;
+        }
+        if (s_editorData.m_documentDirty)
+            break;
+    }
+    s_editorData.m_updateWindowTitle = true;
 }
 
 static void OnFileSave()
@@ -650,9 +666,7 @@ TODO:
 // * this is for settings like "where do we compile the output to?" etc
 // TODO: support drag/drop of fbs and dbroot files onto window
 // TODO: why does a string without a default just default to "0"? should figure that out and maybe give a fix patch
-
 // TODO: only write files if they are different than what's on disk?
-// TODO: when saving a data item, only keep the document dirty flag if there are any other dirty data items left.
 
 /*
 Notes:
