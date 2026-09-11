@@ -379,6 +379,9 @@ static void OnDataListNew()
 
     // make the entry in the data
     table.LoadFile(fileName.string().c_str());
+
+    // select the new item
+    s_editorData.m_selectedDataItemName = itemName;
 }
 
 static void OnDataListDelete()
@@ -398,6 +401,13 @@ static void OnDataListDelete()
 
     // delete from the table
     table.m_data.erase(s_editorData.m_selectedDataItemName);
+
+    // Select the first item in the table
+    for (const auto& pair : table.m_data)
+    {
+        s_editorData.m_selectedDataItemName = pair.first;
+        break;
+    }
 }
 
 static void ShowDataList()
@@ -632,14 +642,15 @@ TODO:
 // TODO: Maybe dbroot is json with a hard coded schema and make file menu options to.make.a new one, save, save as? and edit in the editor in a window
 // * no: Have a user file next to dbroot or other file extension. with a hard coded schema and a window to edit it
 // * this is for settings like "where do we compile the output to?" etc
-// TODO: make a test dataset that has all the things in it. move example into DataSets and have this other one be "Test"
-// test data set has all types exhaustively
-// TODO: note in the docs that this acts as a flatbuffer editor too because of how it works
 // TODO: support drag/drop of fbs and dbroot files onto window
 // TODO: why does a string without a default just default to "0"? should figure that out and maybe give a fix patch
 
 // TODO: only write files if they are different than what's on disk?
 // TOOD: don't remove recent file if it fails to load. remove it if the file doesn't exist!
-// TODO: when deleting an item, set the selection to... the first item in the table?
 // TODO: when making a new item, select it.
 // TODO: when saving a data item, only keep the document dirty flag if there are any other dirty data items left.
+
+/*
+Notes:
+* This works as a flatbuffer data editor too
+*/

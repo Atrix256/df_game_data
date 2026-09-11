@@ -692,12 +692,6 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
         jsonData.m_data[jsonPath].push_back(jsonData.m_data[jsonPath][duplicateIndex]);
         MarkDirty(editorData, jsonData);
     }
-
-    /*
-    TODO:
-    * fixed sized arrays need to have their size honored.
-    * get table links working
-    */
 }
 
 static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& parser, const flatbuffers::StructDef& structDef, const char* structFieldName, DBTable::JSONData& jsonData, const json_pointer& path, bool makeTreeNode)
@@ -744,3 +738,9 @@ void ShowDataEditor(EditorData& editorData)
 
     AddUIForType(editorData, parser, *parser.root_struct_def_, parser.root_struct_def_->name.c_str(), data, json_pointer(""), true);
 }
+
+/*
+TODO:
+* fixed sized arrays need to have their size honored.
+* get table links working
+*/
