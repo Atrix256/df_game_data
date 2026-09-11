@@ -1,0 +1,3 @@
+#include "df_resource.h"
+
+IDI_ICON1 ICON "df.ico"

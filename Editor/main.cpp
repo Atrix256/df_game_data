@@ -6,6 +6,8 @@
 // - Documentation        https://dearimgui.com/docs (same as your local docs/ folder).
 // - Introduction, links and more at the top of imgui.cpp
 
+#include "../df_resource.h"
+
 #include "Editor.h"
 #include "FontAwesome/IconsFontAwesome7.h"
 
@@ -127,9 +129,9 @@ int main(int, char**)
     float main_scale = ImGui_ImplWin32_GetDpiScaleForMonitor(::MonitorFromPoint(POINT{ 0, 0 }, MONITOR_DEFAULTTOPRIMARY));
 
     // Create application window
-    WNDCLASSEXW wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"ImGui Example", nullptr };
+    WNDCLASSEXW wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_ICON1)), nullptr, nullptr, nullptr, L"df_game_data Editor", LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_ICON1)) };
     ::RegisterClassExW(&wc);
-    g_hwnd = ::CreateWindowW(wc.lpszClassName, L"Dear ImGui DirectX12 Example", WS_OVERLAPPEDWINDOW, 100, 100, (int)(1280 * main_scale), (int)(800 * main_scale), nullptr, nullptr, wc.hInstance, nullptr);
+    g_hwnd = ::CreateWindowW(wc.lpszClassName, L"df_game_data Dditor", WS_OVERLAPPEDWINDOW, 100, 100, (int)(1280 * main_scale), (int)(800 * main_scale), nullptr, nullptr, wc.hInstance, nullptr);
 
     // Initialize Direct3D
     if (!CreateDeviceD3D(g_hwnd))

@@ -103,6 +103,8 @@
 #include <tchar.h>
 #include <dwmapi.h>
 
+#include "../df_resource.h"
+
 // Using XInput for gamepad (will load DLL dynamically)
 #ifndef IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
 #include <xinput.h>
@@ -1485,12 +1487,12 @@ static void ImGui_ImplWin32_InitMultiViewportSupport(bool platform_has_own_dc)
     wcex.cbClsExtra = 0;
     wcex.cbWndExtra = 0;
     wcex.hInstance = ::GetModuleHandle(nullptr);
-    wcex.hIcon = nullptr;
+    wcex.hIcon = LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_ICON1));
     wcex.hCursor = nullptr;
     wcex.hbrBackground = (HBRUSH)(COLOR_BACKGROUND + 1);
     wcex.lpszMenuName = nullptr;
     wcex.lpszClassName = L"ImGui Platform";
-    wcex.hIconSm = nullptr;
+    wcex.hIconSm = LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_ICON1));
     ::RegisterClassExW(&wcex);
 
     ImGui_ImplWin32_UpdateMonitors();

@@ -167,6 +167,7 @@ dxgi.lib
     <ClCompile Include="RecentFiles.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\df_resource.h" />
     <ClInclude Include="DataItem.h" />
     <ClInclude Include="Editor.h" />
     <ClInclude Include="FontAwesome\IconsFontAwesome7.h" />
@@ -179,6 +180,9 @@ dxgi.lib
     <ProjectReference Include="..\loader\loader.vcxproj">
       <Project>{306d7dd5-9b7d-4a1d-a4f6-8223b668fedf}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\df.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

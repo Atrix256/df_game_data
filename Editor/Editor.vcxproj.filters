@@ -29,10 +29,14 @@
     <ClInclude Include="RecentFiles.h" />
     <ClInclude Include="FontAwesome\IconsFontAwesome7.h" />
     <ClInclude Include="UIShared.h" />
+    <ClInclude Include="..\df_resource.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
       <UniqueIdentifier>{47b3d56f-528c-4c6f-a071-962d2cc9ce0b}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\df.rc" />
   </ItemGroup>
 </Project>

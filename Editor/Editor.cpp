@@ -652,8 +652,7 @@ bool ShowEditorWindow()
 }
 /*
 TODO:
-* application icon
-* undo redo stack
+* undo redo stack - make a task talking about it. each modification is an action with enough state to undo and redo it. No direct modifications. Every modification goes through that system which does it and puts it on the stack.
 * add text copy/paste?
 * look for TODOs
 * imgui srgb target? or do we care?
