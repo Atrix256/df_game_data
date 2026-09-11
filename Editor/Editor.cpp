@@ -652,14 +652,13 @@ bool ShowEditorWindow()
 }
 /*
 TODO:
-* when done: get rid of other editor app. rename this one to editor. add imgui to OSS list, remove wxwidgets. update vcpkg script.
 * application icon
 * undo redo stack
 * add text copy/paste?
 * look for TODOs
 * imgui srgb target? or do we care?
 * maybe try the light theme of imgui?
-* watch files on disk and react to them for hot loading
+* watch files on disk and react to them for hot loading. The game will use this functionality too. make it part of the loader
 */
 // TODO: Maybe dbroot is json with a hard coded schema and make file menu options to.make.a new one, save, save as? and edit in the editor in a window
 // * no: Have a user file next to dbroot or other file extension. with a hard coded schema and a window to edit it
