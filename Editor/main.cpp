@@ -131,7 +131,7 @@ int main(int, char**)
     // Create application window
     WNDCLASSEXW wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_ICON1)), nullptr, nullptr, nullptr, L"df_game_data Editor", LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_ICON1)) };
     ::RegisterClassExW(&wc);
-    g_hwnd = ::CreateWindowW(wc.lpszClassName, L"df_game_data Dditor", WS_OVERLAPPEDWINDOW, 100, 100, (int)(1280 * main_scale), (int)(800 * main_scale), nullptr, nullptr, wc.hInstance, nullptr);
+    g_hwnd = ::CreateWindowW(wc.lpszClassName, L"df_game_data Dditor", WS_OVERLAPPEDWINDOW, 100, 100, (int)(640 * main_scale), (int)(480 * main_scale), nullptr, nullptr, wc.hInstance, nullptr);
 
     // Initialize Direct3D
     if (!CreateDeviceD3D(g_hwnd))
