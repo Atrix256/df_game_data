@@ -106,6 +106,14 @@ enum class TypeCategory
     Union,
 };
 
+bool TypeCategoryIsScalar(TypeCategory category)
+{
+    return
+        category != TypeCategory::Unknown &&
+        category != TypeCategory::Struct &&
+        category != TypeCategory::Union;
+}
+
 union TypeDetails
 {
     struct
@@ -323,12 +331,18 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
 
     // Figure out how many items are in this array (1 item for non arrays)
     size_t arrayItemCount = 1;
+    bool fixedSizedArray = false;
     if (type.isVector)
     {
         if (type.vectorSize > 0)
+        {
+            fixedSizedArray = true;
             arrayItemCount = type.vectorSize;
+        }
         else
+        {
             arrayItemCount = jsonData.m_data.value(jsonPath, json::array()).size();
+        }
 
         bool treeNodeOpened = ImGui::TreeNodeEx(fieldDef.name.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
 
@@ -594,11 +608,9 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
 
         if (type.isVector)
         {
-            ImGui::SameLine();
-            if (ImGui::SmallButton("X"))
-                deleteIndex = arrayIndex;
-            ShowToolTip("Delete", false);
-            ImGui::SameLine();
+            if (TypeCategoryIsScalar(type.category))
+                ImGui::SameLine();
+
             {
                 ImGui_Enabled enabled(arrayIndex != 0);
                 if (ImGui::SmallButton(ICON_FA_ANGLE_UP "##Up"))
@@ -627,7 +639,13 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
                 ShowToolTip("Down to Bottom", false);
             }
 
+            if (!fixedSizedArray)
             {
+                ImGui::SameLine();
+                if (ImGui::SmallButton("X"))
+                    deleteIndex = arrayIndex;
+                ShowToolTip("Delete", false);
+
                 ImGui::SameLine();
                 if (ImGui::SmallButton("Duplicate"))
                     duplicateIndex = arrayIndex;
@@ -640,7 +658,7 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
 
     if (type.isVector)
     {
-        if (ImGui::Button("Add Item"))
+        if (!fixedSizedArray && ImGui::Button("Add Item"))
         {
             if (type.category == TypeCategory::Union)
             {
@@ -741,6 +759,6 @@ void ShowDataEditor(EditorData& editorData)
 
 /*
 TODO:
-* fixed sized arrays need to have their size honored.
 * get table links working
+ * just a combo box of the records of the other table, and store as a string. in fact, make links only be checked for if they are string types.
 */
