@@ -24,3 +24,4 @@ struct EditorData
 };
 
 bool ShowEditorWindow();
+void OnFileDragDropped(const wchar_t* path);

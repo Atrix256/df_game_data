@@ -133,6 +133,8 @@ int main(int, char**)
     ::RegisterClassExW(&wc);
     g_hwnd = ::CreateWindowW(wc.lpszClassName, L"df_game_data Dditor", WS_OVERLAPPEDWINDOW, 100, 100, (int)(640 * main_scale), (int)(480 * main_scale), nullptr, nullptr, wc.hInstance, nullptr);
 
+    DragAcceptFiles(g_hwnd, TRUE);
+
     // Initialize Direct3D
     if (!CreateDeviceD3D(g_hwnd))
     {
@@ -551,6 +553,25 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     if (msg == WM_CLOSE)
     {
         ImGui::GetMainViewport()->PlatformRequestClose = true;
+        return 0;
+    }
+
+    if (msg == WM_DROPFILES)
+    {
+        HDROP hDrop = (HDROP)wParam;
+        UINT fileCount = DragQueryFileW(hDrop, 0xFFFFFFFF, nullptr, 0);
+
+        for (UINT i = 0; i < fileCount; ++i)
+        {
+            wchar_t path[MAX_PATH];
+            if (DragQueryFileW(hDrop, i, path, MAX_PATH))
+            {
+                // Queue this for your app to handle (e.g. next frame)
+                OnFileDragDropped(path);
+            }
+        }
+
+        DragFinish(hDrop);
         return 0;
     }
 

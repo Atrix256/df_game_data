@@ -217,6 +217,11 @@ bool DBRoot::Load(const char* path)
 
         m_tables[newTable->m_rootType] = std::move(newTable);
     }
+    else
+    {
+        m_errorText = "Unknown file type: " + std::string(path);
+        return false;
+    }
 
     return true;
 }

@@ -650,22 +650,27 @@ bool ShowEditorWindow()
 
     return ret;
 }
+
+void OnFileDragDropped(const wchar_t* path)
+{
+    LoadFile(std::filesystem::path(path).string().c_str());
+}
+
 /*
 TODO:
+// TODO: why does a string without a default just default to "0"? should figure that out and maybe give a fix patch
+// TODO: only write files if they are different than what's on disk?
+// TODO: wrap each "at()" with a "contains()" to prevent all these exceptions form coming up. They cost perf.
 * add text copy/paste?
 * look for TODOs
 * ask claude how to make it prettier. something said replacing the font is a good step.
 * watch files on disk and react to them for hot loading. The game will use this functionality too. make it part of the loader
 * nlohman is throwing a bunch of exceptions, shown in the debug output window. it would be nice if that wasn't the case
-*/
+
 // TODO: Maybe dbroot is json with a hard coded schema and make file menu options to.make.a new one, save, save as? and edit in the editor in a window
 // * no: Have a user file next to dbroot or other file extension. with a hard coded schema and a window to edit it
 // * this is for settings like "where do we compile the output to?" etc
-// TODO: support drag/drop of fbs and dbroot files onto window
-// TODO: why does a string without a default just default to "0"? should figure that out and maybe give a fix patch
-// TODO: only write files if they are different than what's on disk?
 
-/*
 Notes:
 * This works as a flatbuffer data editor too
 * explain the design decisions (each data item as a json data file for easier merging. flat tables for speed. multiple tables because that's whats needed. table links)
