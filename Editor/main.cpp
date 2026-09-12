@@ -121,6 +121,93 @@ void WaitForPendingOperations();
 FrameContext* WaitForNextFrameContext();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+void ApplyStyle()
+{
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImGui::StyleColorsLight(&style); // start from light baseline, override below
+
+    // --- Sizing & spacing ---
+    style.WindowPadding = ImVec2(12, 12);
+    style.FramePadding = ImVec2(8, 6);
+    style.ItemSpacing = ImVec2(8, 8);
+    style.ItemInnerSpacing = ImVec2(6, 6);
+    style.IndentSpacing = 20.0f;
+    style.ScrollbarSize = 14.0f;
+    style.GrabMinSize = 10.0f;
+
+    // --- Borders (pick one strategy: soft border, no double-emphasis) ---
+    style.WindowBorderSize = 1.0f;
+    style.FrameBorderSize = 0.0f;   // rely on bg contrast, not borders, for fields
+    style.PopupBorderSize = 1.0f;
+    style.TabBorderSize = 0.0f;
+
+    // --- Rounding (keep consistent across widgets) ---
+    style.WindowRounding = 6.0f;
+    style.FrameRounding = 5.0f;
+    style.PopupRounding = 6.0f;
+    style.ScrollbarRounding = 8.0f;
+    style.GrabRounding = 5.0f;
+    style.TabRounding = 5.0f;
+    style.ChildRounding = 5.0f;
+
+    // --- Alignment ---
+    style.WindowTitleAlign = ImVec2(0.0f, 0.5f);
+    style.ButtonTextAlign = ImVec2(0.5f, 0.5f);
+
+    // --- Colors: muted grays + single blue accent ---
+    ImVec4* colors = style.Colors;
+    colors[ImGuiCol_WindowBg] = ImVec4(0.96f, 0.96f, 0.97f, 1.00f);
+    colors[ImGuiCol_ChildBg] = ImVec4(0.96f, 0.96f, 0.97f, 1.00f);
+    colors[ImGuiCol_PopupBg] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
+    colors[ImGuiCol_Border] = ImVec4(0.82f, 0.82f, 0.84f, 0.60f);
+
+    colors[ImGuiCol_FrameBg] = ImVec4(0.90f, 0.90f, 0.92f, 1.00f);
+    colors[ImGuiCol_FrameBgHovered] = ImVec4(0.85f, 0.87f, 0.94f, 1.00f);
+    colors[ImGuiCol_FrameBgActive] = ImVec4(0.80f, 0.83f, 0.95f, 1.00f);
+
+    colors[ImGuiCol_TitleBg] = ImVec4(0.93f, 0.93f, 0.95f, 1.00f);
+    colors[ImGuiCol_TitleBgActive] = ImVec4(0.90f, 0.90f, 0.93f, 1.00f);
+
+    colors[ImGuiCol_MenuBarBg] = ImVec4(0.93f, 0.93f, 0.95f, 1.00f);
+
+    colors[ImGuiCol_ScrollbarBg] = ImVec4(0.96f, 0.96f, 0.97f, 1.00f);
+    colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.80f, 0.80f, 0.82f, 1.00f);
+    colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.70f, 0.70f, 0.73f, 1.00f);
+    colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.60f, 0.60f, 0.63f, 1.00f);
+
+    // Single accent color used consistently for anything "active/selected"
+    ImVec4 accent = ImVec4(0.26f, 0.45f, 0.86f, 1.00f);
+    ImVec4 accentHover = ImVec4(0.32f, 0.52f, 0.90f, 1.00f);
+    ImVec4 accentActive = ImVec4(0.20f, 0.38f, 0.78f, 1.00f);
+
+    colors[ImGuiCol_CheckMark] = accent;
+    colors[ImGuiCol_SliderGrab] = accent;
+    colors[ImGuiCol_SliderGrabActive] = accentActive;
+    colors[ImGuiCol_Button] = ImVec4(0.90f, 0.90f, 0.92f, 1.00f);
+    colors[ImGuiCol_ButtonHovered] = accentHover;
+    colors[ImGuiCol_ButtonActive] = accentActive;
+
+    colors[ImGuiCol_Header] = ImVec4(0.85f, 0.88f, 0.96f, 1.00f); // selected tree/table row
+    colors[ImGuiCol_HeaderHovered] = ImVec4(0.88f, 0.91f, 0.98f, 1.00f);
+    colors[ImGuiCol_HeaderActive] = accent;
+
+    colors[ImGuiCol_Tab] = ImVec4(0.90f, 0.90f, 0.92f, 1.00f);
+    colors[ImGuiCol_TabHovered] = accentHover;
+    colors[ImGuiCol_TabActive] = ImVec4(0.98f, 0.98f, 0.99f, 1.00f);
+    colors[ImGuiCol_TabUnfocused] = ImVec4(0.90f, 0.90f, 0.92f, 1.00f);
+    colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.94f, 0.94f, 0.96f, 1.00f);
+
+    colors[ImGuiCol_ResizeGrip] = ImVec4(0.80f, 0.80f, 0.82f, 0.40f);
+    colors[ImGuiCol_ResizeGripHovered] = accentHover;
+    colors[ImGuiCol_ResizeGripActive] = accentActive;
+
+    colors[ImGuiCol_SeparatorHovered] = accentHover;
+    colors[ImGuiCol_SeparatorActive] = accentActive;
+
+    colors[ImGuiCol_Text] = ImVec4(0.15f, 0.15f, 0.17f, 1.00f);
+    colors[ImGuiCol_TextDisabled] = ImVec4(0.55f, 0.55f, 0.58f, 1.00f);
+}
+
 // Main code
 int main(int, char**)
 {
@@ -164,6 +251,7 @@ int main(int, char**)
     // Setup Dear ImGui style
     //ImGui::StyleColorsDark();
     ImGui::StyleColorsLight();
+    ApplyStyle();
 
     // Setup scaling
     ImGuiStyle& style = ImGui::GetStyle();
@@ -216,12 +304,27 @@ int main(int, char**)
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf");
     //IM_ASSERT(font != nullptr);
 
+    // Load standard windows font if we can
+    {
+        const char* fontFile = "C:\\Windows\\Fonts\\segoeui.ttf";
+        std::error_code ec;
+        if (std::filesystem::exists(fontFile, ec))
+        {
+            ImFontConfig base_config;
+            base_config.SizePixels = 16.0f;
+
+            io.Fonts->AddFontFromFileTTF(fontFile, 16.0f, &base_config);
+        }
+        else
+        {
+            ImFontConfig base_config;
+            base_config.SizePixels = 16.0f;
+            io.Fonts->AddFontDefault(&base_config);
+        }
+    }
+
     // Load Font Awesome icons
     {
-        ImFontConfig base_config;
-        base_config.SizePixels = 13.0f;
-        io.Fonts->AddFontDefault(&base_config);
-
         static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_16_FA, 0 };
         ImFontConfig icons_config;
         icons_config.MergeMode = true;
@@ -231,7 +334,7 @@ int main(int, char**)
         const char* fontName = "FontAwesome/fontawesome-webfont.ttf";
 
         // Use an actual pixel size here, matching base_config.SizePixels (or close to it)
-        io.Fonts->AddFontFromFileTTF(fontName, 13.0f, &icons_config, icons_ranges);
+        io.Fonts->AddFontFromFileTTF(fontName, 16.0f, &icons_config, icons_ranges);
     }
 
     // Our state

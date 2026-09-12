@@ -671,9 +671,7 @@ void OnFileDragDropped(const wchar_t* path)
 
 /*
 TODO:
-* ask claude how to make it prettier. something said replacing the font is a good step.
 * watch files on disk and react to them for hot loading. The game will use this functionality too. make it part of the loader
-* nlohman is throwing a bunch of exceptions, shown in the debug output window. it would be nice if that wasn't the case
 
 // Maybe dbroot is json with a hard coded schema and make file menu options to.make.a new one, save, save as? and edit in the editor in a window
 //  * no: Have a user file next to dbroot or other file extension. with a hard coded schema and a window to edit it
