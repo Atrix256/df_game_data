@@ -158,6 +158,7 @@ dxgi.lib
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Compile.cpp" />
     <ClCompile Include="DataItem.cpp" />
     <ClCompile Include="Editor.cpp" />
     <ClCompile Include="imgui_demo.cpp" />
@@ -168,6 +169,7 @@ dxgi.lib
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\df_resource.h" />
+    <ClInclude Include="Compile.h" />
     <ClInclude Include="DataItem.h" />
     <ClInclude Include="Editor.h" />
     <ClInclude Include="FontAwesome\IconsFontAwesome7.h" />

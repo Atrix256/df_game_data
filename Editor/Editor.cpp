@@ -7,11 +7,48 @@
 #include "DataItem.h"
 #include <filesystem>
 #include "UIShared.h"
+#include "Compile.h"
 
 static EditorData s_editorData;
 
 extern void SetWindowTitle(const char* text);
-extern bool RunFlatc(const char* args, bool waitForExit);
+
+static void LoadSettings()
+{
+    s_editorData.m_settings = Settings();
+
+    std::filesystem::path settingsFileName(std::string(s_editorData.m_dbroot.GetPath()) + ".dbsettings");
+
+    // Load the json file
+    std::string jsonString;
+    if (!flatbuffers::LoadFile(settingsFileName.string().c_str(), false, &jsonString))
+        return;
+
+    json data = json::parse(jsonString, nullptr, false);
+    if (data.is_discarded())
+        return;
+
+    if (data.contains("compileOutputDir"))
+        s_editorData.m_settings.compileOutputDir = data.at("compileOutputDir");
+}
+
+static void SaveSettings()
+{
+    std::filesystem::path settingsFileName(std::string(s_editorData.m_dbroot.GetPath()) + ".dbsettings");
+
+    json doc = json::object();
+    doc["compileOutputDir"] = s_editorData.m_settings.compileOutputDir;
+
+    std::string jsonString = doc.dump(4);
+
+    FILE* file = nullptr;
+    fopen_s(&file, settingsFileName.string().c_str(), "wb");
+    if (file)
+    {
+        fwrite(jsonString.c_str(), 1, jsonString.size(), file);
+        fclose(file);
+    }
+}
 
 static void LoadFile(const char* fileName)
 {
@@ -43,6 +80,7 @@ static void LoadFile(const char* fileName)
             }
             break;
         }
+        LoadSettings();
     }
     else
     {
@@ -246,30 +284,11 @@ static bool ShowMenuBar()
 
         if (ImGui::BeginMenu("Compile"))
         {
-            if (ImGui::MenuItem("Do it"))
-            {
-                if (s_editorData.m_dbroot.m_tables.count(s_editorData.m_selectedTableName) > 0)
-                {
-                    DBTable& table = *s_editorData.m_dbroot.m_tables[s_editorData.m_selectedTableName].get();
+            if (ImGui::MenuItem("Settings"))
+                s_editorData.m_openSettingsWindow = true;
 
-                    if (table.m_data.count(s_editorData.m_selectedDataItemName) > 0)
-                    {
-                        DBTable::JSONData& data = *table.m_data[s_editorData.m_selectedDataItemName].get();
-
-                        // Make the generated header
-                        {
-                            std::string commandLine = "--cpp " + std::string(table.GetPath());
-                            RunFlatc(commandLine.c_str(), false);
-                        }
-
-                        // Make a binary file
-                        {
-                            std::string commandLine = "-b " + std::string(table.GetPath()) + " " + data.m_path;
-                            RunFlatc(commandLine.c_str(), false);
-                        }
-                    }
-                }
-            }
+            if (ImGui::MenuItem("Compile", "Ctrl+C"))
+                CompileData(s_editorData);
 
             ImGui::EndMenu();
         }
@@ -288,6 +307,9 @@ static bool ShowMenuBar()
 
     if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_X))
         ret = true;
+
+    if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_C))
+        CompileData(s_editorData);
 
     return ret;
 }
@@ -579,6 +601,42 @@ static void ShowDataList()
     }
 }
 
+void HandleSettingsWindow()
+{
+    if (s_editorData.m_openSettingsWindow)
+    {
+        ImGui::OpenPopup("Settings");
+        s_editorData.m_openSettingsWindow = false;
+    }
+
+    if (ImGui::BeginPopupModal("Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        // Compile Output Directory
+        static std::vector<char> tmpBuffer;
+        tmpBuffer.resize(4096);
+        strcpy_s(tmpBuffer.data(), tmpBuffer.size(), s_editorData.m_settings.compileOutputDir.c_str());
+        if (ImGui::InputText("Compile Output Directory", tmpBuffer.data(), tmpBuffer.size()))
+            s_editorData.m_settings.compileOutputDir = tmpBuffer.data();
+
+        ImGui::Separator();
+
+        if (ImGui::Button("OK", ImVec2(120, 0)))
+        {
+            SaveSettings();
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SetItemDefaultFocus();
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", ImVec2(120, 0)))
+        {
+            LoadSettings();
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
+}
+
 bool ShowEditorWindow()
 {
     bool ret = false;
@@ -645,6 +703,8 @@ bool ShowEditorWindow()
         showConfirmExit = true;
         ImGui::OpenPopup("Exit Confirmation");
     }
+
+    HandleSettingsWindow();
 
     if (ImGui::BeginPopupModal("Exit Confirmation", &showConfirmExit, ImGuiWindowFlags_AlwaysAutoResize))
     {

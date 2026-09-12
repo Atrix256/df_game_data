@@ -4,6 +4,11 @@
 #include <string>
 #include "RecentFiles.h"
 
+struct Settings
+{
+    std::string compileOutputDir;
+};
+
 struct EditorData
 {
     EditorData()
@@ -12,6 +17,8 @@ struct EditorData
         m_recentFiles.LoadAllEntries();
     }
 
+    Settings m_settings;
+
     DBRoot m_dbroot;
     std::string m_selectedTableName;
     std::string m_selectedDataItemName;
@@ -19,6 +26,7 @@ struct EditorData
     bool m_documentDirty = false;
     bool m_updateWindowTitle = true;
     bool m_showLoadingErrors = false;
+    bool m_openSettingsWindow = false;
 
     RecentFiles m_recentFiles;
 };
