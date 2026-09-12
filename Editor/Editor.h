@@ -28,6 +28,9 @@ struct EditorData
     bool m_showLoadingErrors = false;
     bool m_openSettingsWindow = false;
 
+    bool m_showCompileResultsWindow = false;
+    bool m_compileSucceeded = false;
+
     RecentFiles m_recentFiles;
 };
 

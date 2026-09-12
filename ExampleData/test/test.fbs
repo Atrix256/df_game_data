@@ -62,7 +62,7 @@ table TableEntry
     _float:float;
     _double:double;
 
-    _string:string = "test";
+    _string:string;
     _string_deprecated:string = "test" (deprecated);
     _color:Color;
     _union:Point;

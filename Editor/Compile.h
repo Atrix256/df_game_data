@@ -2,4 +2,4 @@
 
 struct EditorData;
 
-void CompileData(EditorData& editorData);
+bool CompileData(EditorData& editorData);

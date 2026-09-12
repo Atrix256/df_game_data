@@ -524,6 +524,8 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
                 case TypeCategory::String:
                 {
                     std::string dflt = fieldDef.value.constant.c_str();
+                    if (dflt == "0") // the default for strings in flatbuffers is "0" for some reason. This is a hack around.
+                        dflt = "";
                     std::string value = GetOrDefault(jsonData.m_data, jsonPathItem, dflt);
 
                     // links have a drop down menu

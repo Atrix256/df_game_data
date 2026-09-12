@@ -6,8 +6,20 @@
 
 extern bool RunFlatc(const char* args, bool waitForExit);
 
-void CompileData(EditorData& editorData)
+std::filesystem::path ApplyPath(const std::filesystem::path& base, const std::filesystem::path& input)
 {
+    if (input.is_absolute())
+        return input;
+    return base / input;
+}
+
+bool CompileData(EditorData& editorData)
+{
+    bool ret = true;
+
+    std::filesystem::path dbRootPath = std::filesystem::path(editorData.m_dbroot.GetPath()).remove_filename();
+
+    std::string outputDir = ApplyPath(dbRootPath, editorData.m_settings.compileOutputDir).generic_string();
 
     if (editorData.m_dbroot.m_tables.count(editorData.m_selectedTableName) > 0)
     {
@@ -19,15 +31,16 @@ void CompileData(EditorData& editorData)
 
             // Make the generated header
             {
-                std::string commandLine = "--cpp " + std::string(table.GetPath());
-                RunFlatc(commandLine.c_str(), false);
+                std::string commandLine = "--cpp -o \"" + outputDir + "\" \"" + std::string(table.GetPath()) + "\"";
+                ret |= RunFlatc(commandLine.c_str(), false);
             }
 
             // Make a binary file
             {
-                std::string commandLine = "-b " + std::string(table.GetPath()) + " " + data.m_path;
-                RunFlatc(commandLine.c_str(), false);
+                std::string commandLine = "-b -o \"" + outputDir + "\" \"" + std::string(table.GetPath()) + "\" \"" + data.m_path + "\"";
+                ret |= RunFlatc(commandLine.c_str(), false);
             }
         }
     }
+    return ret;
 }

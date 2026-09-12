@@ -288,7 +288,10 @@ static bool ShowMenuBar()
                 s_editorData.m_openSettingsWindow = true;
 
             if (ImGui::MenuItem("Compile", "Ctrl+C"))
-                CompileData(s_editorData);
+            {
+                s_editorData.m_compileSucceeded = CompileData(s_editorData);
+                s_editorData.m_showCompileResultsWindow = true;
+            }
 
             ImGui::EndMenu();
         }
@@ -309,7 +312,10 @@ static bool ShowMenuBar()
         ret = true;
 
     if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_C))
-        CompileData(s_editorData);
+    {
+        s_editorData.m_compileSucceeded = CompileData(s_editorData);
+        s_editorData.m_showCompileResultsWindow = true;
+    }
 
     return ret;
 }
@@ -601,6 +607,34 @@ static void ShowDataList()
     }
 }
 
+void HandleCompileResults()
+{
+    if (s_editorData.m_showCompileResultsWindow)
+    {
+        ImGui::OpenPopup("Compile Finished");
+        s_editorData.m_showCompileResultsWindow = false;
+    }
+
+    if (ImGui::BeginPopupModal("Compile Finished", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        if (s_editorData.m_compileSucceeded)
+            ImGui::Text(" Data Compilation Succeeded");
+        else
+            ImGui::Text(ICON_FA_CIRCLE_EXCLAMATION " Data Compilation Failed");
+
+        ImGui::Separator();
+
+        if (ImGui::Button("OK", ImVec2(120, 0)))
+        {
+            SaveSettings();
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SetItemDefaultFocus();
+
+        ImGui::EndPopup();
+    }
+}
+
 void HandleSettingsWindow()
 {
     if (s_editorData.m_openSettingsWindow)
@@ -705,6 +739,7 @@ bool ShowEditorWindow()
     }
 
     HandleSettingsWindow();
+    HandleCompileResults();
 
     if (ImGui::BeginPopupModal("Exit Confirmation", &showConfirmExit, ImGuiWindowFlags_AlwaysAutoResize))
     {
@@ -765,12 +800,25 @@ TODO:
 
 * start compiling data to binary
 
+* is a dbroot file made automatically when opening an fbs file, and you add fbs files to them?
+ * or maybe you add them to an array in settings? so dbroot holds the list of files, and also the settings, and no more settings file?
+
 // Maybe dbroot is json with a hard coded schema and make file menu options to.make.a new one, save, save as? and edit in the editor in a window
 //  * no: Have a user file next to dbroot or other file extension. with a hard coded schema and a window to edit it
 //  * this is for settings like "where do we compile the output to?" etc
-// why does a string without a default just default to "0"? should figure that out and maybe give a fix patch. or just put a hackaround in your own code
 
 * watch files on disk and react to them for hot loading. The game will use this functionality too. make it part of the loader
+
+* need a way to compile from command line. maybe a standalone app. move compilation logic into loader?
+
+* Make a script to make binary releases.
+* installer
+ * with option to add to path (for binary compilation)
+* Alsp need version number in app and installer.
+* dd contributors list and how to contribute
+* Let people Add their name. Alpha sort. Along with a description of what they did?
+ * Or a link to a page with their check ins or something.
+* Add a help about with version and contributor list.
 
 Notes:
 * This works as a flatbuffer data editor too (can open fbs or dbroot files)
