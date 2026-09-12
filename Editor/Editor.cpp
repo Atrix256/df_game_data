@@ -126,7 +126,20 @@ static void SaveJSON(DBTable& table, const json& jsonIn, const char* fileName)
 
     std::string jsonString = jsonOut.dump(4);
 
+    // If the file already exists and hasn't changed, don't touch it again
     FILE* file = nullptr;
+    fopen_s(&file, fileName, "rb");
+    if (file)
+    {
+        fseek(file, 0, SEEK_END);
+        std::vector<char> fileData(ftell(file));
+        fread(fileData.data(), 1, fileData.size(), file);
+        fileData.push_back(0);
+
+        if (strcmp(jsonString.c_str(), fileData.data()) == 0)
+            return;
+    }
+
     fopen_s(&file, fileName, "wb");
     if (file)
     {
@@ -390,7 +403,7 @@ static void OnDataListNew()
     std::string itemName = GetUniqueDataItemName("NewEntry");
     std::filesystem::path fileName = (std::filesystem::path(table.GetPath()).remove_filename() / itemName).replace_extension(".json");
 
-    // make the file
+    // make a dummy file
     {
         FILE* file = nullptr;
         fopen_s(&file, fileName.string().c_str(), "wb");
@@ -658,10 +671,7 @@ void OnFileDragDropped(const wchar_t* path)
 
 /*
 TODO:
-// TODO: why does a string without a default just default to "0"? should figure that out and maybe give a fix patch
-// TODO: only write files if they are different than what's on disk?
 // TODO: wrap each "at()" with a "contains()" to prevent all these exceptions form coming up. They cost perf.
-* add text copy/paste?
 * look for TODOs
 * ask claude how to make it prettier. something said replacing the font is a good step.
 * watch files on disk and react to them for hot loading. The game will use this functionality too. make it part of the loader
@@ -670,10 +680,12 @@ TODO:
 // TODO: Maybe dbroot is json with a hard coded schema and make file menu options to.make.a new one, save, save as? and edit in the editor in a window
 // * no: Have a user file next to dbroot or other file extension. with a hard coded schema and a window to edit it
 // * this is for settings like "where do we compile the output to?" etc
+// TODO: why does a string without a default just default to "0"? should figure that out and maybe give a fix patch. or just put a hackaround in your own code
 
 Notes:
-* This works as a flatbuffer data editor too
+* This works as a flatbuffer data editor too (can open fbs or dbroot files)
 * explain the design decisions (each data item as a json data file for easier merging. flat tables for speed. multiple tables because that's whats needed. table links)
 * Explain how to use it
+* mention drag and drop working
 
 */
