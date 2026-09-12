@@ -101,6 +101,23 @@ bool CompileData(EditorData& editorData)
 
         std::string fullSchema = includes + "attribute \"link\";\n" + combinedSchema;
 
+        // Make a table that has arrays of each table type, and make it be the root type
+        fullSchema += "table dbroot\n{\n";
+        for (const std::string& tableName : tableOrder)
+        {
+            std::string memberName = tableName;
+            std::transform(memberName.begin(), memberName.end(), memberName.begin(),
+                [](unsigned char c)
+                {
+                    return std::tolower(c);
+                }
+            );
+            memberName += "_entries";
+
+            fullSchema += "    " + memberName + ":[" + tableName + "];\n";
+        }
+        fullSchema += "}\n\nroot_type dbroot;\n\n";
+
         std::string fullSchemaFileName = std::filesystem::path(tempDir).replace_filename("schema.fbs").generic_string();
 
         FILE* file = nullptr;
@@ -116,7 +133,7 @@ bool CompileData(EditorData& editorData)
         }
 
         std::string commandLine = "--cpp" + includePaths + " -o \"" + outputDir + "\" \"" + fullSchemaFileName + "\"";
-        if (!RunFlatc(commandLine.c_str(), false))
+        if (!RunFlatc(commandLine.c_str(), true))
             return false;
     }
 

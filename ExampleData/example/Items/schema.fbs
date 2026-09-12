@@ -1,7 +1,5 @@
 include "../common.fbs";
 
-namespace ExampleData.Items;
-
 // Root Type
 table Item
 {

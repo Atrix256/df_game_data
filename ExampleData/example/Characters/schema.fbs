@@ -1,7 +1,5 @@
 include "../common.fbs";
 
-namespace ExampleData.Characters;
-
 // Enums
 enum EyeColor : byte { Brown, Hazel, Blue, Green }
 enum Alignment : byte { Good, Neutral, Evil }

@@ -800,6 +800,8 @@ TODO:
 
 * make all filepath .string into .generic_string for forward slash separators
 
+* put a namespace string in the compile settings and put that into the combined schema
+
 * maybe have output dir pluralized and specify an enum for each. like cpp or javascript or whatever other options
 
 * is a dbroot file made automatically when opening an fbs file, and you add fbs files to them?
@@ -830,5 +832,6 @@ Notes:
 * Explain how to use it
 * mention drag and drop working
 * if you use table links, the table you reference must come before the current table in the dbroot list
+* don't use namespace in your files, but you can put a namespace in the settings.
 
 */
