@@ -625,10 +625,8 @@ void HandleCompileResults()
         ImGui::Separator();
 
         if (ImGui::Button("OK", ImVec2(120, 0)))
-        {
-            SaveSettings();
             ImGui::CloseCurrentPopup();
-        }
+
         ImGui::SetItemDefaultFocus();
 
         ImGui::EndPopup();
@@ -800,6 +798,10 @@ TODO:
 
 * start compiling data to binary
 
+* make all filepath .string into .generic_string for forward slash separators
+
+* maybe have output dir pluralized and specify an enum for each. like cpp or javascript or whatever other options
+
 * is a dbroot file made automatically when opening an fbs file, and you add fbs files to them?
  * or maybe you add them to an array in settings? so dbroot holds the list of files, and also the settings, and no more settings file?
 
@@ -810,6 +812,8 @@ TODO:
 * watch files on disk and react to them for hot loading. The game will use this functionality too. make it part of the loader
 
 * need a way to compile from command line. maybe a standalone app. move compilation logic into loader?
+
+* make all extern functions instead be in a header for better visibility of platform needs
 
 * Make a script to make binary releases.
 * installer
@@ -825,5 +829,6 @@ Notes:
 * explain the design decisions (each data item as a json data file for easier merging. flat tables for speed. multiple tables because that's whats needed. table links)
 * Explain how to use it
 * mention drag and drop working
+* if you use table links, the table you reference must come before the current table in the dbroot list
 
 */

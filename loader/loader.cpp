@@ -147,6 +147,7 @@ bool DBRoot::Load(const char* path)
     std::string extension = std::filesystem::path(path).extension().string();
     std::filesystem::path base_path = std::filesystem::absolute(path).remove_filename();
 
+    int loadOrder = 0;
     if (extension == ".dbroot")
     {
         // Load m_tables
@@ -186,6 +187,7 @@ bool DBRoot::Load(const char* path)
                     m_errorText += warningText;
                 }
 
+                newTable->m_loadOrder = loadOrder++;
                 m_tables[newTable->m_rootType] = std::move(newTable);
             }
 
@@ -215,6 +217,7 @@ bool DBRoot::Load(const char* path)
             m_errorText += warningText;
         }
 
+        newTable->m_loadOrder = loadOrder++;
         m_tables[newTable->m_rootType] = std::move(newTable);
     }
     else

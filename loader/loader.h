@@ -41,6 +41,7 @@ public:
 
     std::map<std::string, std::unique_ptr<JSONData>> m_data;
     std::string m_rootType;
+    int m_loadOrder = 0;
 
 private:
     bool LoadSchema();
