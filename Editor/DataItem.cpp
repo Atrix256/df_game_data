@@ -341,7 +341,10 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
         }
         else
         {
-            arrayItemCount = jsonData.m_data.value(jsonPath, json::array()).size();
+            if (jsonData.m_data.contains(jsonPath))
+                arrayItemCount = jsonData.m_data.value(jsonPath, json::array()).size();
+            else
+                arrayItemCount = 0;
         }
 
         bool treeNodeOpened = ImGui::TreeNodeEx(fieldDef.name.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
