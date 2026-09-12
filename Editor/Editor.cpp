@@ -8,9 +8,10 @@
 #include <filesystem>
 #include "UIShared.h"
 
-extern void SetWindowTitle(const char* text);
-
 static EditorData s_editorData;
+
+extern void SetWindowTitle(const char* text);
+extern bool RunFlatc(const char* args, bool waitForExit);
 
 static void LoadFile(const char* fileName)
 {
@@ -240,6 +241,36 @@ static bool ShowMenuBar()
             ImGui::Separator();
             if (ImGui::MenuItem("Exit", "Ctrl+X"))
                 ret = true;
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Compile"))
+        {
+            if (ImGui::MenuItem("Do it"))
+            {
+                if (s_editorData.m_dbroot.m_tables.count(s_editorData.m_selectedTableName) > 0)
+                {
+                    DBTable& table = *s_editorData.m_dbroot.m_tables[s_editorData.m_selectedTableName].get();
+
+                    if (table.m_data.count(s_editorData.m_selectedDataItemName) > 0)
+                    {
+                        DBTable::JSONData& data = *table.m_data[s_editorData.m_selectedDataItemName].get();
+
+                        // Make the generated header
+                        {
+                            std::string commandLine = "--cpp " + std::string(table.GetPath());
+                            RunFlatc(commandLine.c_str(), false);
+                        }
+
+                        // Make a binary file
+                        {
+                            std::string commandLine = "-b " + std::string(table.GetPath()) + " " + data.m_path;
+                            RunFlatc(commandLine.c_str(), false);
+                        }
+                    }
+                }
+            }
+
             ImGui::EndMenu();
         }
 
@@ -671,12 +702,15 @@ void OnFileDragDropped(const wchar_t* path)
 
 /*
 TODO:
-* watch files on disk and react to them for hot loading. The game will use this functionality too. make it part of the loader
+
+* start compiling data to binary
 
 // Maybe dbroot is json with a hard coded schema and make file menu options to.make.a new one, save, save as? and edit in the editor in a window
 //  * no: Have a user file next to dbroot or other file extension. with a hard coded schema and a window to edit it
 //  * this is for settings like "where do we compile the output to?" etc
 // why does a string without a default just default to "0"? should figure that out and maybe give a fix patch. or just put a hackaround in your own code
+
+* watch files on disk and react to them for hot loading. The game will use this functionality too. make it part of the loader
 
 Notes:
 * This works as a flatbuffer data editor too (can open fbs or dbroot files)

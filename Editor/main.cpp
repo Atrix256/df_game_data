@@ -36,6 +36,35 @@ void SetWindowTitle(const char* text)
     SetWindowTextA(g_hwnd, text);
 }
 
+bool RunFlatc(const char* args, bool waitForExit)
+{
+    std::string cmdLine = "\"..\\vcpkg_installed\\x64-windows\\x64-windows\\tools\\flatbuffers\\flatc.exe\" " + std::string(args);
+
+    STARTUPINFOA si{ sizeof(si) };
+    PROCESS_INFORMATION pi{};
+
+    if (!CreateProcessA(nullptr, (char*)cmdLine.c_str(), nullptr, nullptr, FALSE,
+        CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi))
+    {
+        return false;
+    }
+
+    if (!waitForExit)
+    {
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+        return true;
+    }
+
+    WaitForSingleObject(pi.hProcess, INFINITE);
+    DWORD exitCode = 1;
+    GetExitCodeProcess(pi.hProcess, &exitCode);
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+
+    return exitCode == 0;
+}
+
 // Config for example app
 static const int APP_NUM_FRAMES_IN_FLIGHT = 2;
 static const int APP_NUM_BACK_BUFFERS = 2;
@@ -311,9 +340,9 @@ int main(int, char**)
         if (std::filesystem::exists(fontFile, ec))
         {
             ImFontConfig base_config;
-            base_config.SizePixels = 16.0f;
+            base_config.SizePixels = 18.0f;
 
-            io.Fonts->AddFontFromFileTTF(fontFile, 16.0f, &base_config);
+            io.Fonts->AddFontFromFileTTF(fontFile, 18.0f, &base_config);
         }
         else
         {
@@ -329,12 +358,12 @@ int main(int, char**)
         ImFontConfig icons_config;
         icons_config.MergeMode = true;
         icons_config.PixelSnapH = true;
-        icons_config.GlyphMinAdvanceX = 16.0f;
+        icons_config.GlyphMinAdvanceX = 18.0f;
 
         const char* fontName = "FontAwesome/fontawesome-webfont.ttf";
 
         // Use an actual pixel size here, matching base_config.SizePixels (or close to it)
-        io.Fonts->AddFontFromFileTTF(fontName, 16.0f, &icons_config, icons_ranges);
+        io.Fonts->AddFontFromFileTTF(fontName, 18.0f, &icons_config, icons_ranges);
     }
 
     // Our state
