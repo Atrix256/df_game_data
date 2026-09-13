@@ -1,2 +1,6 @@
-Items/schema.fbs
-Characters/schema.fbs
+{
+    "tables": [
+        "Items/schema.fbs",
+        "Characters/schema.fbs"
+    ]
+}

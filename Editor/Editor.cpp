@@ -851,6 +851,12 @@ void OnFileDragDropped(const wchar_t* path)
 /*
 TODO:
 
+* make dbroot be json
+* get the settings into dbroot
+* be able to add / remove tables (buttons next to button drop down)
+* figure out the new / save / save as stuff.
+* when loading a .fbs make a .dbroot file with just that table and save it / have that be what is loaded.
+
 * is a dbroot file made automatically when opening an fbs file, and you add fbs files to them?
  * or maybe you add them to an array in settings? so dbroot holds the list of files, and also the settings, and no more settings file?
  * would want a new, save, saveas then in the file menu.

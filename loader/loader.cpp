@@ -150,48 +150,58 @@ bool DBRoot::Load(const char* path)
     int loadOrder = 0;
     if (extension == ".dbroot")
     {
-        // Load m_tables
+
+        std::string jsonString;
+        if (!flatbuffers::LoadFile(path, false, &jsonString))
         {
-            std::ifstream file(path);
-            if (!file.is_open())
+            m_errorText = "Failed to open dbroot file: " + std::string(path);
+            return false;
+        }
+
+        json data = json::parse(jsonString, nullptr, false);
+        if (data.is_discarded())
+        {
+            m_errorText = "Failed to parse dbroot file: " + std::string(path);
+            return false;
+        }
+
+        m_fileWatcher.AddFile(path, nullptr);
+
+        // Load the tables
+        int index = 0;
+        while(true)
+        {
+            json_pointer jsonPath("/tables");
+            jsonPath /= index++;
+
+            if (!data.contains(jsonPath))
+                break;
+
+            std::string tablePath = data.value<std::string>(jsonPath, "");
+
+            std::filesystem::path full_path = std::filesystem::weakly_canonical(base_path / tablePath);
+
+            std::unique_ptr<DBTable> newTable = std::make_unique<DBTable>();
+            if (!newTable->Load(full_path.generic_string().c_str()))
             {
-                m_errorText = "Failed to open dbroot file: " + std::string(path);
+                m_errorText = newTable->GetErrorText();
+                Clear();
                 return false;
             }
-            m_path = path;
 
-            m_fileWatcher.AddFile(path, nullptr);
+            m_fileWatcher.AddDirectory(full_path.remove_filename().generic_string().c_str(), nullptr);
 
-            std::string line;
-            while (std::getline(file, line))
+            // accumulate warnings
+            std::string warningText = newTable->GetErrorText();
+            if (!warningText.empty())
             {
-                std::filesystem::path full_path = std::filesystem::weakly_canonical(base_path / line);
-
-                std::unique_ptr<DBTable> newTable = std::make_unique<DBTable>();
-                if (!newTable->Load(full_path.generic_string().c_str()))
-                {
-                    m_errorText = newTable->GetErrorText();
-                    Clear();
-                    file.close();
-                    return false;
-                }
-
-                m_fileWatcher.AddDirectory(full_path.remove_filename().generic_string().c_str(), nullptr);
-
-                // accumulate warnings
-                std::string warningText = newTable->GetErrorText();
-                if (!warningText.empty())
-                {
-                    if (!m_errorText.empty())
-                        m_errorText += std::string("\n\n");
-                    m_errorText += warningText;
-                }
-
-                newTable->m_loadOrder = loadOrder++;
-                m_tables[newTable->m_rootType] = std::move(newTable);
+                if (!m_errorText.empty())
+                    m_errorText += std::string("\n\n");
+                m_errorText += warningText;
             }
 
-            file.close();
+            newTable->m_loadOrder = loadOrder++;
+            m_tables[newTable->m_rootType] = std::move(newTable);
         }
     }
     else if (extension == ".fbs")
