@@ -7,6 +7,18 @@
 extern bool RunFlatc(const char* args, bool waitForExit);
 extern std::string GetProcessTempDirectory();
 
+inline void StringReplaceAll(std::string& str, const std::string& from, const std::string& to)
+{
+    if (from.empty())
+        return;
+    size_t start_pos = 0;
+    while ((start_pos = str.find(from, start_pos)) != std::string::npos)
+    {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length();
+    }
+}
+
 std::filesystem::path ApplyPath(const std::filesystem::path& base, const std::filesystem::path& input)
 {
     if (input.is_absolute())
@@ -64,16 +76,17 @@ bool CompileData(EditorData& editorData)
     std::string outputDir = ApplyPath(dbRootPath, editorData.m_settings.compileOutputDir).generic_string();
     std::string tempDir = GetProcessTempDirectory();
 
-    // Make and write out the combined schema file from all the input tables
+    // Process the tables in the order specified in the dbroot, because that matters for declarations
+    std::vector<std::string> tableOrder(editorData.m_dbroot.m_tables.size());
+    for (const auto& pair : editorData.m_dbroot.m_tables)
+        tableOrder[pair.second->m_loadOrder] = pair.first;
+
+    // Make the combined schema from all tables and compile it
+    std::string fullSchemaFileName;
+    std::string includePaths;
     {
         std::string includes;
         std::string combinedSchema;
-        std::string includePaths;
-
-        // Process the tables in the order specified in the dbroot, because that matters for declarations
-        std::vector<std::string> tableOrder(editorData.m_dbroot.m_tables.size());
-        for (const auto& pair : editorData.m_dbroot.m_tables)
-            tableOrder[pair.second->m_loadOrder] = pair.first;
 
         for (const std::string& tableName : tableOrder)
         {
@@ -118,40 +131,81 @@ bool CompileData(EditorData& editorData)
         }
         fullSchema += "}\n\nroot_type dbroot;\n\n";
 
-        std::string fullSchemaFileName = std::filesystem::path(tempDir).replace_filename("schema.fbs").generic_string();
+        fullSchemaFileName = std::filesystem::path(tempDir).replace_filename("schema.fbs").generic_string();
 
         FILE* file = nullptr;
         fopen_s(&file, fullSchemaFileName.c_str(), "wb");
-        if (file)
-        {
-            fwrite(fullSchema.c_str(), 1, fullSchema.size(), file);
-            fclose(file);
-        }
-        else
-        {
+        if (!file)
             return false;
-        }
+        fwrite(fullSchema.c_str(), 1, fullSchema.size(), file);
+        fclose(file);
 
         std::string commandLine = "--cpp" + includePaths + " -o \"" + outputDir + "\" \"" + fullSchemaFileName + "\"";
         if (!RunFlatc(commandLine.c_str(), true))
             return false;
     }
 
-    if (editorData.m_dbroot.m_tables.count(editorData.m_selectedTableName) > 0)
+    // Make the combined data from all tables and compile it
     {
-        DBTable& table = *editorData.m_dbroot.m_tables[editorData.m_selectedTableName].get();
+        std::string allData = "{\n";
 
-        if (table.m_data.count(editorData.m_selectedDataItemName) > 0)
+        for (const std::string& tableName : tableOrder)
         {
-            DBTable::JSONData& data = *table.m_data[editorData.m_selectedDataItemName].get();
+            const DBTable& table = *editorData.m_dbroot.m_tables[tableName].get();
 
-            // Make a binary file
+            std::string memberName = tableName;
+            std::transform(memberName.begin(), memberName.end(), memberName.begin(),
+                [](unsigned char c)
+                {
+                    return std::tolower(c);
+                }
+            );
+
+            std::string allDataItems = "    \"" + memberName + "_entries\" : [\n";
+
+            for (const auto& pair : table.m_data)
             {
-                std::string commandLine = "-b -o \"" + outputDir + "\" \"" + std::string(table.GetPath()) + "\" \"" + data.m_path + "\"";
-                if (!RunFlatc(commandLine.c_str(), false))
+                // load the json data
+                std::string jsonString;
+                if (!flatbuffers::LoadFile(pair.second->m_path.c_str(), false, &jsonString))
                     return false;
+
+                StringReplaceAll(jsonString, "\n", "\n        ");
+
+                allDataItems += "        " + jsonString + ",\n";
             }
+
+            // remove trailing comma
+            allDataItems.pop_back();
+            allDataItems.pop_back();
+            allDataItems.push_back('\n');
+
+            allDataItems += "    ],\n";
+
+            allData += allDataItems;
         }
+
+        // remove trailing comma
+        allData.pop_back();
+        allData.pop_back();
+        allData.push_back('\n');
+
+        allData += "}\n";
+
+        // write it out
+        std::string fullDataFileName = std::filesystem::path(tempDir).replace_filename("data.json").generic_string();
+
+        FILE* file = nullptr;
+        fopen_s(&file, fullDataFileName.c_str(), "wb");
+        if (!file)
+            return false;
+        fwrite(allData.c_str(), 1, allData.size(), file);
+        fclose(file);
+
+        std::string commandLine = "-b" + includePaths + " -o \"" + outputDir + "\" \"" + fullSchemaFileName + "\" \"" + fullDataFileName + "\"";
+        if (!RunFlatc(commandLine.c_str(), false))
+            return false;
     }
+
     return true;
 }

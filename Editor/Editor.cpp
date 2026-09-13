@@ -796,7 +796,8 @@ void OnFileDragDropped(const wchar_t* path)
 /*
 TODO:
 
-* start compiling data to binary
+// TODO: not sure how to associate names with array entries. maybe need a separate table that is "name to index"?
+// TODO: and/or maybe make an enum for it. we are going to have to make a wrapper header anyway. i think? if not, append to the one that was generated
 
 * make all filepath .string into .generic_string for forward slash separators
 
@@ -825,6 +826,9 @@ TODO:
 * Let people Add their name. Alpha sort. Along with a description of what they did?
  * Or a link to a page with their check ins or something.
 * Add a help about with version and contributor list.
+ * could also put the larger df.png on there
+
+* should we force a save all on compile? visual studio does.
 
 Notes:
 * This works as a flatbuffer data editor too (can open fbs or dbroot files)
