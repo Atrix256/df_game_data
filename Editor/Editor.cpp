@@ -335,13 +335,7 @@ static void ShowTableList()
         {
             if (s_editorData.m_dbroot.m_tables.contains(s_editorData.m_selectedTableName))
             {
-                s_editorData.m_dbroot.m_tables.erase(s_editorData.m_selectedTableName);
-
-                // renumber the table load orders
-                std::erase(tableOrder, s_editorData.m_selectedTableName);
-                for (size_t i = 0; i < tableOrder.size(); ++i)
-                    s_editorData.m_dbroot.m_tables[tableOrder[i]]->m_loadOrder = (int)i;
-
+                s_editorData.m_dbroot.RemoveTable(s_editorData.m_selectedTableName.c_str());
                 s_editorData.m_dbroot.SaveDBRoot();
 
                 // set a new selected table since we deleted the old selection
@@ -911,13 +905,9 @@ void OnFileDragDropped(const wchar_t* path)
 /*
 TODO:
 
-* need a function to remove a table, which removes the dir from file watcher, and also renumbers the load order
-
-? why does table order matter again? it would be nice if it didn't
-
-* be able to add / remove tables (buttons next to button drop down) and save dbroot after each of these operations
-* figure out the new / save / save as stuff, since it's dealing with dbroot files. onfilesave needs to be ondataitemsave.
 * when loading a .fbs make a .dbroot file with just that table and save it / have that be what is loaded.
+
+* figure out the new / save / save as stuff, since it's dealing with dbroot files. onfilesave needs to be ondataitemsave.
 
 * is a dbroot file made automatically when opening an fbs file, and you add fbs files to them?
  * or maybe you add them to an array in settings? so dbroot holds the list of files, and also the settings, and no more settings file?
@@ -960,4 +950,7 @@ Notes:
  * explain that it makes an enum for the entry_names
 * explain the simple interface (only use generated headers), and the one that does file watching.
 * explain how order of tables in the db can affect things. table must come before things use types from that table (like, table links)
+* explain you can move up and down the tables in the dbroot.
+ * useful if one table schema defines types used by another table schema
+ * better to have a shared schema include file though.
 */

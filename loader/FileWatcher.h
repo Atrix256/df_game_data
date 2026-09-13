@@ -12,4 +12,9 @@ public:
     {
         int ijkl = 0;
     }
+
+    void RemoveDirectory(const char* fileName)
+    {
+        int ijkl = 0;
+    }
 };

@@ -183,6 +183,42 @@ void DBRoot::SaveDBRoot()
     }
 }
 
+bool DBRoot::RemoveTable(const char* name)
+{
+    if (!m_tables.contains(name))
+        return false;
+
+    // Remove the file watch
+    m_fileWatcher.RemoveDirectory(std::filesystem::path(m_tables[name]->GetPath()).remove_filename().generic_string().c_str());
+
+    // remove the table
+    m_tables.erase(name);
+
+    // renumber the load orders of the tables
+    struct LoadOrder
+    {
+        int loadOrder;
+        std::string name;
+    };
+
+    std::vector<LoadOrder> loadOrder;
+    for (const auto& pair : m_tables)
+        loadOrder.push_back({ pair.second->m_loadOrder, pair.first });
+
+    std::sort(loadOrder.begin(), loadOrder.end(),
+        [this] (const LoadOrder& A, const LoadOrder& B)
+        {
+            return m_tables[A.name]->m_loadOrder < m_tables[B.name]->m_loadOrder;
+        }
+    );
+
+    int index = 0;
+    for (const LoadOrder& order : loadOrder)
+        m_tables[order.name]->m_loadOrder = index++;
+
+    return true;
+}
+
 bool DBRoot::AddTable(const char* path)
 {
     std::unique_ptr<DBTable> newTable = std::make_unique<DBTable>();
