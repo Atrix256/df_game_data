@@ -304,29 +304,20 @@ bool DBRoot::Load(const char* path)
     }
     else if (extension == ".fbs")
     {
-        m_path = path;
-
-        std::unique_ptr<DBTable> newTable = std::make_unique<DBTable>();
-        if (!newTable->Load(path))
+        // If given a .fbs file, make a .dbsroot file containing only that item, and load that
+        std::filesystem::path dbroot = std::filesystem::path(path).replace_extension(".dbroot");
+        FILE* file = nullptr;
+        fopen_s(&file, dbroot.generic_string().c_str(), "wb");
+        if (!file)
         {
-            m_errorText = newTable->GetErrorText();
-            Clear();
+            m_errorText = "Could not open for writing: " + dbroot.generic_string();
             return false;
         }
 
-        m_fileWatcher.AddDirectory(base_path.generic_string().c_str(), nullptr);
+        fprintf(file, "{\n    \"tables\": [\n        \"%s\"\n    ]\n}\n", std::filesystem::path(path).filename().generic_string().c_str());
+        fclose(file);
 
-        // accumulate warnings
-        std::string warningText = newTable->GetErrorText();
-        if (!warningText.empty())
-        {
-            if (!m_errorText.empty())
-                m_errorText += std::string("\n\n");
-            m_errorText += warningText;
-        }
-
-        newTable->m_loadOrder = 0;
-        m_tables[newTable->m_rootType] = std::move(newTable);
+        return Load(dbroot.generic_string().c_str());
     }
     else
     {

@@ -904,9 +904,6 @@ void OnFileDragDropped(const wchar_t* path)
 
 /*
 TODO:
-
-* when loading a .fbs make a .dbroot file with just that table and save it / have that be what is loaded.
-
 * figure out the new / save / save as stuff, since it's dealing with dbroot files. onfilesave needs to be ondataitemsave.
 
 * is a dbroot file made automatically when opening an fbs file, and you add fbs files to them?
