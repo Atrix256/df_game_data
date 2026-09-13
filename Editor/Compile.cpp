@@ -71,7 +71,7 @@ bool CompileData(EditorData& editorData)
         return false;
 
     std::string dbRootPath = std::filesystem::path(editorData.m_dbroot.GetPath()).remove_filename().generic_string();
-    std::string outputDir = ApplyPath(dbRootPath, editorData.m_settings.compileOutputDir).generic_string();
+    std::string outputDir = ApplyPath(dbRootPath, editorData.m_dbroot.m_settings.compileOutputDir).generic_string();
     std::string tempDir = GetProcessTempDirectory();
 
     // Process the tables in the order specified in the dbroot, because that matters for declarations
@@ -122,8 +122,8 @@ bool CompileData(EditorData& editorData)
 
         std::string fullSchema = includes + "attribute \"link\";\n";
 
-        if (!editorData.m_settings.nameSpace.empty())
-            fullSchema += "namespace " + editorData.m_settings.nameSpace + ";\n";
+        if (!editorData.m_dbroot.m_settings.nameSpace.empty())
+            fullSchema += "namespace " + editorData.m_dbroot.m_settings.nameSpace + ";\n";
 
         fullSchema += combinedSchema;
 
@@ -153,7 +153,7 @@ bool CompileData(EditorData& editorData)
         fwrite(fullSchema.c_str(), 1, fullSchema.size(), file);
         fclose(file);
 
-        std::string commandLine = "--" + editorData.m_settings.targetLanguage + includePaths + " -o \"" + outputDir + "\" \"" + fullSchemaFileName + "\"";
+        std::string commandLine = "--" + editorData.m_dbroot.m_settings.targetLanguage + includePaths + " -o \"" + outputDir + "\" \"" + fullSchemaFileName + "\"";
         if (!RunFlatc(commandLine.c_str(), true))
             return false;
     }

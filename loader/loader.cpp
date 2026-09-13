@@ -140,6 +140,49 @@ bool DBTable::Load(const char* path)
     return true;
 }
 
+void DBRoot::LoadSettings(json& data)
+{
+    if (data.contains("compileOutputDir"))
+        m_settings.compileOutputDir = data.at("compileOutputDir");
+
+    if (data.contains("nameSpace"))
+        m_settings.nameSpace = data.at("nameSpace");
+
+    if (data.contains("targetLanguage"))
+        m_settings.targetLanguage = data.at("targetLanguage");
+}
+
+void DBRoot::SaveDBRoot()
+{
+    // Process the tables in the order specified in the dbroot, because that matters for declarations
+    std::vector<std::string> tableOrder(m_tables.size());
+    for (const auto& pair : m_tables)
+        tableOrder[pair.second->m_loadOrder] = pair.first;
+
+    json doc = json::object();
+    doc["compileOutputDir"] = m_settings.compileOutputDir;
+    doc["nameSpace"] = m_settings.nameSpace;
+    doc["targetLanguage"] = m_settings.targetLanguage;
+
+    doc["tables"] = json::array();
+    std::filesystem::path basePath = std::filesystem::path(m_path).remove_filename();
+    for (const std::string& tableName : tableOrder)
+    {
+        std::filesystem::path target(m_tables[tableName]->GetPath());
+        doc["tables"].push_back(std::filesystem::proximate(target, basePath).generic_string());
+    }
+
+    std::string jsonString = doc.dump(4);
+
+    FILE* file = nullptr;
+    fopen_s(&file, m_path.c_str(), "wb");
+    if (file)
+    {
+        fwrite(jsonString.c_str(), 1, jsonString.size(), file);
+        fclose(file);
+    }
+}
+
 bool DBRoot::Load(const char* path)
 {
     Clear();
@@ -150,6 +193,7 @@ bool DBRoot::Load(const char* path)
     int loadOrder = 0;
     if (extension == ".dbroot")
     {
+        m_path = path;
 
         std::string jsonString;
         if (!flatbuffers::LoadFile(path, false, &jsonString))

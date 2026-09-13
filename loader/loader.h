@@ -9,6 +9,13 @@
 
 #include "FileWatcher.h"
 
+struct DBSettings
+{
+    std::string compileOutputDir;
+    std::string nameSpace;
+    std::string targetLanguage = "cpp";
+};
+
 class DBTable
 {
 public:
@@ -65,6 +72,7 @@ class DBRoot
 {
 public:
     bool Load(const char* path);
+    void SaveDBRoot();
 
     void Clear();
 
@@ -83,8 +91,12 @@ public:
         return m_path.c_str();
     }
 
+private:
+    void LoadSettings(json& data);
+
 public:
     std::map<std::string, std::unique_ptr<DBTable>> m_tables;
+    DBSettings m_settings;
 
 private:
     std::string m_errorText;

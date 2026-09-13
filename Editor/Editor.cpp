@@ -12,51 +12,6 @@
 
 static EditorData s_editorData;
 
-static void LoadSettings()
-{
-    s_editorData.m_settings = Settings();
-
-    std::filesystem::path settingsFileName(std::string(s_editorData.m_dbroot.GetPath()) + ".dbsettings");
-
-    // Load the json file
-    std::string jsonString;
-    if (!flatbuffers::LoadFile(settingsFileName.generic_string().c_str(), false, &jsonString))
-        return;
-
-    json data = json::parse(jsonString, nullptr, false);
-    if (data.is_discarded())
-        return;
-
-    if (data.contains("compileOutputDir"))
-        s_editorData.m_settings.compileOutputDir = data.at("compileOutputDir");
-
-    if (data.contains("nameSpace"))
-        s_editorData.m_settings.nameSpace = data.at("nameSpace");
-
-    if (data.contains("targetLanguage"))
-        s_editorData.m_settings.targetLanguage = data.at("targetLanguage");
-}
-
-static void SaveSettings()
-{
-    std::filesystem::path settingsFileName(std::string(s_editorData.m_dbroot.GetPath()) + ".dbsettings");
-
-    json doc = json::object();
-    doc["compileOutputDir"] = s_editorData.m_settings.compileOutputDir;
-    doc["nameSpace"] = s_editorData.m_settings.nameSpace;
-    doc["targetLanguage"] = s_editorData.m_settings.targetLanguage;
-
-    std::string jsonString = doc.dump(4);
-
-    FILE* file = nullptr;
-    fopen_s(&file, settingsFileName.generic_string().c_str(), "wb");
-    if (file)
-    {
-        fwrite(jsonString.c_str(), 1, jsonString.size(), file);
-        fclose(file);
-    }
-}
-
 static void LoadFile(const char* fileName)
 {
     s_editorData.m_dbroot.Clear();
@@ -87,7 +42,6 @@ static void LoadFile(const char* fileName)
             }
             break;
         }
-        LoadSettings();
     }
     else
     {
@@ -649,10 +603,13 @@ void HandleCompileResults()
 
 void HandleSettingsWindow()
 {
+    static DBSettings settings;
+
     if (s_editorData.m_openSettingsWindow)
     {
         ImGui::OpenPopup("Settings");
         s_editorData.m_openSettingsWindow = false;
+        settings = s_editorData.m_dbroot.m_settings;
     }
 
     if (ImGui::BeginPopupModal("Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
@@ -661,17 +618,17 @@ void HandleSettingsWindow()
         tmpBuffer.resize(4096);
 
         // Compile Output Directory
-        strcpy_s(tmpBuffer.data(), tmpBuffer.size(), s_editorData.m_settings.compileOutputDir.c_str());
+        strcpy_s(tmpBuffer.data(), tmpBuffer.size(), settings.compileOutputDir.c_str());
         if (ImGui::InputText("Compile Output Directory", tmpBuffer.data(), tmpBuffer.size()))
-            s_editorData.m_settings.compileOutputDir = tmpBuffer.data();
+            settings.compileOutputDir = tmpBuffer.data();
 
         // Namespace
-        strcpy_s(tmpBuffer.data(), tmpBuffer.size(), s_editorData.m_settings.nameSpace.c_str());
+        strcpy_s(tmpBuffer.data(), tmpBuffer.size(), settings.nameSpace.c_str());
         if (ImGui::InputText("Namespace", tmpBuffer.data(), tmpBuffer.size()))
-            s_editorData.m_settings.nameSpace = tmpBuffer.data();
+            settings.nameSpace = tmpBuffer.data();
 
         // Target Language
-        if (ImGui::BeginCombo("Target Language", s_editorData.m_settings.targetLanguage.c_str()))
+        if (ImGui::BeginCombo("Target Language", settings.targetLanguage.c_str()))
         {
             const char* targets[] =
             {
@@ -693,10 +650,10 @@ void HandleSettingsWindow()
 
             for (const char* target : targets)
             {
-                const bool is_selected = (s_editorData.m_settings.targetLanguage == target);
+                const bool is_selected = (settings.targetLanguage == target);
 
                 if (ImGui::Selectable(target, is_selected))
-                    s_editorData.m_settings.targetLanguage = target;
+                    settings.targetLanguage = target;
 
                 if (is_selected)
                     ImGui::SetItemDefaultFocus();
@@ -709,16 +666,14 @@ void HandleSettingsWindow()
 
         if (ImGui::Button("OK", ImVec2(120, 0)))
         {
-            SaveSettings();
+            s_editorData.m_dbroot.m_settings = settings;
+            s_editorData.m_dbroot.SaveDBRoot();
             ImGui::CloseCurrentPopup();
         }
         ImGui::SetItemDefaultFocus();
         ImGui::SameLine();
         if (ImGui::Button("Cancel", ImVec2(120, 0)))
-        {
-            LoadSettings();
             ImGui::CloseCurrentPopup();
-        }
 
         ImGui::EndPopup();
     }
@@ -851,10 +806,8 @@ void OnFileDragDropped(const wchar_t* path)
 /*
 TODO:
 
-* make dbroot be json
-* get the settings into dbroot
-* be able to add / remove tables (buttons next to button drop down)
-* figure out the new / save / save as stuff.
+* be able to add / remove tables (buttons next to button drop down) and save dbroot after each of these operations
+* figure out the new / save / save as stuff, since it's dealing with dbroot files. onfilesave needs to be ondataitemsave.
 * when loading a .fbs make a .dbroot file with just that table and save it / have that be what is loaded.
 
 * is a dbroot file made automatically when opening an fbs file, and you add fbs files to them?
