@@ -145,7 +145,7 @@ bool CompileData(EditorData& editorData)
         fwrite(fullSchema.c_str(), 1, fullSchema.size(), file);
         fclose(file);
 
-        std::string commandLine = "--cpp" + includePaths + " -o \"" + outputDir + "\" \"" + fullSchemaFileName + "\"";
+        std::string commandLine = "--" + editorData.m_settings.targetLanguage + includePaths + " -o \"" + outputDir + "\" \"" + fullSchemaFileName + "\"";
         if (!RunFlatc(commandLine.c_str(), true))
             return false;
     }

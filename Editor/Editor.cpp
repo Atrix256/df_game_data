@@ -33,6 +33,9 @@ static void LoadSettings()
 
     if (data.contains("nameSpace"))
         s_editorData.m_settings.nameSpace = data.at("nameSpace");
+
+    if (data.contains("targetLanguage"))
+        s_editorData.m_settings.targetLanguage = data.at("targetLanguage");
 }
 
 static void SaveSettings()
@@ -42,6 +45,7 @@ static void SaveSettings()
     json doc = json::object();
     doc["compileOutputDir"] = s_editorData.m_settings.compileOutputDir;
     doc["nameSpace"] = s_editorData.m_settings.nameSpace;
+    doc["targetLanguage"] = s_editorData.m_settings.targetLanguage;
 
     std::string jsonString = doc.dump(4);
 
@@ -662,10 +666,46 @@ void HandleSettingsWindow()
         if (ImGui::InputText("Compile Output Directory", tmpBuffer.data(), tmpBuffer.size()))
             s_editorData.m_settings.compileOutputDir = tmpBuffer.data();
 
-        // Compile Output Directory
+        // Namespace
         strcpy_s(tmpBuffer.data(), tmpBuffer.size(), s_editorData.m_settings.nameSpace.c_str());
         if (ImGui::InputText("Namespace", tmpBuffer.data(), tmpBuffer.size()))
             s_editorData.m_settings.nameSpace = tmpBuffer.data();
+
+        // Target Language
+        if (ImGui::BeginCombo("Target Language", s_editorData.m_settings.targetLanguage.c_str()))
+        {
+            const char* targets[] =
+            {
+                "cpp",
+                "java",
+                "kotlin",
+                "csharp",
+                "go",
+                "python",
+                "js",
+                "ts",
+                "php",
+                "dart",
+                "lua",
+                "lobster",
+                "rust",
+                "swift",
+                "nim",
+            };
+
+            for (const char* target : targets)
+            {
+                const bool is_selected = (s_editorData.m_settings.targetLanguage == target);
+
+                if (ImGui::Selectable(target, is_selected))
+                    s_editorData.m_settings.targetLanguage = target;
+
+                if (is_selected)
+                    ImGui::SetItemDefaultFocus();
+            }
+
+            ImGui::EndCombo();
+        }
 
         ImGui::Separator();
 
@@ -850,5 +890,6 @@ Notes:
 * mention drag and drop working
 * if you use table links, the table you reference must come before the current table in the dbroot list
 * don't use namespace in your files, but you can put a namespace in the settings.
+* C++ is the main target language - that's what i use it for! - but other languages are supported
 
 */

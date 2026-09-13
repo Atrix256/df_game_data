@@ -8,6 +8,7 @@ struct Settings
 {
     std::string compileOutputDir;
     std::string nameSpace;
+    std::string targetLanguage = "cpp";
 };
 
 struct EditorData
