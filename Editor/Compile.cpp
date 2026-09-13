@@ -112,7 +112,12 @@ bool CompileData(EditorData& editorData)
             includePaths += " -I " + std::filesystem::path(table.GetPath()).remove_filename().generic_string();
         }
 
-        std::string fullSchema = includes + "attribute \"link\";\n" + combinedSchema;
+        std::string fullSchema = includes + "attribute \"link\";\n";
+
+        if (!editorData.m_settings.nameSpace.empty())
+            fullSchema += "namespace " + editorData.m_settings.nameSpace + ";\n";
+
+        fullSchema += combinedSchema;
 
         // Make a table that has arrays of each table type, and make it be the root type
         fullSchema += "table dbroot\n{\n";

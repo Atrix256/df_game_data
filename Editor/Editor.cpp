@@ -30,6 +30,9 @@ static void LoadSettings()
 
     if (data.contains("compileOutputDir"))
         s_editorData.m_settings.compileOutputDir = data.at("compileOutputDir");
+
+    if (data.contains("nameSpace"))
+        s_editorData.m_settings.nameSpace = data.at("nameSpace");
 }
 
 static void SaveSettings()
@@ -38,6 +41,7 @@ static void SaveSettings()
 
     json doc = json::object();
     doc["compileOutputDir"] = s_editorData.m_settings.compileOutputDir;
+    doc["nameSpace"] = s_editorData.m_settings.nameSpace;
 
     std::string jsonString = doc.dump(4);
 
@@ -282,11 +286,16 @@ static bool ShowMenuBar()
             ImGui::EndMenu();
         }
 
-        if (ImGui::BeginMenu("Compile"))
+        if (ImGui::BeginMenu("Edit"))
         {
             if (ImGui::MenuItem("Settings"))
                 s_editorData.m_openSettingsWindow = true;
 
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Compile"))
+        {
             if (ImGui::MenuItem("Compile", "Ctrl+C"))
             {
                 OnFileSaveAll();
@@ -645,12 +654,18 @@ void HandleSettingsWindow()
 
     if (ImGui::BeginPopupModal("Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {
-        // Compile Output Directory
         static std::vector<char> tmpBuffer;
         tmpBuffer.resize(4096);
+
+        // Compile Output Directory
         strcpy_s(tmpBuffer.data(), tmpBuffer.size(), s_editorData.m_settings.compileOutputDir.c_str());
         if (ImGui::InputText("Compile Output Directory", tmpBuffer.data(), tmpBuffer.size()))
             s_editorData.m_settings.compileOutputDir = tmpBuffer.data();
+
+        // Compile Output Directory
+        strcpy_s(tmpBuffer.data(), tmpBuffer.size(), s_editorData.m_settings.nameSpace.c_str());
+        if (ImGui::InputText("Namespace", tmpBuffer.data(), tmpBuffer.size()))
+            s_editorData.m_settings.nameSpace = tmpBuffer.data();
 
         ImGui::Separator();
 
@@ -801,12 +816,11 @@ TODO:
 // TODO: not sure how to associate names with array entries. maybe need a separate table that is "name to index"?
 // TODO: and/or maybe make an enum for it. we are going to have to make a wrapper header anyway. i think? if not, append to the one that was generated
 
-* put a namespace string in the compile settings and put that into the combined schema
-
 * maybe have output dir pluralized and specify an enum for each. like cpp or javascript or whatever other options
 
 * is a dbroot file made automatically when opening an fbs file, and you add fbs files to them?
  * or maybe you add them to an array in settings? so dbroot holds the list of files, and also the settings, and no more settings file?
+ * would want a new, save, saveas then in the file menu.
 
 // Maybe dbroot is json with a hard coded schema and make file menu options to.make.a new one, save, save as? and edit in the editor in a window
 //  * no: Have a user file next to dbroot or other file extension. with a hard coded schema and a window to edit it

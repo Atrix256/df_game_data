@@ -7,6 +7,7 @@
 struct Settings
 {
     std::string compileOutputDir;
+    std::string nameSpace;
 };
 
 struct EditorData
