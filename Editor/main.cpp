@@ -249,9 +249,9 @@ int main(int, char**)
     io.IniFilename = nullptr;
 
     // Setup Dear ImGui style
-    //ImGui::StyleColorsDark();
-    ImGui::StyleColorsLight();
-    ApplyStyle();
+    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsLight();
+    //ApplyStyle();
 
     // Setup scaling
     ImGuiStyle& style = ImGui::GetStyle();

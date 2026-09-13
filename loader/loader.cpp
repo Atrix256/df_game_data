@@ -183,6 +183,41 @@ void DBRoot::SaveDBRoot()
     }
 }
 
+bool DBRoot::AddTable(const char* path)
+{
+    std::unique_ptr<DBTable> newTable = std::make_unique<DBTable>();
+    if (!newTable->Load(path))
+    {
+        if (!m_errorText.empty())
+            m_errorText += std::string("\n\n");
+        m_errorText += newTable->GetErrorText();
+        return false;
+    }
+
+    m_fileWatcher.AddDirectory(std::filesystem::path(path).remove_filename().generic_string().c_str(), nullptr);
+
+    // accumulate warnings
+    std::string warningText = newTable->GetErrorText();
+    if (!warningText.empty())
+    {
+        if (!m_errorText.empty())
+            m_errorText += std::string("\n\n");
+        m_errorText += warningText;
+    }
+
+    newTable->m_loadOrder = (int)m_tables.size();
+
+    if (m_tables.contains(newTable->m_rootType))
+    {
+        m_errorText = "Table already exists in database: " + newTable->m_rootType;
+        return false;
+    }
+
+    m_tables[newTable->m_rootType] = std::move(newTable);
+
+    return true;
+}
+
 bool DBRoot::Load(const char* path)
 {
     Clear();
@@ -190,7 +225,6 @@ bool DBRoot::Load(const char* path)
     std::string extension = std::filesystem::path(path).extension().generic_string();
     std::filesystem::path base_path = std::filesystem::absolute(path).remove_filename();
 
-    int loadOrder = 0;
     if (extension == ".dbroot")
     {
         m_path = path;
@@ -225,27 +259,11 @@ bool DBRoot::Load(const char* path)
 
             std::filesystem::path full_path = std::filesystem::weakly_canonical(base_path / tablePath);
 
-            std::unique_ptr<DBTable> newTable = std::make_unique<DBTable>();
-            if (!newTable->Load(full_path.generic_string().c_str()))
+            if (!AddTable(full_path.generic_string().c_str()))
             {
-                m_errorText = newTable->GetErrorText();
                 Clear();
                 return false;
             }
-
-            m_fileWatcher.AddDirectory(full_path.remove_filename().generic_string().c_str(), nullptr);
-
-            // accumulate warnings
-            std::string warningText = newTable->GetErrorText();
-            if (!warningText.empty())
-            {
-                if (!m_errorText.empty())
-                    m_errorText += std::string("\n\n");
-                m_errorText += warningText;
-            }
-
-            newTable->m_loadOrder = loadOrder++;
-            m_tables[newTable->m_rootType] = std::move(newTable);
         }
     }
     else if (extension == ".fbs")
@@ -271,7 +289,7 @@ bool DBRoot::Load(const char* path)
             m_errorText += warningText;
         }
 
-        newTable->m_loadOrder = loadOrder++;
+        newTable->m_loadOrder = 0;
         m_tables[newTable->m_rootType] = std::move(newTable);
     }
     else

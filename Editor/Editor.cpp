@@ -34,6 +34,9 @@ static void LoadFile(const char* fileName)
     {
         for (auto& pair1 : s_editorData.m_dbroot.m_tables)
         {
+            if (pair1.second->m_loadOrder != 0)
+                continue;
+
             s_editorData.m_selectedTableName = pair1.first;
             for (auto& pair2 : pair1.second->m_data)
             {
@@ -57,8 +60,7 @@ static void OnFileOpen()
 
     nfdu8filteritem_t filters[] =
     {
-        { "Database Root Files", "dbroot" },
-        { "FlatBuffers Schema", "fbs" }
+        { "Supported Files (*.dbroot, *.fbs)", "dbroot,fbs" }
     };
 
     nfdresult_t result = NFD_OpenDialogU8(&outPath, filters, IM_COUNTOF(filters), nullptr);
@@ -290,18 +292,29 @@ static bool ShowMenuBar()
 
 static void ShowTableList()
 {
+    int selectedIndex = -1;
+    std::vector<std::string> tableOrder(s_editorData.m_dbroot.m_tables.size());
+    int index = 0;
+    for (const auto& pair : s_editorData.m_dbroot.m_tables)
+    {
+        tableOrder[pair.second->m_loadOrder] = pair.first;
+        if (pair.first == s_editorData.m_selectedTableName)
+            selectedIndex = pair.second->m_loadOrder;
+        index++;
+    }
+
     if (ImGui::BeginCombo("Table", s_editorData.m_selectedTableName.c_str()))
     {
-        for (auto& pair : s_editorData.m_dbroot.m_tables)
+        for (const std::string& tableName : tableOrder)
         {
-            const bool is_selected = (s_editorData.m_selectedTableName == pair.first);
+            const bool is_selected = (s_editorData.m_selectedTableName == tableName);
 
-            if (ImGui::Selectable(pair.first.c_str(), is_selected))
+            if (ImGui::Selectable(tableName.c_str(), is_selected))
             {
-                s_editorData.m_selectedTableName = pair.first;
+                s_editorData.m_selectedTableName = tableName;
                 s_editorData.m_selectedDataItemName = "";
 
-                for (auto& pair2 : pair.second->m_data)
+                for (auto& pair2 : s_editorData.m_dbroot.m_tables[tableName]->m_data)
                 {
                     s_editorData.m_selectedDataItemName = pair2.first;
                     break;
@@ -313,6 +326,98 @@ static void ShowTableList()
         }
 
         ImGui::EndCombo();
+    }
+
+    {
+        ImGui_Enabled enabled(s_editorData.m_dbroot.m_tables.contains(s_editorData.m_selectedTableName));
+        ImGui::SameLine();
+        if (ImGui::Button("Remove"))
+        {
+            if (s_editorData.m_dbroot.m_tables.contains(s_editorData.m_selectedTableName))
+            {
+                s_editorData.m_dbroot.m_tables.erase(s_editorData.m_selectedTableName);
+
+                // renumber the table load orders
+                std::erase(tableOrder, s_editorData.m_selectedTableName);
+                for (size_t i = 0; i < tableOrder.size(); ++i)
+                    s_editorData.m_dbroot.m_tables[tableOrder[i]]->m_loadOrder = (int)i;
+
+                s_editorData.m_dbroot.SaveDBRoot();
+
+                // set a new selected table since we deleted the old selection
+                s_editorData.m_selectedTableName = "";
+                for (auto& pair : s_editorData.m_dbroot.m_tables)
+                {
+                    s_editorData.m_selectedTableName = pair.first;
+                    for (auto& pair2 : s_editorData.m_dbroot.m_tables[s_editorData.m_selectedTableName]->m_data)
+                    {
+                        s_editorData.m_selectedDataItemName = pair2.first;
+                        break;
+                    }
+                    break;
+                }
+            }
+        }
+        ShowToolTip("Removes this table from the database", false);
+    }
+
+    {
+        ImGui::SameLine();
+        if (ImGui::Button("Add"))
+        {
+            nfdchar_t* outPath = NULL;
+
+            nfdu8filteritem_t filters[] =
+            {
+                { "Flatbuffer Schema (*.fbs)", "fbs" }
+            };
+
+            nfdresult_t result = NFD_OpenDialogU8(&outPath, filters, IM_COUNTOF(filters), nullptr);
+
+            if (result == NFD_OKAY)
+            {
+                if (s_editorData.m_dbroot.AddTable(outPath))
+                {
+                    s_editorData.m_selectedTableName = s_editorData.m_dbroot.m_tables.rbegin()->first;
+                    for (auto& pair2 : s_editorData.m_dbroot.m_tables[s_editorData.m_selectedTableName]->m_data)
+                    {
+                        s_editorData.m_selectedDataItemName = pair2.first;
+                        break;
+                    }
+                    s_editorData.m_dbroot.SaveDBRoot();
+                }
+                else
+                    s_editorData.m_showLoadingErrors = true;
+            }
+        }
+        ShowToolTip("Adds a table to the database", false);
+    }
+
+    {
+        ImGui::SameLine();
+        ImGui_Enabled enabled(selectedIndex > 0);
+        if (ImGui::SmallButton(ICON_FA_ANGLE_UP "##Up"))
+        {
+            std::swap(
+                s_editorData.m_dbroot.m_tables[tableOrder[selectedIndex]]->m_loadOrder,
+                s_editorData.m_dbroot.m_tables[tableOrder[selectedIndex - 1]]->m_loadOrder
+            );
+            s_editorData.m_dbroot.SaveDBRoot();
+        }
+        ShowToolTip("Move this table up.", false);
+    }
+    {
+        ImGui::SameLine();
+        ImGui_Enabled enabled(selectedIndex >= 0 && selectedIndex + 1 < tableOrder.size());
+        if (ImGui::SmallButton(ICON_FA_ANGLE_DOWN "##Down"))
+        {
+            std::swap(
+                s_editorData.m_dbroot.m_tables[tableOrder[selectedIndex]]->m_loadOrder,
+                s_editorData.m_dbroot.m_tables[tableOrder[selectedIndex + 1]]->m_loadOrder
+            );
+            s_editorData.m_dbroot.SaveDBRoot();
+        }
+        ShowToolTip("Move this table down.", false);
     }
 }
 
@@ -806,6 +911,10 @@ void OnFileDragDropped(const wchar_t* path)
 /*
 TODO:
 
+* need a function to remove a table, which removes the dir from file watcher, and also renumbers the load order
+
+? why does table order matter again? it would be nice if it didn't
+
 * be able to add / remove tables (buttons next to button drop down) and save dbroot after each of these operations
 * figure out the new / save / save as stuff, since it's dealing with dbroot files. onfilesave needs to be ondataitemsave.
 * when loading a .fbs make a .dbroot file with just that table and save it / have that be what is loaded.
@@ -850,4 +959,5 @@ Notes:
  * string lookup doesnt work in c++ though. maybe need to add it.
  * explain that it makes an enum for the entry_names
 * explain the simple interface (only use generated headers), and the one that does file watching.
+* explain how order of tables in the db can affect things. table must come before things use types from that table (like, table links)
 */

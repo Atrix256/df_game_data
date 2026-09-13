@@ -72,6 +72,7 @@ class DBRoot
 {
 public:
     bool Load(const char* path);
+    bool AddTable(const char* path);
     void SaveDBRoot();
 
     void Clear();

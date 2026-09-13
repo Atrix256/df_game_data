@@ -61,20 +61,6 @@ T GetOrDefault(const json& json, const json_pointer& path, T& defaultValue)
     return json.value<T>(path, defaultValue);
 }
 
-static void ShowToolTip(const char* tooltip, bool showQ = true)
-{
-    if (!tooltip || !tooltip[0])
-        return;
-
-    if (showQ)
-    {
-        ImGui::SameLine();
-        ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.0f, 1.0f), "[?]");
-    }
-    if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
-        ImGui::SetTooltip("%s", tooltip);
-}
-
 static void ShowToolTip(const std::vector<std::string>& comments, bool showQ = true)
 {
     std::string text;

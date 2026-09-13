@@ -1,4 +1,7 @@
 {
+    "compileOutputDir": "",
+    "nameSpace": "",
+    "targetLanguage": "cpp",
     "tables": [
         "Items/schema.fbs",
         "Characters/schema.fbs"
