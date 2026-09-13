@@ -3,9 +3,7 @@
 #include "flatbuffers/idl.h"
 #include "../loader/JSON.h"
 #include "Editor.h"
-
-extern bool RunFlatc(const char* args, bool waitForExit);
-extern std::string GetProcessTempDirectory();
+#include "Platform.h"
 
 inline void StringReplaceAll(std::string& str, const std::string& from, const std::string& to)
 {

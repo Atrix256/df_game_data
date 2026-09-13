@@ -8,10 +8,9 @@
 #include <filesystem>
 #include "UIShared.h"
 #include "Compile.h"
+#include "Platform.h"
 
 static EditorData s_editorData;
-
-extern void SetWindowTitle(const char* text);
 
 static void LoadSettings()
 {
@@ -852,8 +851,6 @@ void OnFileDragDropped(const wchar_t* path)
 /*
 TODO:
 
-* make all extern functions instead be in a header for better visibility of platform needs
-
 * is a dbroot file made automatically when opening an fbs file, and you add fbs files to them?
  * or maybe you add them to an array in settings? so dbroot holds the list of files, and also the settings, and no more settings file?
  * would want a new, save, saveas then in the file menu.
@@ -868,6 +865,8 @@ TODO:
 
 * need a way to compile from command line. maybe a standalone app. move compilation logic into loader?
 
+* option to have it just spit out the combined json? maybe a "json" output type?
+
 * Make a script to make binary releases.
 * installer
  * with option to add to path (for binary compilation)
@@ -881,6 +880,7 @@ TODO:
 
 Notes:
 * This works as a flatbuffer data editor too (can open fbs or dbroot files)
+ * not quite. a json editor where the schema is defined as flatbuffers.
 * explain the design decisions (each data item as a json data file for easier merging. flat tables for speed. multiple tables because that's whats needed. table links)
 * Explain how to use it
 * mention drag and drop working

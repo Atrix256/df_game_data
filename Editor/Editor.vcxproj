@@ -165,6 +165,7 @@ dxgi.lib
     <ClCompile Include="imgui_impl_dx12.cpp" />
     <ClCompile Include="imgui_impl_win32.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Platform.cpp" />
     <ClCompile Include="RecentFiles.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -175,6 +176,7 @@ dxgi.lib
     <ClInclude Include="FontAwesome\IconsFontAwesome7.h" />
     <ClInclude Include="imgui_impl_dx12.h" />
     <ClInclude Include="imgui_impl_win32.h" />
+    <ClInclude Include="Platform.h" />
     <ClInclude Include="RecentFiles.h" />
     <ClInclude Include="UIShared.h" />
   </ItemGroup>

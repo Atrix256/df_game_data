@@ -17,6 +17,7 @@
     <ClCompile Include="DataItem.cpp" />
     <ClCompile Include="RecentFiles.cpp" />
     <ClCompile Include="Compile.cpp" />
+    <ClCompile Include="Platform.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Editor.h" />
@@ -32,6 +33,7 @@
     <ClInclude Include="UIShared.h" />
     <ClInclude Include="..\df_resource.h" />
     <ClInclude Include="Compile.h" />
+    <ClInclude Include="Platform.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
