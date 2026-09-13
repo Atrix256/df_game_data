@@ -862,6 +862,8 @@ TODO:
 //  * no: Have a user file next to dbroot or other file extension. with a hard coded schema and a window to edit it
 //  * this is for settings like "where do we compile the output to?" etc
 
+* the example data needs a small c++ main.cpp that loads the data and prints something from it.
+
 * watch files on disk and react to them for hot loading. The game will use this functionality too. make it part of the loader
 
 * need a way to compile from command line. maybe a standalone app. move compilation logic into loader?
@@ -888,5 +890,5 @@ Notes:
 * explain how to use enums to look up items by name (and string to enum to do a lookup by string name in some languages?)
  * string lookup doesnt work in c++ though. maybe need to add it.
  * explain that it makes an enum for the entry_names
-
+* explain the simple interface (only use generated headers), and the one that does file watching.
 */
