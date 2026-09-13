@@ -106,6 +106,16 @@ bool CompileData(EditorData& editorData)
             // Add what's left to the combined schema
             combinedSchema += schemaString;
 
+            // add an enum for the item name / indices
+            combinedSchema += "enum " + tableName + "_entry_names : uint16\n{\n";
+            uint16_t index = 0;
+            for (auto& pair : table.m_data)
+            {
+                combinedSchema += "  " + pair.first + " = " + std::to_string(index) + ",\n";
+                index++;
+            }
+            combinedSchema += "}\n\n";
+
             // we need to track all the include paths
             // If there's a problem with this (picks wrong paths for same file names), we will need to rewrite
             // the include lines to absolute paths instead

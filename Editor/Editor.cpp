@@ -677,20 +677,19 @@ void HandleSettingsWindow()
             const char* targets[] =
             {
                 "cpp",
+                "csharp",
+                "dart",
+                "go",
                 "java",
                 "kotlin",
-                "csharp",
-                "go",
-                "python",
-                "js",
-                "ts",
-                "php",
-                "dart",
-                "lua",
                 "lobster",
+                "lua",
+                "nim",
+                "php",
+                "python",
                 "rust",
                 "swift",
-                "nim",
+                "ts",
             };
 
             for (const char* target : targets)
@@ -853,10 +852,7 @@ void OnFileDragDropped(const wchar_t* path)
 /*
 TODO:
 
-// TODO: not sure how to associate names with array entries. maybe need a separate table that is "name to index"?
-// TODO: and/or maybe make an enum for it. we are going to have to make a wrapper header anyway. i think? if not, append to the one that was generated
-
-* maybe have output dir pluralized and specify an enum for each. like cpp or javascript or whatever other options
+* make all extern functions instead be in a header for better visibility of platform needs
 
 * is a dbroot file made automatically when opening an fbs file, and you add fbs files to them?
  * or maybe you add them to an array in settings? so dbroot holds the list of files, and also the settings, and no more settings file?
@@ -869,8 +865,6 @@ TODO:
 * watch files on disk and react to them for hot loading. The game will use this functionality too. make it part of the loader
 
 * need a way to compile from command line. maybe a standalone app. move compilation logic into loader?
-
-* make all extern functions instead be in a header for better visibility of platform needs
 
 * Make a script to make binary releases.
 * installer
@@ -891,5 +885,8 @@ Notes:
 * if you use table links, the table you reference must come before the current table in the dbroot list
 * don't use namespace in your files, but you can put a namespace in the settings.
 * C++ is the main target language - that's what i use it for! - but other languages are supported
+* explain how to use enums to look up items by name (and string to enum to do a lookup by string name in some languages?)
+ * string lookup doesnt work in c++ though. maybe need to add it.
+ * explain that it makes an enum for the entry_names
 
 */
