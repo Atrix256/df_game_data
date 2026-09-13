@@ -30,7 +30,7 @@ bool DBTable::LoadSchema()
         m_fbsFile.insert(lastIncludePos, "attribute \"link\";\n");
     }
 
-    m_includeDirsStr.push_back(std::filesystem::path(m_path).remove_filename().string());
+    m_includeDirsStr.push_back(std::filesystem::path(m_path).remove_filename().generic_string());
 
     m_includeDirs.resize(m_includeDirsStr.size());
     for (size_t i = 0; i < m_includeDirs.size(); ++i)
@@ -63,7 +63,7 @@ bool DBTable::LoadData()
     std::filesystem::recursive_directory_iterator it(std::filesystem::path(m_path).remove_filename(), ec);
     if (ec)
     {
-        m_errorText = "Could not scan directory: " + std::filesystem::path(m_path).remove_filename().string();
+        m_errorText = "Could not scan directory: " + std::filesystem::path(m_path).remove_filename().generic_string();
         return false;
     }
 
@@ -74,14 +74,14 @@ bool DBTable::LoadData()
         const auto& entry = *it;
         if (std::filesystem::is_regular_file(entry, ec) && entry.path().extension() == ".json")
         {
-            if (!LoadFile(entry.path().string().c_str()))
+            if (!LoadFile(entry.path().generic_string().c_str()))
                 return false;
         }
 
         it.increment(ec);
         if (ec)
         {
-            m_errorText = "Error while scanning directory: " + std::filesystem::path(m_path).remove_filename().string() + "\n" + ec.message();
+            m_errorText = "Error while scanning directory: " + std::filesystem::path(m_path).remove_filename().generic_string() + "\n" + ec.message();
             return false;
         }
     }
@@ -119,7 +119,7 @@ bool DBTable::LoadFile(const char* fileName)
     // Insert the data into the data table.
     // The filename without extension is the key.
     std::unique_ptr<JSONData> newData = std::make_unique<JSONData>();
-    std::string key = std::filesystem::path(fileName).filename().replace_extension("").string();
+    std::string key = std::filesystem::path(fileName).filename().replace_extension("").generic_string();
     newData->m_data = data;
     newData->m_path = fileName;
     m_data[key] = std::move(newData);
@@ -144,7 +144,7 @@ bool DBRoot::Load(const char* path)
 {
     Clear();
 
-    std::string extension = std::filesystem::path(path).extension().string();
+    std::string extension = std::filesystem::path(path).extension().generic_string();
     std::filesystem::path base_path = std::filesystem::absolute(path).remove_filename();
 
     int loadOrder = 0;
@@ -168,7 +168,7 @@ bool DBRoot::Load(const char* path)
                 std::filesystem::path full_path = std::filesystem::weakly_canonical(base_path / line);
 
                 std::unique_ptr<DBTable> newTable = std::make_unique<DBTable>();
-                if (!newTable->Load(full_path.string().c_str()))
+                if (!newTable->Load(full_path.generic_string().c_str()))
                 {
                     m_errorText = newTable->GetErrorText();
                     Clear();
@@ -176,7 +176,7 @@ bool DBRoot::Load(const char* path)
                     return false;
                 }
 
-                m_fileWatcher.AddDirectory(full_path.remove_filename().string().c_str(), nullptr);
+                m_fileWatcher.AddDirectory(full_path.remove_filename().generic_string().c_str(), nullptr);
 
                 // accumulate warnings
                 std::string warningText = newTable->GetErrorText();
@@ -206,7 +206,7 @@ bool DBRoot::Load(const char* path)
             return false;
         }
 
-        m_fileWatcher.AddDirectory(base_path.string().c_str(), nullptr);
+        m_fileWatcher.AddDirectory(base_path.generic_string().c_str(), nullptr);
 
         // accumulate warnings
         std::string warningText = newTable->GetErrorText();

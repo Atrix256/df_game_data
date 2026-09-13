@@ -21,7 +21,7 @@ static void LoadSettings()
 
     // Load the json file
     std::string jsonString;
-    if (!flatbuffers::LoadFile(settingsFileName.string().c_str(), false, &jsonString))
+    if (!flatbuffers::LoadFile(settingsFileName.generic_string().c_str(), false, &jsonString))
         return;
 
     json data = json::parse(jsonString, nullptr, false);
@@ -42,7 +42,7 @@ static void SaveSettings()
     std::string jsonString = doc.dump(4);
 
     FILE* file = nullptr;
-    fopen_s(&file, settingsFileName.string().c_str(), "wb");
+    fopen_s(&file, settingsFileName.generic_string().c_str(), "wb");
     if (file)
     {
         fwrite(jsonString.c_str(), 1, jsonString.size(), file);
@@ -289,6 +289,7 @@ static bool ShowMenuBar()
 
             if (ImGui::MenuItem("Compile", "Ctrl+C"))
             {
+                OnFileSaveAll();
                 s_editorData.m_compileSucceeded = CompileData(s_editorData);
                 s_editorData.m_showCompileResultsWindow = true;
             }
@@ -313,6 +314,7 @@ static bool ShowMenuBar()
 
     if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_C))
     {
+        OnFileSaveAll();
         s_editorData.m_compileSucceeded = CompileData(s_editorData);
         s_editorData.m_showCompileResultsWindow = true;
     }
@@ -385,7 +387,7 @@ static void OnDataListReload()
 
     table.m_data.erase(s_editorData.m_selectedDataItemName);
 
-    table.Load(src.string().c_str());
+    table.Load(src.generic_string().c_str());
 }
 
 static void OnDataListRename(const char* newName)
@@ -410,7 +412,7 @@ static void OnDataListRename(const char* newName)
     std::filesystem::copy_file(src, dst, std::filesystem::copy_options::overwrite_existing, ec);
 
     // Load the file
-    table.Load(src.string().c_str());
+    table.Load(src.generic_string().c_str());
 
     // delete old file from disk
     std::filesystem::remove(src);
@@ -446,7 +448,7 @@ static void OnDataListDuplicate()
     std::filesystem::copy_file(src, dst, std::filesystem::copy_options::overwrite_existing, ec);
 
     // Load the file
-    table.Load(src.string().c_str());
+    table.Load(src.generic_string().c_str());
 
     // select the new item
     s_editorData.m_selectedDataItemName = newItemName;
@@ -465,7 +467,7 @@ static void OnDataListNew()
     // make a dummy file
     {
         FILE* file = nullptr;
-        fopen_s(&file, fileName.string().c_str(), "wb");
+        fopen_s(&file, fileName.generic_string().c_str(), "wb");
         if (!file)
             return;
 
@@ -474,7 +476,7 @@ static void OnDataListNew()
     }
 
     // make the entry in the data
-    table.LoadFile(fileName.string().c_str());
+    table.LoadFile(fileName.generic_string().c_str());
 
     // select the new item
     s_editorData.m_selectedDataItemName = itemName;
@@ -678,7 +680,7 @@ bool ShowEditorWindow()
         char buffer[2048];
         const char* path = s_editorData.m_dbroot.GetPath();
         if (path && path[0])
-            sprintf_s(buffer, "df_game_data Editor - %s%s", std::filesystem::path(path).filename().string().c_str(), s_editorData.m_documentDirty ? " *" : "");
+            sprintf_s(buffer, "df_game_data Editor - %s%s", std::filesystem::path(path).filename().generic_string().c_str(), s_editorData.m_documentDirty ? " *" : "");
         else
             strcpy_s(buffer, "df_game_data Editor");
         SetWindowTitle(buffer);
@@ -790,7 +792,7 @@ bool ShowEditorWindow()
 
 void OnFileDragDropped(const wchar_t* path)
 {
-    LoadFile(std::filesystem::path(path).string().c_str());
+    LoadFile(std::filesystem::path(path).generic_string().c_str());
 }
 
 /*
@@ -798,8 +800,6 @@ TODO:
 
 // TODO: not sure how to associate names with array entries. maybe need a separate table that is "name to index"?
 // TODO: and/or maybe make an enum for it. we are going to have to make a wrapper header anyway. i think? if not, append to the one that was generated
-
-* make all filepath .string into .generic_string for forward slash separators
 
 * put a namespace string in the compile settings and put that into the combined schema
 
@@ -821,14 +821,13 @@ TODO:
 * Make a script to make binary releases.
 * installer
  * with option to add to path (for binary compilation)
-* Alsp need version number in app and installer.
-* dd contributors list and how to contribute
+* Also need version number in app and installer.
+* add contributors list and how to contribute
 * Let people Add their name. Alpha sort. Along with a description of what they did?
  * Or a link to a page with their check ins or something.
 * Add a help about with version and contributor list.
  * could also put the larger df.png on there
 
-* should we force a save all on compile? visual studio does.
 
 Notes:
 * This works as a flatbuffer data editor too (can open fbs or dbroot files)
