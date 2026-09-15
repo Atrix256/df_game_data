@@ -94,6 +94,11 @@ public:
         return m_path.c_str();
     }
 
+    bool Loaded() const
+    {
+        return !m_path.empty();
+    }
+
 private:
     void LoadSettings(json& data);
 

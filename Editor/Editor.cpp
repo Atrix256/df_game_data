@@ -261,10 +261,10 @@ static bool ShowMenuBar()
             if (ImGui::MenuItem("Open Database", "Ctrl+O"))
                 OnFileOpen();
 
-            if (ImGui::MenuItem("Save Data Item", "Ctrl+S"))
+            if (ImGui::MenuItem("Save Data Item", "Ctrl+S", false, s_editorData.m_dbroot.Loaded()))
                 OnFileSave();
 
-            if (ImGui::MenuItem("Save All Data Items", "Ctrl+A"))
+            if (ImGui::MenuItem("Save All Data Items", "Ctrl+A", false, s_editorData.m_dbroot.Loaded()))
                 OnFileSaveAll();
 
             ImGui::Separator();
@@ -279,7 +279,7 @@ static bool ShowMenuBar()
 
         if (ImGui::BeginMenu("Edit"))
         {
-            if (ImGui::MenuItem("Settings"))
+            if (ImGui::MenuItem("Settings", nullptr, false, s_editorData.m_dbroot.Loaded()))
                 s_editorData.m_openSettingsWindow = true;
 
             ImGui::EndMenu();
@@ -287,7 +287,7 @@ static bool ShowMenuBar()
 
         if (ImGui::BeginMenu("Compile"))
         {
-            if (ImGui::MenuItem("Compile", "Ctrl+C"))
+            if (ImGui::MenuItem("Compile", "Ctrl+C", false, s_editorData.m_dbroot.Loaded()))
             {
                 OnFileSaveAll();
                 s_editorData.m_compileSucceeded = CompileData(s_editorData);
@@ -391,6 +391,7 @@ static void ShowTableList()
     }
 
     {
+        ImGui_Enabled enabled(s_editorData.m_dbroot.Loaded());
         ImGui::SameLine();
         if (ImGui::Button("Add"))
         {
@@ -610,11 +611,15 @@ static void OnDataListDelete()
 
 static void ShowDataList()
 {
-    if (ImGui::Button("New"))
-        OnDataListNew();
-    ImGui::SameLine();
-    if (ImGui::Button("Delete"))
-        OnDataListDelete();
+    {
+        ImGui_Enabled enabled(s_editorData.m_dbroot.m_tables.contains(s_editorData.m_selectedTableName));
+
+        if (ImGui::Button("New"))
+            OnDataListNew();
+        ImGui::SameLine();
+        if (ImGui::Button("Delete"))
+            OnDataListDelete();
+    }
 
     //ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.10f, 0.10f, 0.10f, 1.0f));
     if (ImGui::BeginListBox("##DataListBox", ImVec2(-FLT_MIN, -FLT_MIN)))
@@ -968,11 +973,16 @@ void OnFileDragDropped(const wchar_t* path)
 
 /*
 TODO:
-File menu should have...
-* new - new dbroot file. makes you choose a name and then saves it.
-* save as - can save a dbroot file somewhere else. i think it should update the paths of the tables? maybe don't do this one. log an issue.
-* Remove "save". not useful in this menu. rename to on data list save or something.
-* Keep save all but rename to save all data items
+* instead of adding an enum for table entries, add a string table. Also maybe have a hash field as the key, for faster compares, and an index?
+ * maybe dont need hash.
+ * Have a get() function on an entry pointer which returns an object.
+ * Internally checks load version # to see if it needs to look entry up again by name.
+ * If entry not found by name return default object with a invalid flag thay can be checked.
+ * What if schema hash changes? Maybe need a way to detect that incompatibility? Or does flatbuffer handle that with backwards and forwards compatibility?
+ * maybe still need to check for massive schema changes that don't follow the rules of what's allowed for flatbuffer loading to continue working
+
+* command line to open a file.
+ * Also if -compile is on the command line, do that instead of oepning a window.
 
 * the example data needs a small c++ main.cpp that loads the data and prints something from it.
 
