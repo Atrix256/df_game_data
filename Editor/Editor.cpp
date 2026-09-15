@@ -54,6 +54,35 @@ static void LoadFile(const char* fileName)
     s_editorData.m_updateWindowTitle = true;
 }
 
+static void OnFileNewDatabase(bool checkDirty)
+{
+    if (checkDirty && s_editorData.m_documentDirty)
+    {
+        s_editorData.m_showConfirmNew = true;
+        return;
+    }
+
+    nfdchar_t* outPath = NULL;
+
+    nfdu8filteritem_t filters[] =
+    {
+        { "DBRoot Files (*.dbroots)", "dbroot" }
+    };
+
+    nfdresult_t result = NFD_SaveDialogU8(&outPath, filters, IM_COUNTOF(filters), nullptr, nullptr);
+
+    if (result != NFD_OKAY)
+        return;
+
+    if (!s_editorData.m_dbroot.New(outPath))
+        s_editorData.m_showLoadingErrors = true;
+
+    NFD_FreePathU8(outPath);
+
+    s_editorData.m_documentDirty = false;
+    s_editorData.m_updateWindowTitle = true;
+}
+
 static void OnFileOpen()
 {
     nfdchar_t* outPath = NULL;
@@ -226,13 +255,16 @@ static bool ShowMenuBar()
     {
         if (ImGui::BeginMenu("File"))
         {
-            if (ImGui::MenuItem("Open", "Ctrl+O"))
+            if (ImGui::MenuItem("New Database", "Ctrl+N"))
+                OnFileNewDatabase(true);
+
+            if (ImGui::MenuItem("Open Database", "Ctrl+O"))
                 OnFileOpen();
 
-            if (ImGui::MenuItem("Save", "Ctrl+S"))
+            if (ImGui::MenuItem("Save Data Item", "Ctrl+S"))
                 OnFileSave();
 
-            if (ImGui::MenuItem("Save All", "Ctrl+A"))
+            if (ImGui::MenuItem("Save All Data Items", "Ctrl+A"))
                 OnFileSaveAll();
 
             ImGui::Separator();
@@ -267,6 +299,9 @@ static bool ShowMenuBar()
 
         ImGui::EndMenuBar();
     }
+
+    if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_N))
+        OnFileNewDatabase(true);
 
     if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_O))
         OnFileOpen();
@@ -398,7 +433,7 @@ static void ShowTableList()
             );
             s_editorData.m_dbroot.SaveDBRoot();
         }
-        ShowToolTip("Move this table up.", false);
+        ShowToolTip("Move this table up in loading order.", false);
     }
     {
         ImGui::SameLine();
@@ -411,7 +446,7 @@ static void ShowTableList()
             );
             s_editorData.m_dbroot.SaveDBRoot();
         }
-        ShowToolTip("Move this table down.", false);
+        ShowToolTip("Move this table down in loading order.", false);
     }
 }
 
@@ -674,6 +709,34 @@ static void ShowDataList()
     }
 }
 
+void HandleConfirmNew()
+{
+    if (s_editorData.m_showConfirmNew)
+    {
+        ImGui::OpenPopup("Create New Database?");
+        s_editorData.m_showConfirmNew = false;
+    }
+
+    if (ImGui::BeginPopupModal("Create New Database?", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::Text("Data is unsaved, continue?");
+
+        ImGui::Separator();
+
+        if (ImGui::Button("OK", ImVec2(120, 0)))
+        {
+            OnFileNewDatabase(false);
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SetItemDefaultFocus();
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", ImVec2(120, 0)))
+            ImGui::CloseCurrentPopup();
+
+        ImGui::EndPopup();
+    }
+}
+
 void HandleCompileResults()
 {
     if (s_editorData.m_showCompileResultsWindow)
@@ -847,6 +910,7 @@ bool ShowEditorWindow()
 
     HandleSettingsWindow();
     HandleCompileResults();
+    HandleConfirmNew();
 
     if (ImGui::BeginPopupModal("Exit Confirmation", &showConfirmExit, ImGuiWindowFlags_AlwaysAutoResize))
     {
@@ -904,15 +968,11 @@ void OnFileDragDropped(const wchar_t* path)
 
 /*
 TODO:
-* figure out the new / save / save as stuff, since it's dealing with dbroot files. onfilesave needs to be ondataitemsave.
-
-* is a dbroot file made automatically when opening an fbs file, and you add fbs files to them?
- * or maybe you add them to an array in settings? so dbroot holds the list of files, and also the settings, and no more settings file?
- * would want a new, save, saveas then in the file menu.
-
-// Maybe dbroot is json with a hard coded schema and make file menu options to.make.a new one, save, save as? and edit in the editor in a window
-//  * no: Have a user file next to dbroot or other file extension. with a hard coded schema and a window to edit it
-//  * this is for settings like "where do we compile the output to?" etc
+File menu should have...
+* new - new dbroot file. makes you choose a name and then saves it.
+* save as - can save a dbroot file somewhere else. i think it should update the paths of the tables? maybe don't do this one. log an issue.
+* Remove "save". not useful in this menu. rename to on data list save or something.
+* Keep save all but rename to save all data items
 
 * the example data needs a small c++ main.cpp that loads the data and prints something from it.
 

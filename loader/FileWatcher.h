@@ -17,4 +17,9 @@ public:
     {
         int ijkl = 0;
     }
+
+    void Clear()
+    {
+
+    }
 };

@@ -254,6 +254,24 @@ bool DBRoot::AddTable(const char* path)
     return true;
 }
 
+bool DBRoot::New(const char* path)
+{
+    Clear();
+
+    FILE* file = nullptr;
+    fopen_s(&file, path, "wb");
+    if (!file)
+    {
+        m_errorText = "Could not open for writing: " + std::string(path);
+        return false;
+    }
+
+    fprintf(file, "{\n    \"tables\": []\n}\n");
+    fclose(file);
+
+    return Load(path);
+}
+
 bool DBRoot::Load(const char* path)
 {
     Clear();
@@ -332,4 +350,5 @@ void DBRoot::Clear()
 {
     m_tables.clear();
     m_path = "";
+    m_fileWatcher.Clear();
 }

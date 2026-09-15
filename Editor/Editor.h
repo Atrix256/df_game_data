@@ -18,11 +18,12 @@ struct EditorData
 
     bool m_documentDirty = false;
     bool m_updateWindowTitle = true;
-    bool m_showLoadingErrors = false;
     bool m_openSettingsWindow = false;
 
+    bool m_showLoadingErrors = false;
     bool m_showCompileResultsWindow = false;
     bool m_compileSucceeded = false;
+    bool m_showConfirmNew = false;
 
     RecentFiles m_recentFiles;
 };
