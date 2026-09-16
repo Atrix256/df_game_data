@@ -1023,7 +1023,16 @@ TODO:
 
 * have it save all on compile, like visual studio does, so you make edits, then control+c to make the game update.
 
+! I think i need to replace flatbuffers. the generated headers require flatbuffers.h. Needs:
+ 1) Describe schema (json schema?)
+ 2) load json, ensure it follows schema (nlohmann-json-schema-validator? or just do it manually since you need to parse the schema for UI anyways)
+ 3) generate binary data from combined json (custom)
+ 4) generate standalone header from combined schema (custom)
+  * may need to put a hash of schema in data to know when it's no longer compatible.
+  * need to describe what is possible in schema: pods, strings, fixed size and variable arrays, structs, enums. links.
+
 * the example data needs a small c++ main.cpp that loads the data and prints something from it.
+ * ExampleData\example_code\main.cpp when it's time to do this again.
 
 * runtime file watching:
  * Have a get() function on an entry pointer which returns an object.

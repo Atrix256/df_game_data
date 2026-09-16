@@ -1,6 +1,6 @@
 {
-    "compileOutputDir": "",
-    "nameSpace": "",
+    "compileOutputDir": "../example_code/data",
+    "nameSpace": "GameData",
     "targetLanguage": "cpp",
     "tables": [
         "Items/schema.fbs",
