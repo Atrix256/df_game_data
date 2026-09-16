@@ -209,8 +209,14 @@ void ApplyStyle()
 }
 
 // Main code
-int main(int, char**)
+int main(int argc, char** argv)
 {
+    {
+        int returnCode = 0;
+        if (!EditorOnAppLaunch(argc, argv, returnCode))
+            return returnCode;
+    }
+
     // Make process DPI aware and obtain main monitor scale
     ImGui_ImplWin32_EnableDpiAwareness();
     float main_scale = ImGui_ImplWin32_GetDpiScaleForMonitor(::MonitorFromPoint(POINT{ 0, 0 }, MONITOR_DEFAULTTOPRIMARY));

@@ -12,6 +12,9 @@
 
 static EditorData s_editorData;
 
+std::string s_commandLineFileName;
+static bool s_loadCommandLine = false;
+
 static void LoadFile(const char* fileName)
 {
     s_editorData.m_dbroot.Clear();
@@ -848,6 +851,12 @@ void HandleSettingsWindow()
 
 bool ShowEditorWindow()
 {
+    if (s_loadCommandLine)
+    {
+        LoadFile(s_commandLineFileName.c_str());
+        s_loadCommandLine = false;
+    }
+
     bool ret = false;
 
     if (s_editorData.m_updateWindowTitle)
@@ -971,24 +980,59 @@ void OnFileDragDropped(const wchar_t* path)
     LoadFile(std::filesystem::path(path).generic_string().c_str());
 }
 
+bool EditorOnAppLaunch(int argc, char** argv, int &returnCode)
+{
+    returnCode = 0;
+
+    bool wantsCompile = false;
+    if (argc > 1)
+    {
+        s_commandLineFileName = argv[1];
+        if (argc > 2 && (!_stricmp(s_commandLineFileName.c_str(), "-c") || !_stricmp(s_commandLineFileName.c_str(), "--compile")))
+        {
+            s_commandLineFileName = argv[2];
+            wantsCompile = true;
+        }
+    }
+    s_loadCommandLine = !s_commandLineFileName.empty();
+
+    if (wantsCompile)
+    {
+        LoadFile(s_commandLineFileName.c_str());
+
+        if (s_editorData.m_showLoadingErrors)
+        {
+            printf("Error: %s", s_editorData.m_dbroot.GetErrorText());
+            returnCode = 1;
+            return false;
+        }
+
+        if (!CompileData(s_editorData))
+        {
+            printf("Error: could not compile data");
+            returnCode = 1;
+            return false;
+        }
+    }
+
+    return !wantsCompile;
+}
+
 /*
 TODO:
-* instead of adding an enum for table entries, add a string table. Also maybe have a hash field as the key, for faster compares, and an index?
- * maybe dont need hash.
+
+* the example data needs a small c++ main.cpp that loads the data and prints something from it.
+
+* watch files on disk and react to them for hot loading. The game will use this functionality too. make it part of the loader
+ * nah. the game will just watch the bin. try that to start out.
+
+* runtime file watching:
  * Have a get() function on an entry pointer which returns an object.
  * Internally checks load version # to see if it needs to look entry up again by name.
  * If entry not found by name return default object with a invalid flag thay can be checked.
  * What if schema hash changes? Maybe need a way to detect that incompatibility? Or does flatbuffer handle that with backwards and forwards compatibility?
  * maybe still need to check for massive schema changes that don't follow the rules of what's allowed for flatbuffer loading to continue working
 
-* command line to open a file.
- * Also if -compile is on the command line, do that instead of oepning a window.
-
-* the example data needs a small c++ main.cpp that loads the data and prints something from it.
-
-* watch files on disk and react to them for hot loading. The game will use this functionality too. make it part of the loader
-
-* need a way to compile from command line. maybe a standalone app. move compilation logic into loader?
 
 * option to have it just spit out the combined json? maybe a "json" output type?
 
@@ -1020,4 +1064,7 @@ Notes:
 * explain you can move up and down the tables in the dbroot.
  * useful if one table schema defines types used by another table schema
  * better to have a shared schema include file though.
+* command line options:
+ * put a filename on command line to load it
+ * If there is a -c or --compile before it, compiles the data file without making a window
 */

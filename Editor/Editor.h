@@ -28,5 +28,6 @@ struct EditorData
     RecentFiles m_recentFiles;
 };
 
+bool EditorOnAppLaunch(int argc, char** argv, int& returnCode);
 bool ShowEditorWindow();
 void OnFileDragDropped(const wchar_t* path);

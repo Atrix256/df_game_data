@@ -104,16 +104,6 @@ bool CompileData(EditorData& editorData)
             // Add what's left to the combined schema
             combinedSchema += schemaString;
 
-            // add an enum for the item name / indices
-            combinedSchema += "enum " + tableName + "_entry_names : uint16\n{\n";
-            uint16_t index = 0;
-            for (auto& pair : table.m_data)
-            {
-                combinedSchema += "  " + pair.first + " = " + std::to_string(index) + ",\n";
-                index++;
-            }
-            combinedSchema += "}\n\n";
-
             // we need to track all the include paths
             // If there's a problem with this (picks wrong paths for same file names), we will need to rewrite
             // the include lines to absolute paths instead
@@ -127,20 +117,25 @@ bool CompileData(EditorData& editorData)
 
         fullSchema += combinedSchema;
 
-        // Make a table that has arrays of each table type, and make it be the root type
+        // make the schema for the table that will map entry names to indices.
+        fullSchema += "\ntable EntryNameToIndex\n{\n  name:string;\n  index:uint32;\n}\n\n";
+
+        // Make a table that has arrays of each table type, and a mapping from sorted name to index
+        // Make this table the root type
         fullSchema += "table dbroot\n{\n";
         for (const std::string& tableName : tableOrder)
         {
-            std::string memberName = tableName;
-            std::transform(memberName.begin(), memberName.end(), memberName.begin(),
+            std::string memberNameBase = tableName;
+            std::transform(memberNameBase.begin(), memberNameBase.end(), memberNameBase.begin(),
                 [](unsigned char c)
                 {
                     return std::tolower(c);
                 }
             );
-            memberName += "_entries";
 
-            fullSchema += "    " + memberName + ":[" + tableName + "];\n";
+            fullSchema += "    " + memberNameBase + "_entries:[" + tableName + "];\n";
+
+            fullSchema += "    " + memberNameBase + "_name_to_index:[EntryNameToIndex];\n";
         }
         fullSchema += "}\n\nroot_type dbroot;\n\n";
 
@@ -194,6 +189,37 @@ bool CompileData(EditorData& editorData)
             allDataItems.push_back('\n');
 
             allDataItems += "    ],\n";
+
+            // Add the name_to_index sorted list
+            {
+                struct NameToIndex
+                {
+                    std::string name;
+                    int index;
+                };
+                std::vector<NameToIndex> nameToIndex;
+                int i = 0;
+                for (const auto& pair : table.m_data)
+                    nameToIndex.push_back({ pair.first, i++ });
+
+                std::sort(nameToIndex.begin(), nameToIndex.end(),
+                    [](const NameToIndex& A, const NameToIndex& B)
+                    {
+                        return A.name < B.name;
+                    }
+                );
+
+                allDataItems += "    \"" + memberName + "_name_to_index\" : [\n";
+                for (const NameToIndex& n : nameToIndex)
+                    allDataItems += "        { name:\"" + n.name + "\", index:" + std::to_string(n.index) + " },\n";
+
+                // remove trailing comma
+                allDataItems.pop_back();
+                allDataItems.pop_back();
+                allDataItems.push_back('\n');
+
+                allDataItems += "    ],\n";
+            }
 
             allData += allDataItems;
         }
