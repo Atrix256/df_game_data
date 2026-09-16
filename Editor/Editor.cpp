@@ -1021,10 +1021,9 @@ bool EditorOnAppLaunch(int argc, char** argv, int &returnCode)
 /*
 TODO:
 
-* the example data needs a small c++ main.cpp that loads the data and prints something from it.
+* have it save all on compile, like visual studio does, so you make edits, then control+c to make the game update.
 
-* watch files on disk and react to them for hot loading. The game will use this functionality too. make it part of the loader
- * nah. the game will just watch the bin. try that to start out.
+* the example data needs a small c++ main.cpp that loads the data and prints something from it.
 
 * runtime file watching:
  * Have a get() function on an entry pointer which returns an object.
@@ -1033,19 +1032,19 @@ TODO:
  * What if schema hash changes? Maybe need a way to detect that incompatibility? Or does flatbuffer handle that with backwards and forwards compatibility?
  * maybe still need to check for massive schema changes that don't follow the rules of what's allowed for flatbuffer loading to continue working
 
-
-* option to have it just spit out the combined json? maybe a "json" output type?
+* use it a bit before announcing it and making builds available
 
 * Make a script to make binary releases.
 * installer
  * with option to add to path (for binary compilation)
+ * nah. just binaries i think?
 * Also need version number in app and installer.
 * add contributors list and how to contribute
 * Let people Add their name. Alpha sort. Along with a description of what they did?
  * Or a link to a page with their check ins or something.
 * Add a help about with version and contributor list.
  * could also put the larger df.png on there
-
+* make flatc.exe get copied to where the editor exe is, on compile and make it .gitignored. call it from there. needed for binaries / installer?
 
 Notes:
 * This works as a flatbuffer data editor too (can open fbs or dbroot files)
