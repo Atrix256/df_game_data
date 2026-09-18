@@ -1067,6 +1067,15 @@ TODO:
  * could also put the larger df.png on there
 * make flatc.exe get copied to where the editor exe is, on compile and make it .gitignored. call it from there. needed for binaries / installer?
 
+Schema documentation:
+* Tries to be familiar to C++ programmers, the target user
+* #include
+* #root
+* struct {};
+* enum {};
+* types
+* how namespaces work (including types using :: syntax)
+
 Notes:
 * This works as a flatbuffer data editor too (can open fbs or dbroot files)
  * not quite. a json editor where the schema is defined as flatbuffers.
