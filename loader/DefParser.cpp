@@ -9,6 +9,7 @@ enum class TokenType : uint8_t
     Identifier,
 
     StructDef,
+    EnumDef,
 
     TypeName,
 
@@ -23,6 +24,7 @@ enum class TokenType : uint8_t
     BracketBegin,
     BracketEnd,
     Semicolon,
+    Comma,
     Equals,
 };
 
@@ -165,6 +167,7 @@ static void ConvertIdentifierToken(Token& token)
     IdentifierToTokenType map[] =
     {
         {"struct", TokenType::StructDef},
+        {"enum", TokenType::EnumDef},
         {"uint8", TokenType::TypeName},
         {"sint8", TokenType::TypeName},
         {"uint16", TokenType::TypeName},
@@ -273,6 +276,7 @@ void DefParser::GetToken(const char*& cursor, Token& token)
         { '[', TokenType::BracketBegin },
         { ']', TokenType::BracketEnd },
         { ';', TokenType::Semicolon },
+        { ',', TokenType::Comma },
         { '=', TokenType::Equals },
     };
 
@@ -344,6 +348,53 @@ bool DefParser::ParseStructDef(const char*& cursor)
     return true;
 }
 
+bool DefParser::ParseEnumDef(const char*& cursor)
+{
+    Token token;
+    GetToken(cursor, token);
+    if (!TokenTypeExpected(token, TokenType::Identifier))
+        return false;
+
+    Enum& newEnum = m_enums.emplace_back();
+    newEnum.name = std::string(token.token);
+    newEnum.nameSpace = m_currentNamespace;
+
+    GetToken(cursor, token);
+    if (!TokenTypeExpected(token, TokenType::BraceBegin))
+        return false;
+
+    // read the enum labels until we hit the end of the brace
+    while (true)
+    {
+        GetToken(cursor, token);
+        if (token.type == TokenType::BraceEnd)
+            break;
+
+        if (!TokenTypeExpected(token, TokenType::Identifier))
+            return false;
+
+        for (const std::string& s : newEnum.labels)
+        {
+            if (s == token.token)
+            {
+                m_errorText << "Error in " << m_path << ": duplicate enum value on line " << m_lineNumber;
+                return false;
+            }
+        }
+
+        newEnum.labels.push_back(std::string(token.token));
+
+        GetToken(cursor, token);
+        if (token.type == TokenType::BraceEnd)
+            break;
+
+        if (!TokenTypeExpected(token, TokenType::Comma))
+            return false;
+    }
+
+    return true;
+}
+
 bool DefParser::ParseDirectiveRoot(const char*& cursor)
 {
     Token token;
@@ -377,6 +428,7 @@ bool DefParser::ParseDirectiveInclude(const char*& cursor)
 
     // Copy the types from the include
     m_structs.insert(m_structs.end(), includeParser.m_structs.begin(), includeParser.m_structs.end());
+    m_enums.insert(m_enums.end(), includeParser.m_enums.begin(), includeParser.m_enums.end());
 
     return true;
 }
@@ -414,6 +466,12 @@ bool DefParser::Parse(const char* fileName)
             case TokenType::StructDef:
             {
                 if (!ParseStructDef(cursor))
+                    return false;
+                break;
+            }
+            case TokenType::EnumDef:
+            {
+                if (!ParseEnumDef(cursor))
                     return false;
                 break;
             }

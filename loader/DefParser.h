@@ -54,6 +54,13 @@ public:
         std::vector<StructField> fields;
     };
 
+    struct Enum
+    {
+        std::string name;
+        std::string nameSpace;
+        std::vector<std::string> labels;
+    };
+
     bool Parse(const char* fileName);
 
     const Struct* GetStructByName(const char* name) const
@@ -72,6 +79,7 @@ public:
 
 private:
     bool ParseStructDef(const char*& cursor);
+    bool ParseEnumDef(const char*& cursor);
     bool ParseDirectiveRoot(const char*& cursor);
     bool ParseDirectiveInclude(const char*& cursor);
 
@@ -89,6 +97,9 @@ private:
     std::string m_currentNamespace;
 
     std::string m_path;
+
     std::string m_rootStruct;
+
     std::vector<Struct> m_structs;
+    std::vector<Enum> m_enums;
 };
