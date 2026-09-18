@@ -444,6 +444,32 @@ bool DefParser::TokenTypeExpected(const Token& token, TokenType expectedType)
     return false;
 }
 
+// TODO: GetStructByName and GetEnumByName need to deal with namespaces:
+// 1) If name has a namespace, search that namespace.
+// 2) Else
+//   a) Search the current namespace
+//   b) Then search the global namespace
+
+const DefParser::Struct* DefParser::GetStructByName(const char* name) const
+{
+    for (const Struct& s : m_structs)
+    {
+        if (name == s.name)
+            return &s;
+    }
+    return nullptr;
+}
+
+const DefParser::Enum* DefParser::GetEnumByName(const char* name) const
+{
+    for (const Enum& e : m_enums)
+    {
+        if (name == e.name)
+            return &e;
+    }
+    return nullptr;
+}
+
 bool DefParser::Parse(const char* fileName)
 {
     m_lineNumber = 1;

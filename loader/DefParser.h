@@ -42,9 +42,6 @@ public:
         int fixedArraySize = 0;
         std::string structName;
         std::string enumName;
-
-        // TODO: no, enum values are listed elsewhere!
-        std::vector<std::string> enumValues;
     };
 
     struct Struct
@@ -63,15 +60,8 @@ public:
 
     bool Parse(const char* fileName);
 
-    const Struct* GetStructByName(const char* name) const
-    {
-        for (const Struct& s : m_structs)
-        {
-            if (name == s.name)
-                return &s;
-        }
-        return nullptr;
-    }
+    const Struct* GetStructByName(const char* name) const;
+    const Enum* GetEnumByName(const char* name) const;
 
     const char* GetRootStruct() const { return m_rootStruct.c_str(); }
 
