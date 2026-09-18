@@ -11,8 +11,6 @@ enum class TokenType : uint8_t
     StructDef,
     EnumDef,
 
-    TypeName,
-
     DirectiveRoot,
     DirectiveInclude,
 
@@ -138,7 +136,7 @@ static void ConvertDirectiveToken(Token& token)
         TokenType type;
     };
 
-    IdentifierToTokenType map[] =
+    static const IdentifierToTokenType map[] =
     {
         {"#root", TokenType::DirectiveRoot},
         {"#include", TokenType::DirectiveInclude},
@@ -164,21 +162,10 @@ static void ConvertIdentifierToken(Token& token)
         TokenType type;
     };
 
-    IdentifierToTokenType map[] =
+    static const IdentifierToTokenType map[] =
     {
         {"struct", TokenType::StructDef},
         {"enum", TokenType::EnumDef},
-        {"uint8", TokenType::TypeName},
-        {"sint8", TokenType::TypeName},
-        {"uint16", TokenType::TypeName},
-        {"sint16", TokenType::TypeName},
-        {"uint32", TokenType::TypeName},
-        {"sint32", TokenType::TypeName},
-        {"uint64", TokenType::TypeName},
-        {"sint64", TokenType::TypeName},
-        {"string", TokenType::TypeName},
-        {"float", TokenType::TypeName},
-        {"double", TokenType::TypeName},
     };
 
     for (const IdentifierToTokenType& m : map)
@@ -191,6 +178,41 @@ static void ConvertIdentifierToken(Token& token)
     }
 
     token.type = TokenType::Identifier;
+}
+
+static bool IdentifierToFieldType(const char* identifier, DefParser::FieldType& fieldType)
+{
+    struct Map
+    {
+        const char* identifier;
+        DefParser::FieldType type;
+    };
+
+    static const Map map[] =
+    {
+        {"bool", DefParser::FieldType::_bool},
+        {"uint8", DefParser::FieldType::_uint8},
+        { "int8", DefParser::FieldType::_sint8},
+        {"uint16", DefParser::FieldType::_uint16},
+        { "int16", DefParser::FieldType::_sint16},
+        {"uint32", DefParser::FieldType::_uint32},
+        { "int32", DefParser::FieldType::_sint32},
+        {"uint64", DefParser::FieldType::_uint64},
+        { "int64", DefParser::FieldType::_sint64},
+        { "float", DefParser::FieldType::_float},
+        { "double", DefParser::FieldType::_double},
+        { "string", DefParser::FieldType::_string},
+    };
+
+    for (const Map& m : map)
+    {
+        if (!strcmp(identifier, m.identifier))
+        {
+            fieldType = m.type;
+            return true;
+        }
+    }
+    return false;
 }
 
 void DefParser::GetToken(const char*& cursor, Token& token)
@@ -269,7 +291,7 @@ void DefParser::GetToken(const char*& cursor, Token& token)
         TokenType type;
     };
 
-    const CharToTokenType map[] =
+    static const CharToTokenType map[] =
     {
         { '{', TokenType::BraceBegin },
         { '}', TokenType::BraceEnd },
@@ -320,14 +342,37 @@ bool DefParser::ParseStructDef(const char*& cursor)
         if (token.type == TokenType::BraceEnd)
             break;
 
-        StructField& newField = newStruct.fields.emplace_back();
-
-        // TODO: i don't think type_name should be a token type. some are dynamic type names. should haev a function to see if an identifir is a type name.
-        if (!TokenTypeExpected(token, TokenType::TypeName))
+        if (!TokenTypeExpected(token, TokenType::Identifier))
             return false;
 
-        // TODO: convert the type name to a field type
-        //newField.fieldType = 
+        StructField& newField = newStruct.fields.emplace_back();
+
+        // First try pod
+        const Enum* e = nullptr;
+        const Struct* s = nullptr;
+        if (!IdentifierToFieldType(std::string(token.token).c_str(), newField.fieldType))
+        {
+            e = GetEnumByName(std::string(token.token).c_str());
+            if (e)
+            {
+                newField.fieldType = FieldType::_enum;
+                newField.enumName = e->FullName();
+            }
+            else
+            {
+                s = GetStructByName(std::string(token.token).c_str());
+                if (s)
+                {
+                    newField.fieldType = FieldType::_struct;
+                    newField.structName = s->FullName();
+                }
+                else
+                {
+                    m_errorText << "Error in " << m_path << "(" << m_lineNumber << ") : type expected, got " << token.token;
+                    return false;
+                }
+            }
+        }
 
         GetToken(cursor, token);
         if (!TokenTypeExpected(token, TokenType::Identifier))
@@ -342,7 +387,33 @@ bool DefParser::ParseStructDef(const char*& cursor)
         if (!TokenTypeExpected(token, TokenType::Equals))
             return false;
 
-        // TODO: need to read a value. token type can be literal_string, literal_integer, literal_float
+        GetToken(cursor, token);
+
+        switch (newField.fieldType)
+        {
+            case FieldType::_enum:
+            {
+                if (!TokenTypeExpected(token, TokenType::Identifier))
+                    return false;
+
+                if (!e->ContainsLabel(std::string(token.token).c_str()))
+                {
+                    m_errorText << "Error in " << m_path << "(" << m_lineNumber << ") : Unknown enum value: " << token.token;
+                    return false;
+                }
+                newField.dflt = std::string(token.token);
+                break;
+            }
+            default:
+            {
+                m_errorText << "Error in " << m_path << "(" << m_lineNumber << ") : unexpected: " << token.token;
+                return false;
+            }
+        }
+
+        GetToken(cursor, token);
+        if (!TokenTypeExpected(token, TokenType::Semicolon))
+            return false;
     }
 
     return true;
@@ -373,13 +444,10 @@ bool DefParser::ParseEnumDef(const char*& cursor)
         if (!TokenTypeExpected(token, TokenType::Identifier))
             return false;
 
-        for (const std::string& s : newEnum.labels)
+        if (newEnum.ContainsLabel(std::string(token.token).c_str()))
         {
-            if (s == token.token)
-            {
-                m_errorText << "Error in " << m_path << ": duplicate enum value on line " << m_lineNumber;
-                return false;
-            }
+            m_errorText << "Error in " << m_path << ": duplicate enum value on line " << m_lineNumber;
+            return false;
         }
 
         newEnum.labels.push_back(std::string(token.token));
@@ -444,7 +512,7 @@ bool DefParser::TokenTypeExpected(const Token& token, TokenType expectedType)
     return false;
 }
 
-static void GetTypeNameAndNamespaceSearchPaths(const char* nameIn, std::string& nameOut, std::vector<std::string> namespaces)
+static void GetTypeNameAndNamespaceSearchPaths(const char* nameIn, std::string& nameOut, std::vector<std::string>& namespaces)
 {
     size_t namespaceEnd = std::string(nameIn).rfind("::");
 
@@ -552,3 +620,5 @@ bool DefParser::Parse(const char* fileName)
 
     return true;
 }
+
+// TODO: standardize errors to have filename and line number before the text. maybe make a function

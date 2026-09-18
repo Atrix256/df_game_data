@@ -20,6 +20,7 @@ public:
 
     enum FieldType
     {
+        _bool,
         _uint8,
         _sint8,
         _uint16,
@@ -30,6 +31,7 @@ public:
         _sint64,
         _float,
         _double,
+        _string,
         _enum,
         _struct
     };
@@ -38,14 +40,25 @@ public:
     {
         std::string name;
         FieldType fieldType;
-        bool isArray = false;
-        int fixedArraySize = 0;
         std::string structName;
         std::string enumName;
+        bool isArray = false;
+        int fixedArraySize = 0;
+
+        // Zero initialized if empty
+        std::string dflt;
     };
 
     struct Struct
     {
+        std::string FullName() const
+        {
+            if (nameSpace.empty())
+                return name;
+            else
+                return nameSpace + "::" + name;
+        }
+
         std::string name;
         std::string nameSpace;
         std::vector<StructField> fields;
@@ -53,6 +66,32 @@ public:
 
     struct Enum
     {
+        std::string FullName() const
+        {
+            if (nameSpace.empty())
+                return name;
+            else
+                return nameSpace + "::" + name;
+        }
+
+        bool GetLabelIndex(const char* name, size_t& index) const
+        {
+            index = 0;
+            while (index < labels.size())
+            {
+                if (labels[index] == name)
+                    return true;
+                index++;
+            }
+            return false;
+        }
+
+        bool ContainsLabel(const char* name) const
+        {
+            size_t index;
+            return GetLabelIndex(name, index);
+        }
+
         std::string name;
         std::string nameSpace;
         std::vector<std::string> labels;
