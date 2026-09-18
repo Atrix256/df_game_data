@@ -526,10 +526,14 @@ bool DefParser::ParseDirectiveRoot(const char*& cursor)
     if (!TokenTypeExpected(token, TokenType::Identifier))
         return false;
 
-    // TODO: ensure it's a known struct type! error if not. GetStructByName should deal with namespaces. maybe get rid of namespaces?
-    // TODO: or maybe it looks in the current namespace, before the global one. but the type may have the namespace as part of the type.
-
     m_rootStruct = std::string(token.token);
+
+    if(!GetStructByName(m_rootStruct.c_str()))
+    {
+        m_errorText << "Error in " << m_path << "(" << m_lineNumber << ") : struct name expected, got " << token.token;
+        return false;
+    }
+
     return true;
 }
 
