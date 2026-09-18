@@ -6,21 +6,7 @@
 #include <sstream>
 
 
-enum TokenType
-{
-    end_of_file,
-    unknown,
-    identifier,
-    struct_def,
-    type_name,
-    directive_root,
-    brace_begin,
-    brace_end,
-    bracket_begin,
-    bracket_end,
-    semicolon,
-    equals,
-};
+enum class TokenType : uint8_t;
 
 struct Token
 {
@@ -87,11 +73,18 @@ public:
 private:
     bool ParseStructDef(const char*& cursor);
     bool ParseDirectiveRoot(const char*& cursor);
+    bool ParseDirectiveInclude(const char*& cursor);
+
+    void GetToken(const char*& cursor, Token& token);
 
     bool TokenTypeExpected(const Token& token, TokenType expectedType);
 
+    bool SkipWhiteSpaceAndNewlines(const char*& cursor);
+    bool SkipWhiteSpaceAndNewlinesAndComments(const char*& cursor);
+
 private:
 
+    int m_lineNumber = 1;
     std::ostringstream m_errorText;
     std::string m_currentNamespace;
 

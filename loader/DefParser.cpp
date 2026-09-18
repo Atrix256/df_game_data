@@ -1,11 +1,28 @@
 #include "DefParser.h"
 
-struct ParserState
-{
-    int lineNumber = 1;
-};
+#include <filesystem>
 
-static ParserState s_parserState;
+enum class TokenType : uint8_t
+{
+    Unknown,
+    EndOfFile,
+    Identifier,
+    StructDef,
+    TypeName,
+
+    DirectiveRoot,
+    DirectiveInclude,
+
+    LiteralString,
+    LiteralString_Unterminated,
+
+    BraceBegin,
+    BraceEnd,
+    BracketBegin,
+    BracketEnd,
+    Semicolon,
+    Equals,
+};
 
 static bool LoadTextFile(const char* fileName, std::string& contents)
 {
@@ -26,6 +43,11 @@ static bool LoadTextFile(const char* fileName, std::string& contents)
     return true;
 }
 
+static bool IsNewLine(char c)
+{
+    return c == '\r' || c == '\n';
+}
+
 static bool SkipWhiteSpace(const char*& cursor)
 {
     bool ret = false;
@@ -37,13 +59,13 @@ static bool SkipWhiteSpace(const char*& cursor)
     return ret;
 }
 
-static bool SkipWhiteSpaceAndNewlines(const char*& cursor)
+bool DefParser::SkipWhiteSpaceAndNewlines(const char*& cursor)
 {
     bool ret = false;
     while (std::isspace(*cursor))
     {
         if (*cursor == '\n')
-            s_parserState.lineNumber++;
+            m_lineNumber++;
         cursor++;
         ret = true;
     }
@@ -79,7 +101,7 @@ static bool SkipComments(const char*& cursor)
     return false;
 }
 
-static bool SkipWhiteSpaceAndNewlinesAndComments(const char*& cursor)
+bool DefParser::SkipWhiteSpaceAndNewlinesAndComments(const char*& cursor)
 {
     bool ret = false;
     while (true)
@@ -114,7 +136,8 @@ static void ConvertDirectiveToken(Token& token)
 
     IdentifierToTokenType map[] =
     {
-        {"#root", TokenType::directive_root},
+        {"#root", TokenType::DirectiveRoot},
+        {"#include", TokenType::DirectiveInclude},
     };
 
     for (const IdentifierToTokenType& m : map)
@@ -125,7 +148,7 @@ static void ConvertDirectiveToken(Token& token)
             return;
         }
     }
-    token.type = TokenType::unknown;
+    token.type = TokenType::Unknown;
 }
 
 // Converts a generic identifier token into a specific identifier, if it is one
@@ -139,18 +162,18 @@ static void ConvertIdentifierToken(Token& token)
 
     IdentifierToTokenType map[] =
     {
-        {"struct", TokenType::struct_def},
-        {"uint8", TokenType::type_name},
-        {"sint8", TokenType::type_name},
-        {"uint16", TokenType::type_name},
-        {"sint16", TokenType::type_name},
-        {"uint32", TokenType::type_name},
-        {"sint32", TokenType::type_name},
-        {"uint64", TokenType::type_name},
-        {"sint64", TokenType::type_name},
-        {"string", TokenType::type_name},
-        {"float", TokenType::type_name},
-        {"double", TokenType::type_name},
+        {"struct", TokenType::StructDef},
+        {"uint8", TokenType::TypeName},
+        {"sint8", TokenType::TypeName},
+        {"uint16", TokenType::TypeName},
+        {"sint16", TokenType::TypeName},
+        {"uint32", TokenType::TypeName},
+        {"sint32", TokenType::TypeName},
+        {"uint64", TokenType::TypeName},
+        {"sint64", TokenType::TypeName},
+        {"string", TokenType::TypeName},
+        {"float", TokenType::TypeName},
+        {"double", TokenType::TypeName},
     };
 
     for (const IdentifierToTokenType& m : map)
@@ -162,17 +185,17 @@ static void ConvertIdentifierToken(Token& token)
         }
     }
 
-    token.type = TokenType::identifier;
+    token.type = TokenType::Identifier;
 }
 
-static void GetToken(const char*& cursor, Token& token)
+void DefParser::GetToken(const char*& cursor, Token& token)
 {
     SkipWhiteSpaceAndNewlines(cursor);
 
     if (*cursor == 0)
     {
         token.token = std::string_view(cursor, cursor+1);
-        token.type = TokenType::end_of_file;
+        token.type = TokenType::EndOfFile;
         return;
     }
 
@@ -185,7 +208,7 @@ static void GetToken(const char*& cursor, Token& token)
             cursor++;
 
         token.token = std::string_view(start, cursor);
-        token.type = TokenType::identifier;
+        token.type = TokenType::Identifier;
         ConvertIdentifierToken(token);
 
         return;
@@ -199,18 +222,41 @@ static void GetToken(const char*& cursor, Token& token)
             cursor++;
 
         token.token = std::string_view(start, cursor);
-        token.type = TokenType::identifier;
+        token.type = TokenType::Identifier;
         ConvertDirectiveToken(token);
         return;
+    }
+    // string literal
+    else if (*cursor == '\"')
+    {
+        const char* start = cursor + 1;
+        cursor++;
+        while (*cursor != 0 && !IsNewLine(*cursor) && *cursor != '\"')
+            cursor++;
+
+        if (*cursor == '\"')
+        {
+            token.token = std::string_view(start, cursor);
+            token.type = TokenType::LiteralString;
+            cursor++;
+            return;
+        }
+        else
+        {
+            token.token = "";
+            token.type = TokenType::LiteralString_Unterminated;
+            return;
+        }
     }
     else
     {
         // TODO: look for...
-        // string literals (quoted)
         // integer literals
         // float literals
         // for enums, they will want an identifer
     }
+
+    // TODO: error if a block quote reaches EOF before finishing!
 
     struct CharToTokenType
     {
@@ -220,12 +266,12 @@ static void GetToken(const char*& cursor, Token& token)
 
     const CharToTokenType map[] =
     {
-        { '{', TokenType::brace_begin },
-        { '}', TokenType::brace_end },
-        { '[', TokenType::bracket_begin },
-        { ']', TokenType::bracket_end },
-        { ';', TokenType::semicolon },
-        { '=', TokenType::equals },
+        { '{', TokenType::BraceBegin },
+        { '}', TokenType::BraceEnd },
+        { '[', TokenType::BracketBegin },
+        { ']', TokenType::BracketEnd },
+        { ';', TokenType::Semicolon },
+        { '=', TokenType::Equals },
     };
 
     for (const CharToTokenType& m : map)
@@ -240,7 +286,7 @@ static void GetToken(const char*& cursor, Token& token)
     }
 
     token.token = std::string_view(cursor, cursor + 1);
-    token.type = TokenType::unknown;
+    token.type = TokenType::Unknown;
     cursor++;
 
     return;
@@ -250,7 +296,7 @@ bool DefParser::ParseStructDef(const char*& cursor)
 {
     Token token;
     GetToken(cursor, token);
-    if (!TokenTypeExpected(token, TokenType::identifier))
+    if (!TokenTypeExpected(token, TokenType::Identifier))
         return false;
 
     Type& newStruct = m_types.emplace_back();
@@ -258,36 +304,36 @@ bool DefParser::ParseStructDef(const char*& cursor)
     newStruct.nameSpace = m_currentNamespace;
 
     GetToken(cursor, token);
-    if (!TokenTypeExpected(token, TokenType::brace_begin))
+    if (!TokenTypeExpected(token, TokenType::BraceBegin))
         return false;
 
     // read the struct fields until we hit the end of the brace
     while (true)
     {
         GetToken(cursor, token);
-        if (token.type == TokenType::brace_end)
+        if (token.type == TokenType::BraceEnd)
             break;
 
         TypeField& newField = newStruct.fields.emplace_back();
 
         // TODO: i don't think type_name should be a token type. some are dynamic type names. should haev a function to see if an identifir is a type name.
-        if (!TokenTypeExpected(token, TokenType::type_name))
+        if (!TokenTypeExpected(token, TokenType::TypeName))
             return false;
 
         // TODO: convert the type name to a field type
         //newField.fieldType = 
 
         GetToken(cursor, token);
-        if (!TokenTypeExpected(token, TokenType::identifier))
+        if (!TokenTypeExpected(token, TokenType::Identifier))
             return false;
 
         newField.name = std::string(token.token);
 
         GetToken(cursor, token);
-        if (token.type == TokenType::semicolon)
+        if (token.type == TokenType::Semicolon)
             continue;
 
-        if (!TokenTypeExpected(token, TokenType::equals))
+        if (!TokenTypeExpected(token, TokenType::Equals))
             return false;
 
         // TODO: need to read a value. token type can be literal_string, literal_integer, literal_float
@@ -300,10 +346,33 @@ bool DefParser::ParseDirectiveRoot(const char*& cursor)
 {
     Token token;
     GetToken(cursor, token);
-    if (!TokenTypeExpected(token, TokenType::identifier))
+    if (!TokenTypeExpected(token, TokenType::Identifier))
         return false;
 
     m_rootType = std::string(token.token);
+    return true;
+}
+
+bool DefParser::ParseDirectiveInclude(const char*& cursor)
+{
+    Token token;
+    GetToken(cursor, token);
+    if (!TokenTypeExpected(token, TokenType::LiteralString))
+        return false;
+
+    std::filesystem::path includePath = std::filesystem::path(m_path).remove_filename() / std::filesystem::path(token.token);
+    includePath = std::filesystem::weakly_canonical(includePath);
+
+    DefParser includeParser;
+    if (!includeParser.Parse(includePath.generic_string().c_str()))
+    {
+        m_errorText << "Error in " << m_path << " when including " << token.token << "\n" << includeParser.GetErrorText();
+        return false;
+    }
+
+    // Copy the types from the include
+    m_types.insert(m_types.end(), includeParser.m_types.begin(), includeParser.m_types.end());
+
     return true;
 }
 
@@ -312,46 +381,57 @@ bool DefParser::TokenTypeExpected(const Token& token, TokenType expectedType)
     if (token.type == expectedType)
         return true;
 
-    m_errorText << "Error loading " << m_path << "\n" << "Unexpected on line " << s_parserState.lineNumber << ": " << token.token;
+    // TODO: write name of token in error too
+
+    m_errorText << "Error loading " << m_path << "\n" << "Unexpected on line " << m_lineNumber << ": " << token.token;
     return false;
 }
 
 bool DefParser::Parse(const char* fileName)
 {
-    s_parserState = ParserState();
+    m_lineNumber = 1;
     m_path = fileName;
 
     std::string def;
     if (!LoadTextFile(fileName, def))
+    {
+        m_errorText << "Could not open file: " << fileName;
         return false;
+    }
 
     const char* cursor = def.data();
 
     Token token;
-    while (GetToken(cursor, token), token.type != TokenType::end_of_file)
+    while (GetToken(cursor, token), token.type != TokenType::EndOfFile)
     {
         switch (token.type)
         {
-            case TokenType::struct_def:
+            case TokenType::StructDef:
             {
                 if (!ParseStructDef(cursor))
                     return false;
                 break;
             }
-            case TokenType::directive_root:
+            case TokenType::DirectiveRoot:
             {
                 if (!ParseDirectiveRoot(cursor))
                     return false;
                 break;
             }
-            case TokenType::semicolon:
+            case TokenType::DirectiveInclude:
+            {
+                if (!ParseDirectiveInclude(cursor))
+                    return false;
+                break;
+            }
+            case TokenType::Semicolon:
             {
                 // no-op
                 break;
             }
             default:
             {
-                m_errorText << "Error loading " << m_path << "\n" << "Unexpected on line " << s_parserState.lineNumber << ": " << token.token;
+                m_errorText << "Error loading " << m_path << "\n" << "Unexpected on line " << m_lineNumber << ": " << token.token;
                 return false;
             }
         }
