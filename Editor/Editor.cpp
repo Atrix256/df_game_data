@@ -1021,6 +1021,9 @@ bool EditorOnAppLaunch(int argc, char** argv, int &returnCode)
 /*
 TODO:
 
+
+* have test.def use namespace to make sure they work.
+
 * switch to using json schema with custom attributes to specify uint8 etc. instead of flatbuffer
  * write out binary data yourself
  * generate a header file
@@ -1074,7 +1077,10 @@ Schema documentation:
 * struct {};
 * enum {};
 * types
+* dynamic / fixed arrays
 * how namespaces work (including types using :: syntax)
+ * if no namespace on a type, first searches current namespace, then global namespace
+ * if there is a namespace on a type, only searches that namespace.
 
 Notes:
 * This works as a flatbuffer data editor too (can open fbs or dbroot files)

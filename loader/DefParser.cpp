@@ -444,28 +444,52 @@ bool DefParser::TokenTypeExpected(const Token& token, TokenType expectedType)
     return false;
 }
 
-// TODO: GetStructByName and GetEnumByName need to deal with namespaces:
-// 1) If name has a namespace, search that namespace.
-// 2) Else
-//   a) Search the current namespace
-//   b) Then search the global namespace
+static void GetTypeNameAndNamespaceSearchPaths(const char* nameIn, std::string& nameOut, std::vector<std::string> namespaces)
+{
+    size_t namespaceEnd = std::string(nameIn).rfind("::");
+
+    if (namespaceEnd == std::string::npos)
+    {
+        nameOut = nameIn;
+        namespaces.push_back("");
+        return;
+    }
+
+    nameOut = &nameIn[namespaceEnd+2];
+    namespaces.push_back(std::string(nameIn).substr(0, namespaceEnd));
+    namespaces.push_back("");
+}
 
 const DefParser::Struct* DefParser::GetStructByName(const char* name) const
 {
-    for (const Struct& s : m_structs)
+    std::string typeName;
+    std::vector<std::string> namespaces;
+    GetTypeNameAndNamespaceSearchPaths(name, typeName, namespaces);
+
+    for (const std::string& n : namespaces)
     {
-        if (name == s.name)
-            return &s;
+        for (const Struct& s : m_structs)
+        {
+            if (s.nameSpace == n && s.name == typeName)
+                return &s;
+        }
     }
     return nullptr;
 }
 
 const DefParser::Enum* DefParser::GetEnumByName(const char* name) const
 {
-    for (const Enum& e : m_enums)
+    std::string typeName;
+    std::vector<std::string> namespaces;
+    GetTypeNameAndNamespaceSearchPaths(name, typeName, namespaces);
+
+    for (const std::string& n : namespaces)
     {
-        if (name == e.name)
-            return &e;
+        for (const Enum& e : m_enums)
+        {
+            if (e.nameSpace == n && e.name == typeName)
+                return &e;
+        }
     }
     return nullptr;
 }
