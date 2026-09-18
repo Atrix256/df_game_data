@@ -1,0 +1,18 @@
+namespace TestInclude;
+
+enum Color
+{
+    Brown,
+    Hazel,
+    Blue,
+    Green,
+};
+
+struct Pos
+{
+    float x;
+    float y;
+};
+
+// Note: the last #root is the one that wins, so this is overwritten by the #root in test.def
+#root Pos

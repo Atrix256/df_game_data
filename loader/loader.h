@@ -9,6 +9,8 @@
 
 #include "FileWatcher.h"
 
+#include "DefParser.h"
+
 struct DBSettings
 {
     std::string compileOutputDir;
@@ -61,6 +63,8 @@ private:
     std::string m_fbsFile;
     std::vector<std::string> m_includeDirsStr;
     std::vector<const char*> m_includeDirs;
+
+    DefParser m_defParser;
 
     // Parser needs all inputs to last as long as it lasts, so:
     // 1) Everything it needs is a member

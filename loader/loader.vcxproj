@@ -81,10 +81,12 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DefParser.cpp" />
     <ClCompile Include="FileWatcher.cpp" />
     <ClCompile Include="loader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DefParser.h" />
     <ClInclude Include="FileWatcher.h" />
     <ClInclude Include="JSON.h" />
     <ClInclude Include="loader.h" />

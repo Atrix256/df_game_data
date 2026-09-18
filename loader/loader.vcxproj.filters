@@ -3,10 +3,12 @@
   <ItemGroup>
     <ClCompile Include="loader.cpp" />
     <ClCompile Include="FileWatcher.cpp" />
+    <ClCompile Include="DefParser.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="loader.h" />
     <ClInclude Include="FileWatcher.h" />
     <ClInclude Include="JSON.h" />
+    <ClInclude Include="DefParser.h" />
   </ItemGroup>
 </Project>

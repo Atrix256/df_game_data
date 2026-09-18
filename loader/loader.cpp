@@ -5,6 +5,13 @@
 
 bool DBTable::LoadSchema()
 {
+    if (!m_defParser.Parse(m_path.c_str()))
+    {
+        // TODO: clean this up when it's working
+        m_errorText = m_defParser.GetErrorText();
+        return false;
+    }
+
     m_parser.opts.strict_json = true;
     m_parser.opts.output_default_scalars_in_json = true;
     m_parser.opts.output_enum_identifiers = true;

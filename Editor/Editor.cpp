@@ -1021,7 +1021,17 @@ bool EditorOnAppLaunch(int argc, char** argv, int &returnCode)
 /*
 TODO:
 
-* have it save all on compile, like visual studio does, so you make edits, then control+c to make the game update.
+* switch to using json schema with custom attributes to specify uint8 etc. instead of flatbuffer
+ * write out binary data yourself
+ * generate a header file
+ * get rid of targetLanguage since there is only one now
+ ? allow refs for json includes?
+ * use .schema.json instead of .fbs everywhere
+ * code that scans for *.json to load it, make it ignore .schema.json files
+ * have a native-type for enums so they can be uint8 or whatever else
+ * need to remake the test schema, not just example.
+
+* make an issue to make a better schema language, like flatbuffers etc have.
 
 ! I think i need to replace flatbuffers. the generated headers require flatbuffers.h. Needs:
  1) Describe schema (json schema?)

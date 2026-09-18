@@ -1,0 +1,40 @@
+#include "../items.def"
+
+enum EyeColor
+{
+    Brown,
+    Hazel,
+    Blue,
+    Green
+};
+
+enum Alignment
+{
+    Good,
+    Neutral,
+    Evil
+};
+
+enum Class
+{
+    Warrior,
+    Wizard,
+    Cleric,
+    Druid
+};
+
+struct Character
+{
+    string name;
+    EyeColor eyeColor = Brown;
+    Alignment alignment = Good;
+    Class class = Warrior;
+    Vec3 location;
+    uint16 max_hp;
+    uint16 max_mp;
+    bool playable;
+    uint16 favorite_numbers[];
+    link<Item> inventory[];
+};
+
+#root Character

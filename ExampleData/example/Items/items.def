@@ -1,0 +1,6 @@
+struct Item
+{
+    string name;
+};
+
+#root Item
