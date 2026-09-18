@@ -7,7 +7,9 @@ enum class TokenType : uint8_t
     Unknown,
     EndOfFile,
     Identifier,
+
     StructDef,
+
     TypeName,
 
     DirectiveRoot,
@@ -299,7 +301,7 @@ bool DefParser::ParseStructDef(const char*& cursor)
     if (!TokenTypeExpected(token, TokenType::Identifier))
         return false;
 
-    Type& newStruct = m_types.emplace_back();
+    Struct& newStruct = m_structs.emplace_back();
     newStruct.name = std::string(token.token);
     newStruct.nameSpace = m_currentNamespace;
 
@@ -314,7 +316,7 @@ bool DefParser::ParseStructDef(const char*& cursor)
         if (token.type == TokenType::BraceEnd)
             break;
 
-        TypeField& newField = newStruct.fields.emplace_back();
+        StructField& newField = newStruct.fields.emplace_back();
 
         // TODO: i don't think type_name should be a token type. some are dynamic type names. should haev a function to see if an identifir is a type name.
         if (!TokenTypeExpected(token, TokenType::TypeName))
@@ -349,7 +351,10 @@ bool DefParser::ParseDirectiveRoot(const char*& cursor)
     if (!TokenTypeExpected(token, TokenType::Identifier))
         return false;
 
-    m_rootType = std::string(token.token);
+    // TODO: ensure it's a known struct type! error if not. GetStructByName should deal with namespaces. maybe get rid of namespaces?
+    // TODO: or maybe it looks in the current namespace, before the global one. but the type may have the namespace as part of the type.
+
+    m_rootStruct = std::string(token.token);
     return true;
 }
 
@@ -371,7 +376,7 @@ bool DefParser::ParseDirectiveInclude(const char*& cursor)
     }
 
     // Copy the types from the include
-    m_types.insert(m_types.end(), includeParser.m_types.begin(), includeParser.m_types.end());
+    m_structs.insert(m_structs.end(), includeParser.m_structs.begin(), includeParser.m_structs.end());
 
     return true;
 }

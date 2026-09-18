@@ -34,7 +34,7 @@ public:
         _struct
     };
 
-    struct TypeField
+    struct StructField
     {
         std::string name;
         FieldType fieldType;
@@ -47,26 +47,26 @@ public:
         std::vector<std::string> enumValues;
     };
 
-    struct Type
+    struct Struct
     {
         std::string name;
         std::string nameSpace;
-        std::vector<TypeField> fields;
+        std::vector<StructField> fields;
     };
 
     bool Parse(const char* fileName);
 
-    const Type* GetTypeByName(const char* name) const
+    const Struct* GetStructByName(const char* name) const
     {
-        for (const Type& type : m_types)
+        for (const Struct& s : m_structs)
         {
-            if (name == type.name)
-                return &type;
+            if (name == s.name)
+                return &s;
         }
         return nullptr;
     }
 
-    const char* GetRootType() const { return m_rootType.c_str(); }
+    const char* GetRootStruct() const { return m_rootStruct.c_str(); }
 
     std::string GetErrorText() const { return m_errorText.str(); }
 
@@ -89,6 +89,6 @@ private:
     std::string m_currentNamespace;
 
     std::string m_path;
-    std::string m_rootType;
-    std::vector<Type> m_types;
+    std::string m_rootStruct;
+    std::vector<Struct> m_structs;
 };
