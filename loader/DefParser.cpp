@@ -24,6 +24,8 @@ enum class TokenType : uint8_t
     Semicolon,
     Comma,
     Equals,
+    LessThan,
+    GreaterThan
 };
 
 static bool LoadTextFile(const char* fileName, std::string& contents)
@@ -300,6 +302,8 @@ void DefParser::GetToken(const char*& cursor, Token& token)
         { ';', TokenType::Semicolon },
         { ',', TokenType::Comma },
         { '=', TokenType::Equals },
+        { '<', TokenType::LessThan },
+        { '>', TokenType::GreaterThan },
     };
 
     for (const CharToTokenType& m : map)
@@ -352,25 +356,56 @@ bool DefParser::ParseStructDef(const char*& cursor)
         const Struct* s = nullptr;
         if (!IdentifierToFieldType(std::string(token.token).c_str(), newField.fieldType))
         {
-            e = GetEnumByName(std::string(token.token).c_str());
-            if (e)
+            while (1)
             {
-                newField.fieldType = FieldType::_enum;
-                newField.enumName = e->FullName();
-            }
-            else
-            {
+                // Try enum
+                e = GetEnumByName(std::string(token.token).c_str());
+                if (e)
+                {
+                    newField.fieldType = FieldType::_enum;
+                    newField.enumName = e->FullName();
+                    break;
+                }
+
+                // Try struct
                 s = GetStructByName(std::string(token.token).c_str());
                 if (s)
                 {
                     newField.fieldType = FieldType::_struct;
                     newField.structName = s->FullName();
+                    break;
                 }
-                else
+
+                // Try a link to a struct
+                if (token.token == "Link")
                 {
-                    m_errorText << "Error in " << m_path << "(" << m_lineNumber << ") : type expected, got " << token.token;
-                    return false;
+                    GetToken(cursor, token);
+                    if (!TokenTypeExpected(token, TokenType::LessThan))
+                        return false;
+
+                    GetToken(cursor, token);
+                    if (!TokenTypeExpected(token, TokenType::Identifier))
+                        return false;
+
+                    newField.fieldType = FieldType::_link;
+                    newField.linkName = std::string(token.token);
+
+                    if (!GetStructByName(newField.linkName.c_str()))
+                    {
+                        m_errorText << "Error in " << m_path << "(" << m_lineNumber << ") : struct name expected, got " << token.token;
+                        return false;
+                    }
+
+                    GetToken(cursor, token);
+                    if (!TokenTypeExpected(token, TokenType::GreaterThan))
+                        return false;
+
+                    break;
                 }
+
+                // Couldn't figure it out
+                m_errorText << "Error in " << m_path << "(" << m_lineNumber << ") : type expected, got " << token.token;
+                return false;
             }
         }
 

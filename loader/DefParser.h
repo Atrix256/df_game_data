@@ -33,17 +33,20 @@ public:
         _double,
         _string,
         _enum,
-        _struct
+        _struct,
+        _link
     };
 
     struct StructField
     {
         std::string name;
         FieldType fieldType;
-        std::string structName;
-        std::string enumName;
         bool isArray = false;
         int fixedArraySize = 0;
+
+        std::string structName;
+        std::string enumName;
+        std::string linkName;
 
         // Zero initialized if empty
         std::string dflt;
