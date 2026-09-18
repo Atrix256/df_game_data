@@ -384,6 +384,27 @@ bool DefParser::ParseStructDef(const char*& cursor)
         if (token.type == TokenType::Semicolon)
             continue;
 
+        // Array
+        if (token.type == TokenType::BracketBegin)
+        {
+            newField.isArray = true;
+
+            GetToken(cursor, token);
+
+            // TODO: need to be able to read an integer and use that as the fixed array size
+            newField.fixedArraySize = 0;
+
+            if (!TokenTypeExpected(token, TokenType::BracketEnd))
+                return false;
+
+            GetToken(cursor, token);
+            if (!TokenTypeExpected(token, TokenType::Semicolon))
+                return false;
+
+            continue;
+        }
+
+        // Default
         if (!TokenTypeExpected(token, TokenType::Equals))
             return false;
 
