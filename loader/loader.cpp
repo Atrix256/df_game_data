@@ -105,9 +105,6 @@ void DBRoot::LoadSettings(json& data)
 
     if (data.contains("nameSpace"))
         m_settings.nameSpace = data.at("nameSpace");
-
-    if (data.contains("targetLanguage"))
-        m_settings.targetLanguage = data.at("targetLanguage");
 }
 
 void DBRoot::SaveDBRoot()
@@ -120,7 +117,6 @@ void DBRoot::SaveDBRoot()
     json doc = json::object();
     doc["compileOutputDir"] = m_settings.compileOutputDir;
     doc["nameSpace"] = m_settings.nameSpace;
-    doc["targetLanguage"] = m_settings.targetLanguage;
 
     doc["tables"] = json::array();
     std::filesystem::path basePath = std::filesystem::path(m_path).remove_filename();

@@ -117,7 +117,7 @@ struct EntryArray4
 struct Entry
 {
     EntryAll entries;
-    EntryDefault entries_defaults;
+    TestData::EntryDefault entries_defaults;
     EntryArrayDynamic entries_dynamic_arrays;
     EntryArray4 entries_static_arrays;
 }

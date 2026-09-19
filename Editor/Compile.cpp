@@ -147,7 +147,8 @@ bool CompileData(EditorData& editorData)
         fwrite(fullSchema.c_str(), 1, fullSchema.size(), file);
         fclose(file);
 
-        std::string commandLine = "--" + editorData.m_dbroot.m_settings.targetLanguage + includePaths + " -o \"" + outputDir + "\" \"" + fullSchemaFileName + "\"";
+        // TODO: no more RunFlatc needed
+        std::string commandLine = "";// "--" + editorData.m_dbroot.m_settings.targetLanguage + includePaths + " -o \"" + outputDir + "\" \"" + fullSchemaFileName + "\"";
         if (!RunFlatc(commandLine.c_str(), true))
             return false;
     }

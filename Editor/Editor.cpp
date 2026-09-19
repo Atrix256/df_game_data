@@ -800,41 +800,6 @@ void HandleSettingsWindow()
         if (ImGui::InputText("Namespace", tmpBuffer.data(), tmpBuffer.size()))
             settings.nameSpace = tmpBuffer.data();
 
-        // Target Language
-        if (ImGui::BeginCombo("Target Language", settings.targetLanguage.c_str()))
-        {
-            const char* targets[] =
-            {
-                "cpp",
-                "csharp",
-                "dart",
-                "go",
-                "java",
-                "kotlin",
-                "lobster",
-                "lua",
-                "nim",
-                "php",
-                "python",
-                "rust",
-                "swift",
-                "ts",
-            };
-
-            for (const char* target : targets)
-            {
-                const bool is_selected = (settings.targetLanguage == target);
-
-                if (ImGui::Selectable(target, is_selected))
-                    settings.targetLanguage = target;
-
-                if (is_selected)
-                    ImGui::SetItemDefaultFocus();
-            }
-
-            ImGui::EndCombo();
-        }
-
         ImGui::Separator();
 
         if (ImGui::Button("OK", ImVec2(120, 0)))
@@ -1029,9 +994,6 @@ TODO:
   * and use the namespaces of the types bleh.
  * write out binary data yourself
  * generate a header file
- * get rid of targetLanguage since there is only one now
-
-* have test.def use namespace to make sure they work.
 
 ! add an issue for supporting comments in the def file becoming documentation strings, and using them as tooltips in the editor
 ! add an issue for supporting enums if they are desired

@@ -13,7 +13,6 @@ struct DBSettings
 {
     std::string compileOutputDir;
     std::string nameSpace;
-    std::string targetLanguage = "cpp";
 };
 
 class DBTable
