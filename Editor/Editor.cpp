@@ -985,6 +985,8 @@ bool EditorOnAppLaunch(int argc, char** argv, int &returnCode)
         if (!Compile(s_editorData, s_editorData.m_compileOutput))
         {
             printf("Error: could not compile data");
+            if (!s_editorData.m_compileOutput.empty())
+                printf("%s\n", s_editorData.m_compileOutput.c_str());
             returnCode = 1;
             return false;
         }

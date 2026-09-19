@@ -13,6 +13,28 @@ static bool MakeHeader(EditorData& editorData, const char* fileName)
     return false;
 }
 
+static bool MakeBin_Table_Item(EditorData& editorData, DBTable& table, json& json, FILE* file)
+{
+    // TODO: continue
+    s_error << "Writing bin not yet implemented";
+    return false;
+}
+
+static bool MakeBin_Table(EditorData& editorData, DBTable& table, FILE* file)
+{
+    // TODO: write number of items?
+
+    bool ret = true;
+    for (auto& it : table.m_data)
+    {
+        ret &= MakeBin_Table_Item(editorData, table, it.second->m_data, file);
+        if (!ret)
+            break;
+    }
+
+    return ret;
+}
+
 static bool MakeBin(EditorData& editorData, const char* fileName)
 {
     FILE* file = nullptr;
@@ -23,15 +45,19 @@ static bool MakeBin(EditorData& editorData, const char* fileName)
         return false;
     }
 
-    for (auto& table : editorData.m_dbroot.m_tables)
+    // TODO: write number of tables?
+
+    bool ret = true;
+    for (auto& it : editorData.m_dbroot.m_tables)
     {
-        int ijkl = 0;
+        ret &= MakeBin_Table(editorData, *it.second.get(), file);
+        if (!ret)
+            break;
     }
 
     fclose(file);
 
-    s_error << "Writing bin not yet implemented";
-    return false;
+    return ret;
 }
 
 bool Compile(EditorData& editorData, std::string& error)
@@ -59,4 +85,5 @@ bool Compile(EditorData& editorData, std::string& error)
 /*
 TODO:
 * can we make editor data const when it's passed in?
+* may want to move the bin and header code into separate files for organization purposes
 */
