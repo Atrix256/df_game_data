@@ -171,6 +171,7 @@ static void SaveJSON(DBTable& table, const json& jsonIn, const char* fileName)
         std::vector<char> fileData(ftell(file));
         fread(fileData.data(), 1, fileData.size(), file);
         fileData.push_back(0);
+        fclose(file);
 
         if (strcmp(jsonString.c_str(), fileData.data()) == 0)
             return;
