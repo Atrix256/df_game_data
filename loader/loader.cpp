@@ -11,6 +11,13 @@ bool DBTable::LoadSchema()
         return false;
     }
     m_rootType = m_parser.GetRootStructName();
+
+    if (m_rootType.empty())
+    {
+        m_errorText = "no #root specified in " + m_path;
+        return false;
+    }
+
     return true;
 }
 

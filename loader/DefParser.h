@@ -125,6 +125,7 @@ private:
 
     bool SkipWhiteSpaceAndNewlines(const char*& cursor);
     bool SkipWhiteSpaceAndNewlinesAndComments(const char*& cursor);
+    bool SkipComments(const char*& cursor);
 
 private:
 

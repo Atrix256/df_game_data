@@ -62,7 +62,7 @@ bool DefParser::SkipWhiteSpaceAndNewlines(const char*& cursor)
     return ret;
 }
 
-static bool SkipComments(const char*& cursor)
+bool DefParser::SkipComments(const char*& cursor)
 {
     if (cursor[0] != '/')
         return false;
@@ -80,7 +80,11 @@ static bool SkipComments(const char*& cursor)
     {
         cursor += 2;
         while (cursor[0] && cursor[1] && !(cursor[0] == '*' && cursor[1] == '/'))
+        {
+            if (*cursor == '\n')
+                m_lineNumber++;
             cursor++;
+        }
 
         if (cursor[0] && cursor[1] && cursor[0] == '*' && cursor[1] == '/')
             cursor += 2;
@@ -301,15 +305,6 @@ void DefParser::GetToken(const char*& cursor, Token& token)
 
         return;
     }
-    else
-    {
-        // TODO: look for...
-        // integer literals
-        // float literals
-        // for enums, they will want an identifer
-    }
-
-    // TODO: error if a block quote reaches EOF before finishing!
 
     struct CharToTokenType
     {
@@ -664,8 +659,6 @@ bool DefParser::TokenTypeExpected(const Token& token, TokenType expectedType)
     if (token.type == expectedType)
         return true;
 
-    // TODO: write name of token in error too
-
     m_errorText << "Error loading " << m_path << "\n" << "Unexpected on line " << m_lineNumber << ": " << token.token;
     return false;
 }
@@ -786,5 +779,3 @@ bool DefParser::Parse(const char* fileName)
 
     return true;
 }
-
-// TODO: standardize errors to have filename and line number before the text. maybe make a function
