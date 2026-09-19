@@ -71,7 +71,7 @@ bool CompileData(EditorData& editorData)
 
     std::string dbRootPath = std::filesystem::path(editorData.m_dbroot.GetPath()).remove_filename().generic_string();
     std::string outputDir = ApplyPath(dbRootPath, editorData.m_dbroot.m_settings.compileOutputDir).generic_string();
-    std::string tempDir = GetProcessTempDirectory();
+    std::string tempDir = "";
 
     // Process the tables in the order specified in the dbroot, because that matters for declarations
     std::vector<std::string> tableOrder(editorData.m_dbroot.m_tables.size());
@@ -147,10 +147,10 @@ bool CompileData(EditorData& editorData)
         fwrite(fullSchema.c_str(), 1, fullSchema.size(), file);
         fclose(file);
 
-        // TODO: no more RunFlatc needed
         std::string commandLine = "";// "--" + editorData.m_dbroot.m_settings.targetLanguage + includePaths + " -o \"" + outputDir + "\" \"" + fullSchemaFileName + "\"";
-        if (!RunFlatc(commandLine.c_str(), true))
-            return false;
+        //if (!RunFlatc(commandLine.c_str(), true))
+            //return false;
+        return false;
     }
 
     // Make the combined data from all tables and compile it
@@ -242,8 +242,9 @@ bool CompileData(EditorData& editorData)
         fclose(file);
 
         std::string commandLine = "-b" + includePaths + " -o \"" + outputDir + "\" \"" + fullSchemaFileName + "\" \"" + fullDataFileName + "\"";
-        if (!RunFlatc(commandLine.c_str(), false))
-            return false;
+        //if (!RunFlatc(commandLine.c_str(), false))
+            //return false;
+        return false;
     }
 
     return true;
