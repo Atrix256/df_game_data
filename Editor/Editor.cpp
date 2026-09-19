@@ -296,7 +296,7 @@ static bool ShowMenuBar()
             if (ImGui::MenuItem("Compile", "Ctrl+C", false, s_editorData.m_dbroot.Loaded()))
             {
                 OnFileSaveAll();
-                s_editorData.m_compileSucceeded = CompileData(s_editorData);
+                s_editorData.m_compileSucceeded = Compile(s_editorData);
                 s_editorData.m_showCompileResultsWindow = true;
             }
 
@@ -324,7 +324,7 @@ static bool ShowMenuBar()
     if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_C))
     {
         OnFileSaveAll();
-        s_editorData.m_compileSucceeded = CompileData(s_editorData);
+        s_editorData.m_compileSucceeded = Compile(s_editorData);
         s_editorData.m_showCompileResultsWindow = true;
     }
 
@@ -975,7 +975,7 @@ bool EditorOnAppLaunch(int argc, char** argv, int &returnCode)
             return false;
         }
 
-        if (!CompileData(s_editorData))
+        if (!Compile(s_editorData))
         {
             printf("Error: could not compile data");
             returnCode = 1;
