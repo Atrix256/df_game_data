@@ -20,6 +20,7 @@ enum class TokenType : uint8_t
     LiteralString_Unterminated,
     LiteralBool,
     LiteralInt,
+    LiteralFloat,
 
     BraceBegin,
     BraceEnd,
@@ -273,8 +274,31 @@ void DefParser::GetToken(const char*& cursor, Token& token)
         while (std::isdigit(*cursor))
             cursor++;
 
-        token.token = std::string_view(start, cursor);
-        token.type = TokenType::LiteralInt;
+        // scientific notation for a float
+        if (*cursor == 'e')
+        {
+            cursor++;
+            while (std::isdigit(*cursor))
+                cursor++;
+            token.token = std::string_view(start, cursor);
+            token.type = TokenType::LiteralFloat;
+        }
+        // decimal place for a float
+        else if (*cursor == '.')
+        {
+            cursor++;
+            while (std::isdigit(*cursor))
+                cursor++;
+            token.token = std::string_view(start, cursor);
+            token.type = TokenType::LiteralFloat;
+        }
+        // else just an integer
+        else
+        {
+            token.token = std::string_view(start, cursor);
+            token.type = TokenType::LiteralInt;
+        }
+
         return;
     }
     else
@@ -505,6 +529,17 @@ bool DefParser::ParseStructDef(const char*& cursor)
             {
                 if (!TokenTypeExpected(token, TokenType::LiteralInt))
                     return false;
+                newField.dflt = std::string(token.token);
+                break;
+            }
+            case FieldType::_float:
+            case FieldType::_double:
+            {
+                if (token.type != TokenType::LiteralInt)
+                {
+                    if (!TokenTypeExpected(token, TokenType::LiteralFloat))
+                        return false;
+                }
                 newField.dflt = std::string(token.token);
                 break;
             }

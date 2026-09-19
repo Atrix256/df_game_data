@@ -55,7 +55,7 @@ struct EntryDefault
     double _double = 1000.0;
 
     TestInclude::Color _color = Hazel;
-    TestInclude::Pos _pos = {32, 45};
+    //TestInclude::Pos _pos = {32, 45};
 };
 
 // All types in dynamic arrays
