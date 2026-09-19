@@ -105,7 +105,9 @@ public:
     const Struct* GetStructByName(const char* name) const;
     const Enum* GetEnumByName(const char* name) const;
 
-    const char* GetRootStruct() const { return m_rootStruct.c_str(); }
+    const Struct* GetRootStruct() const { return GetStructByName(m_rootStruct.c_str()); }
+
+    std::string GetRootStructName() const { return m_rootStruct; }
 
     std::string GetErrorText() const { return m_errorText.str(); }
 

@@ -5,61 +5,12 @@
 
 bool DBTable::LoadSchema()
 {
-    if (!m_defParser.Parse(m_path.c_str()))
+    if (!m_parser.Parse(m_path.c_str()))
     {
-        // TODO: clean this up when it's working
-        m_errorText = m_defParser.GetErrorText();
+        m_errorText = m_parser.GetErrorText();
         return false;
     }
-
-    m_parser.opts.strict_json = true;
-    m_parser.opts.output_default_scalars_in_json = true;
-    m_parser.opts.output_enum_identifiers = true;
-
-    if (!flatbuffers::LoadFile(m_path.c_str(), false, &m_fbsFile))
-    {
-        m_errorText = "Could not load schema: " + m_path;
-        return false;
-    }
-
-    // insert after the last include:
-    // attribute "link";
-    {
-        size_t lastIncludePos = m_fbsFile.rfind("include \"");
-        if (lastIncludePos != std::string::npos)
-            lastIncludePos = m_fbsFile.find("\"", lastIncludePos + 9);
-        if (lastIncludePos != std::string::npos)
-            lastIncludePos = m_fbsFile.find("\n", lastIncludePos + 1);
-        if (lastIncludePos == std::string::npos)
-            lastIncludePos = 0;
-        else
-            lastIncludePos++;
-        m_fbsFile.insert(lastIncludePos, "attribute \"link\";\n");
-    }
-
-    m_includeDirsStr.push_back(std::filesystem::path(m_path).remove_filename().generic_string());
-
-    m_includeDirs.resize(m_includeDirsStr.size());
-    for (size_t i = 0; i < m_includeDirs.size(); ++i)
-        m_includeDirs[i] = m_includeDirsStr[i].c_str();
-
-    if (!m_parser.Parse(m_fbsFile.c_str(), m_includeDirs.data(), m_path.c_str()))
-    {
-        m_errorText = "Error when loading schema: " + m_path + "\n" + m_parser.error_;
-        return false;
-    }
-    else if(!m_parser.error_.empty())
-    {
-        m_errorText = "Warning when loading schema: " + m_path + "\n" + m_parser.error_;
-    }
-
-    if (!m_parser.root_struct_def_)
-    {
-        m_errorText = "No root type specified for schema: " + m_path;
-        return false;
-    }
-    m_rootType = m_parser.root_struct_def_->name;
-
+    m_rootType = m_parser.GetRootStructName();
     return true;
 }
 
@@ -100,16 +51,9 @@ bool DBTable::LoadFile(const char* fileName)
 {
     // Load the json file
     std::string jsonString;
-    if (!flatbuffers::LoadFile(fileName, false, &jsonString))
+    if (!LoadTextFile(fileName, jsonString))
     {
         m_errorText = "Could not load data file: " + std::string(fileName);
-        return false;
-    }
-
-    // Make sure it conforms to the schema
-    if (!m_parser.Parse(jsonString.c_str(), nullptr, fileName))
-    {
-        m_errorText = "Could not load data file: " + std::string(fileName) + "\n" + m_parser.error_;
         return false;
     }
 
@@ -119,7 +63,7 @@ bool DBTable::LoadFile(const char* fileName)
     {
         // No error text available from nlohmann.
         // This is a weird error because flatbuffers loaded it just fine.
-        m_errorText = "Could not load parse data file: " + std::string(fileName) + "\n" + m_parser.error_;
+        m_errorText = "Could not load parse data file: " + std::string(fileName);
         return false;
     }
 
@@ -291,7 +235,7 @@ bool DBRoot::Load(const char* path)
         m_path = path;
 
         std::string jsonString;
-        if (!flatbuffers::LoadFile(path, false, &jsonString))
+        if (!LoadTextFile(path, jsonString))
         {
             m_errorText = "Failed to open dbroot file: " + std::string(path);
             return false;
@@ -327,9 +271,9 @@ bool DBRoot::Load(const char* path)
             }
         }
     }
-    else if (extension == ".fbs")
+    else if (extension == ".def")
     {
-        // If given a .fbs file, make a .dbsroot file containing only that item, and load that
+        // If given a .def file, make a .dbsroot file containing only that item, and load that
         std::filesystem::path dbroot = std::filesystem::path(path).replace_extension(".dbroot");
         FILE* file = nullptr;
         fopen_s(&file, dbroot.generic_string().c_str(), "wb");
@@ -359,3 +303,22 @@ void DBRoot::Clear()
     m_path = "";
     m_fileWatcher.Clear();
 }
+
+bool LoadTextFile(const char* fileName, std::string& contents)
+{
+    FILE* file = nullptr;
+    fopen_s(&file, fileName, "rb");
+    if (!file)
+        return false;
+
+    fseek(file, 0, SEEK_END);
+    size_t fileSize = ftell(file);
+    contents.resize(fileSize);
+    fseek(file, 0, SEEK_SET);
+
+    fread(contents.data(), 1, fileSize, file);
+
+    fclose(file);
+
+    return true;
+};

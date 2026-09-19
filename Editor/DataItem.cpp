@@ -1,50 +1,45 @@
 #include "DataItem.h"
 
-#include "flatbuffers/idl.h"
 #include "../loader/JSON.h"
 #include "Editor.h"
 #include "imgui.h"
 #include <vector>
 #include "UIShared.h"
 
-json MakeDefaultArrayItem(const flatbuffers::FieldDef& field)
+static bool IsSigned(DefParser::FieldType fieldType)
 {
-    using namespace flatbuffers;
-    const flatbuffers::Type& type = field.value.type;
-    const std::string& constant = field.value.constant;
+    return
+        fieldType == DefParser::FieldType::_sint8  ||
+        fieldType == DefParser::FieldType::_sint16 ||
+        fieldType == DefParser::FieldType::_sint32 ||
+        fieldType == DefParser::FieldType::_sint64;
+}
 
-    switch (type.element)
+static bool IsScalar(DefParser::FieldType fieldType)
+{
+    return fieldType != DefParser::FieldType::_struct;
+}
+
+json MakeDefaultArrayItem(const DefParser& parser, const DefParser::StructField& field)
+{
+    switch (field.fieldType)
     {
-        case BASE_TYPE_STRUCT:
+        case DefParser::FieldType::_struct:
             return json::object();
 
-        case BASE_TYPE_VECTOR:
-        case BASE_TYPE_VECTOR64:
-            return json::array();
+        case DefParser::FieldType::_bool:
+            return field.dflt == "1" || field.dflt == "true";
 
-        case BASE_TYPE_UNION:
-            return nullptr;
+        case DefParser::FieldType::_float:
+        case DefParser::FieldType::_double:
+            return std::stof(field.dflt.c_str());
 
-        case BASE_TYPE_BOOL:
-            return constant == "1" || constant == "true";
+        case DefParser::FieldType::_enum:
+        case DefParser::FieldType::_string:
+            return field.dflt;
 
-        case BASE_TYPE_FLOAT:
-        case BASE_TYPE_DOUBLE:
-            return std::stof(constant.c_str());
-
-        case BASE_TYPE_STRING:
-            return "";
-
-        default: // integral types, including enums (UType shares this path)
-        {
-            int64_t intVal = flatbuffers::StringToInt(constant.c_str());
-            if (type.enum_def)
-            {
-                if (auto* enumVal = type.enum_def->ReverseLookup(intVal, false))
-                    return enumVal->name;
-            }
-            return intVal;
-        }
+        default: // integral types
+            return std::stoll(field.dflt.c_str());
     }
 }
 
@@ -79,190 +74,7 @@ static void MarkDirty(EditorData& editorData, DBTable::JSONData& jsonData)
     jsonData.m_dirty = true;
 }
 
-static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& parser, const flatbuffers::StructDef& structDef, const char* structFieldName, DBTable::JSONData& jsonData, const json_pointer& path, bool makeTreeNode);
-
-enum class TypeCategory
-{
-    Unknown,
-    Bool,
-    Int,
-    Float,
-    String,
-    Struct,
-    Union,
-};
-
-bool TypeCategoryIsScalar(TypeCategory category)
-{
-    return
-        category != TypeCategory::Unknown &&
-        category != TypeCategory::Struct &&
-        category != TypeCategory::Union;
-}
-
-union TypeDetails
-{
-    struct
-    {
-        bool isSigned;
-        int numBytes;
-    }
-    Int;
-
-    struct
-    {
-        bool isDouble;
-    }
-    Float;
-
-    struct
-    {
-        flatbuffers::StructDef* structDef;
-    }
-    Struct;
-
-    struct
-    {
-        flatbuffers::EnumDef* enumDef;
-    }
-    Union;
-};
-
-struct Type
-{
-    TypeCategory category = TypeCategory::Unknown;
-    TypeDetails details;
-
-    bool isVector = false;
-    uint16_t vectorSize = 0;
-};
-
-void FlatBufferBaseTypeToOurType(const flatbuffers::Type& type, const flatbuffers::BaseType& baseType, TypeCategory& category, TypeDetails& details)
-{
-    switch (baseType)
-    {
-        case flatbuffers::BaseType::BASE_TYPE_NONE:
-        {
-            break;
-        }
-        case flatbuffers::BaseType::BASE_TYPE_UTYPE:
-        {
-            // Ignore these, the union will show it
-            //category = TypeCategory::Int;
-            //details.Int.isSigned = false;
-            //details.Int.numBytes = 1;
-            break;
-        }
-        case flatbuffers::BaseType::BASE_TYPE_BOOL:
-        {
-            category = TypeCategory::Bool;
-            break;
-        }
-        case flatbuffers::BaseType::BASE_TYPE_CHAR:
-        {
-            category = TypeCategory::Int;
-            details.Int.isSigned = true;
-            details.Int.numBytes = 1;
-            break;
-        }
-        case flatbuffers::BaseType::BASE_TYPE_UCHAR:
-        {
-            category = TypeCategory::Int;
-            details.Int.isSigned = false;
-            details.Int.numBytes = 1;
-            break;
-        }
-        case flatbuffers::BaseType::BASE_TYPE_SHORT:
-        {
-            category = TypeCategory::Int;
-            details.Int.isSigned = true;
-            details.Int.numBytes = 2;
-            break;
-        }
-        case flatbuffers::BaseType::BASE_TYPE_USHORT:
-        {
-            category = TypeCategory::Int;
-            details.Int.isSigned = false;
-            details.Int.numBytes = 2;
-            break;
-        }
-        case flatbuffers::BaseType::BASE_TYPE_INT:
-        {
-            category = TypeCategory::Int;
-            details.Int.isSigned = true;
-            details.Int.numBytes = 4;
-            break;
-        }
-        case flatbuffers::BaseType::BASE_TYPE_UINT:
-        {
-            category = TypeCategory::Int;
-            details.Int.isSigned = false;
-            details.Int.numBytes = 4;
-            break;
-        }
-        case flatbuffers::BaseType::BASE_TYPE_LONG:
-        {
-            category = TypeCategory::Int;
-            details.Int.isSigned = true;
-            details.Int.numBytes = 8;
-            break;
-        }
-        case flatbuffers::BaseType::BASE_TYPE_ULONG:
-        {
-            category = TypeCategory::Int;
-            details.Int.isSigned = false;
-            details.Int.numBytes = 8;
-            break;
-        }
-        case flatbuffers::BaseType::BASE_TYPE_FLOAT:
-        {
-            category = TypeCategory::Float;
-            details.Float.isDouble = false;
-            break;
-        }
-        case flatbuffers::BaseType::BASE_TYPE_DOUBLE:
-        {
-            category = TypeCategory::Float;
-            details.Float.isDouble = true;
-            break;
-        }
-        case flatbuffers::BaseType::BASE_TYPE_STRING:
-        {
-            category = TypeCategory::String;
-            break;
-        }
-        case flatbuffers::BaseType::BASE_TYPE_STRUCT:
-        {
-            category = TypeCategory::Struct;
-            details.Struct.structDef = type.struct_def;
-            break;
-        }
-        case flatbuffers::BaseType::BASE_TYPE_UNION:
-        {
-            category = TypeCategory::Union;
-            details.Union.enumDef = type.enum_def;
-            break;
-        }
-    }
-}
-
-Type FlatBufferTypeToOurType(const flatbuffers::Type& type)
-{
-    Type ret;
-
-    if (type.base_type == flatbuffers::BaseType::BASE_TYPE_VECTOR || type.base_type == flatbuffers::BaseType::BASE_TYPE_VECTOR64 || type.base_type == flatbuffers::BaseType::BASE_TYPE_ARRAY)
-    {
-        ret.isVector = true;
-        ret.vectorSize = type.fixed_length;
-        FlatBufferBaseTypeToOurType(type, type.element, ret.category, ret.details);
-    }
-    else
-    {
-        FlatBufferBaseTypeToOurType(type, type.base_type, ret.category, ret.details);
-    }
-
-    return ret;
-}
+static void AddUIForType(EditorData& editorData, const DefParser& parser, const DefParser::Struct& structDef, const char* structFieldName, DBTable::JSONData& jsonData, const json_pointer& path, bool makeTreeNode);
 
 template <typename T>
 T GetValueFromString(const char* valueStr);
@@ -305,25 +117,17 @@ float GetValueFromString<float>(const char* valueStr)
     return value;
 }
 
-static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& parser, const flatbuffers::FieldDef& fieldDef, DBTable::JSONData& jsonData, const json_pointer& jsonPath, const flatbuffers::FieldDef* unionTypeFieldDef, const json_pointer& unionTypeFieldJsonPath)
+static void AddUIForType(EditorData& editorData, const DefParser& parser, const DefParser::StructField& fieldDef, DBTable::JSONData& jsonData, const json_pointer& jsonPath)
 {
-    if (fieldDef.deprecated)
-        return;
-
-    Type type = FlatBufferTypeToOurType(fieldDef.value.type);
-
-    if (type.category == TypeCategory::Unknown)
-        return;
-
     // Figure out how many items are in this array (1 item for non arrays)
     size_t arrayItemCount = 1;
     bool fixedSizedArray = false;
-    if (type.isVector)
+    if (fieldDef.isArray)
     {
-        if (type.vectorSize > 0)
+        if (fieldDef.fixedArraySize > 0)
         {
             fixedSizedArray = true;
-            arrayItemCount = type.vectorSize;
+            arrayItemCount = fieldDef.fixedArraySize;
         }
         else
         {
@@ -334,8 +138,6 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
         }
 
         bool treeNodeOpened = ImGui::TreeNodeEx(fieldDef.name.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
-
-        ShowToolTip(fieldDef.doc_comment);
 
         if (!treeNodeOpened)
             return;
@@ -356,7 +158,7 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
         json_pointer jsonPathItem = jsonPath;
         std::string fieldName = fieldDef.name;
 
-        if (type.isVector)
+        if (fieldDef.isArray)
         {
             jsonPathItem /= arrayIndex;
 
@@ -365,85 +167,49 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
             fieldName = buffer;
         }
 
-        // If this is an enum, and is not a union
-        if (fieldDef.value.type.enum_def && type.category != TypeCategory::Union)
+        // If this is an enum
+        if (fieldDef.fieldType == DefParser::FieldType::_enum)
         {
-            if (fieldDef.value.type.enum_def->attributes.Lookup("bit_flags") == nullptr)
+            int64_t value = GetValueFromString<int64_t>(fieldDef.dflt.c_str());
+            value = GetOrDefault(jsonData.m_data, jsonPathItem, value);
+
+            const DefParser::Enum* e = parser.GetEnumByName(fieldDef.enumName.c_str());
+            const auto& enumLabels = e->labels;
+
+            std::string selectedValue = "";
+            if (value >= 0 && value < (int64_t)enumLabels.size())
+                selectedValue = enumLabels[value];
+
+            if (ImGui::BeginCombo(fieldName.c_str(), selectedValue.c_str()))
             {
-                int64_t value = GetValueFromString<int64_t>(fieldDef.value.constant.c_str());
-                value = GetOrDefault(jsonData.m_data, jsonPathItem, value);
-
-                const auto& enumVals = fieldDef.value.type.enum_def->Vals();
-
-                std::string selectedValue = "";
-                if (value >= 0 && value < (int64_t)enumVals.size())
-                    selectedValue = enumVals[value]->name;
-
-                if (ImGui::BeginCombo(fieldName.c_str(), selectedValue.c_str()))
+                int64_t enumValue = -1;
+                for (const std::string& label : enumLabels)
                 {
-                    for (const flatbuffers::EnumVal* enumItem : fieldDef.value.type.enum_def->Vals())
+                    enumValue++;
+
+                    const bool selected = (value == enumValue);
+
+                    if (ImGui::Selectable(label.c_str(), selected))
                     {
-                        int64_t enumValue = enumItem->GetAsInt64();
-
-                        const bool selected = (value == enumValue);
-
-                        if (ImGui::Selectable(enumItem->name.c_str(), selected))
-                        {
-                            jsonData.m_data[jsonPathItem] = enumValue;
-                            MarkDirty(editorData, jsonData);
-                        }
-
-                        if (selected)
-                            ImGui::SetItemDefaultFocus();
+                        jsonData.m_data[jsonPathItem] = enumValue;
+                        MarkDirty(editorData, jsonData);
                     }
 
-                    ImGui::EndCombo();
-                }
-            }
-            else if (ImGui::TreeNodeEx(fieldName.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
-            {
-                uint64_t value = GetValueFromString<uint64_t>(fieldDef.value.constant.c_str());
-                value = GetOrDefault(jsonData.m_data, jsonPathItem, value);
-
-                bool valueChanged = false;
-
-                for (const flatbuffers::EnumVal* enumItem : fieldDef.value.type.enum_def->Vals())
-                {
-                    ImGui::PushID(enumItem);
-
-                    uint64_t enumValue = enumItem->GetAsUInt64();
-
-                    bool checked = ((value & enumValue) != 0);
-                    if (ImGui::Checkbox(enumItem->name.c_str(), &checked))
-                    {
-                        if (checked)
-                            value = value | enumValue;
-                        else
-                            value = value & (~enumValue);
-
-                        valueChanged = true;
-                    }
-
-                    ImGui::PopID();
+                    if (selected)
+                        ImGui::SetItemDefaultFocus();
                 }
 
-                if (valueChanged)
-                {
-                    jsonData.m_data[jsonPathItem] = value;
-                    MarkDirty(editorData, jsonData);
-                }
-
-                ImGui::TreePop();
+                ImGui::EndCombo();
             }
         }
         // else it is not an enum
         else
         {
-            switch (type.category)
+            switch (fieldDef.fieldType)
             {
-                case TypeCategory::Bool:
+                case DefParser::FieldType::_bool:
                 {
-                    bool dflt = GetValueFromString<bool>(fieldDef.value.constant.c_str());
+                    bool dflt = GetValueFromString<bool>(fieldDef.dflt.c_str());
                     bool value = GetOrDefault(jsonData.m_data, jsonPathItem, dflt);
                     if (ImGui::Checkbox(fieldName.c_str(), &value))
                     {
@@ -452,14 +218,23 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
                     }
                     break;
                 }
-                case TypeCategory::Int:
+                case DefParser::FieldType::_uint8:
+                case DefParser::FieldType::_sint8:
+                case DefParser::FieldType::_uint16:
+                case DefParser::FieldType::_sint16:
+                case DefParser::FieldType::_uint32:
+                case DefParser::FieldType::_sint32:
+                case DefParser::FieldType::_uint64:
+                case DefParser::FieldType::_sint64:
                 {
-                    if (type.details.Int.isSigned)
+                    bool isSigned = IsSigned(fieldDef.fieldType);
+
+                    if (isSigned)
                     {
                         int64_t step_one = 1;
                         int64_t step_fast = 10;
 
-                        int64_t value = GetValueFromString<int64_t>(fieldDef.value.constant.c_str());
+                        int64_t value = GetValueFromString<int64_t>(fieldDef.dflt.c_str());
                         value = GetOrDefault(jsonData.m_data, jsonPathItem, value);
                         if (ImGui::InputScalar(fieldName.c_str(), ImGuiDataType_S64, &value, &step_one, &step_fast, "%zi"))
                         {
@@ -472,7 +247,7 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
                         uint64_t step_one = 1;
                         uint64_t step_fast = 10;
 
-                        uint64_t value = GetValueFromString<uint64_t>(fieldDef.value.constant.c_str());
+                        uint64_t value = GetValueFromString<uint64_t>(fieldDef.dflt.c_str());
                         value = GetOrDefault(jsonData.m_data, jsonPathItem, value);
                         if (ImGui::InputScalar(fieldName.c_str(), ImGuiDataType_U64, &value, &step_one, &step_fast, "%zu"))
                         {
@@ -483,161 +258,93 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
 
                     break;
                 }
-                case TypeCategory::Float:
+                case DefParser::FieldType::_double:
                 {
-                    if (type.details.Float.isDouble)
+                    double value = GetValueFromString<double>(fieldDef.dflt.c_str());
+                    value = GetOrDefault(jsonData.m_data, jsonPathItem, value);
+                    if (ImGui::InputDouble(fieldName.c_str(), &value))
                     {
-                        double value = GetValueFromString<double>(fieldDef.value.constant.c_str());
-                        value = GetOrDefault(jsonData.m_data, jsonPathItem, value);
-                        if (ImGui::InputDouble(fieldName.c_str(), &value))
-                        {
-                            jsonData.m_data[jsonPathItem] = value;
-                            MarkDirty(editorData, jsonData);
-                        }
-                    }
-                    else
-                    {
-                        float value = GetValueFromString<float>(fieldDef.value.constant.c_str());
-                        value = GetOrDefault(jsonData.m_data, jsonPathItem, value);
-                        if (ImGui::InputFloat(fieldName.c_str(), &value))
-                        {
-                            jsonData.m_data[jsonPathItem] = value;
-                            MarkDirty(editorData, jsonData);
-                        }
+                        jsonData.m_data[jsonPathItem] = value;
+                        MarkDirty(editorData, jsonData);
                     }
                     break;
                 }
-                case TypeCategory::String:
+                case DefParser::FieldType::_float:
                 {
-                    std::string dflt = fieldDef.value.constant.c_str();
-                    if (dflt == "0") // the default for strings in flatbuffers is "0" for some reason. This is a hack around.
-                        dflt = "";
+                    float value = GetValueFromString<float>(fieldDef.dflt.c_str());
+                    value = GetOrDefault(jsonData.m_data, jsonPathItem, value);
+                    if (ImGui::InputFloat(fieldName.c_str(), &value))
+                    {
+                        jsonData.m_data[jsonPathItem] = value;
+                        MarkDirty(editorData, jsonData);
+                    }
+                    break;
+                }
+                case DefParser::FieldType::_link:
+                {
+                    std::string dflt = fieldDef.dflt.c_str();
                     std::string value = GetOrDefault(jsonData.m_data, jsonPathItem, dflt);
 
                     // links have a drop down menu
-                    flatbuffers::Value* linkAttribute = fieldDef.attributes.Lookup("link");
-                    if (linkAttribute != nullptr && linkAttribute->type.base_type == flatbuffers::BASE_TYPE_STRING && editorData.m_dbroot.m_tables.contains(linkAttribute->constant.c_str()))
+                    const DBTable& table = *editorData.m_dbroot.m_tables[fieldDef.linkName];
+
+                    if (ImGui::BeginCombo("Type", value.c_str()))
                     {
-                        const DBTable& table = *editorData.m_dbroot.m_tables[linkAttribute->constant.c_str()];
-
-                        if (ImGui::BeginCombo("Type", value.c_str()))
+                        for (auto& pair : table.m_data)
                         {
-                            for (auto& pair : table.m_data)
+                            const bool selected = (value == pair.first);
+
+                            if (ImGui::Selectable(pair.first.c_str(), selected))
                             {
-                                const bool selected = (value == pair.first);
-
-                                if (ImGui::Selectable(pair.first.c_str(), selected))
-                                {
-                                    jsonData.m_data[jsonPathItem] = pair.first;
-                                    MarkDirty(editorData, jsonData);
-                                }
-
-                                if (selected)
-                                    ImGui::SetItemDefaultFocus();
+                                jsonData.m_data[jsonPathItem] = pair.first;
+                                MarkDirty(editorData, jsonData);
                             }
 
-                            ImGui::EndCombo();
+                            if (selected)
+                                ImGui::SetItemDefaultFocus();
                         }
 
-                        ImGui::SameLine();
-                        if (ImGui::SmallButton(ICON_FA_CIRCLE_ARROW_RIGHT "##GoToLink"))
-                        {
-                            editorData.m_selectedTableName = linkAttribute->constant;
-                            editorData.m_selectedDataItemName = value;
-                        }
-                        ShowToolTip("Go To Link", false);
+                        ImGui::EndCombo();
                     }
+
+                    ImGui::SameLine();
+                    if (ImGui::SmallButton(ICON_FA_CIRCLE_ARROW_RIGHT "##GoToLink"))
+                    {
+                        editorData.m_selectedTableName = fieldDef.linkName;
+                        editorData.m_selectedDataItemName = value;
+                    }
+                    ShowToolTip("Go To Link", false);
+                    break;
+                }
+                case DefParser::FieldType::_string:
+                {
+                    std::string dflt = fieldDef.dflt.c_str();
+                    std::string value = GetOrDefault(jsonData.m_data, jsonPathItem, dflt);
+
                     // otherwise enter the string
-                    else
-                    {
-                        static std::vector<char> tmpBuffer;
-                        tmpBuffer.resize(4096);
-                        strcpy_s(tmpBuffer.data(), tmpBuffer.size(), value.c_str());
+                    static std::vector<char> tmpBuffer;
+                    tmpBuffer.resize(4096);
+                    strcpy_s(tmpBuffer.data(), tmpBuffer.size(), value.c_str());
 
-                        if (ImGui::InputText(fieldName.c_str(), tmpBuffer.data(), tmpBuffer.size()))
-                        {
-                            jsonData.m_data[jsonPathItem] = tmpBuffer.data();
-                            MarkDirty(editorData, jsonData);
-                        }
+                    if (ImGui::InputText(fieldName.c_str(), tmpBuffer.data(), tmpBuffer.size()))
+                    {
+                        jsonData.m_data[jsonPathItem] = tmpBuffer.data();
+                        MarkDirty(editorData, jsonData);
                     }
                     break;
                 }
-                case TypeCategory::Struct:
+                case DefParser::FieldType::_struct:
                 {
-                    AddUIForType(editorData, parser, *type.details.Struct.structDef, fieldName.c_str(), jsonData, jsonPathItem, true);
-                    break;
-                }
-                case TypeCategory::Union:
-                {
-                    if (unionTypeFieldDef && type.details.Union.enumDef && ImGui::TreeNodeEx(fieldName.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
-                    {
-                        json_pointer unionTypeJsonPathItem = unionTypeFieldJsonPath;
-                        if (type.isVector)
-                            unionTypeJsonPathItem /= arrayIndex;
-
-                        // Show the union type field
-                        {
-                            std::string fieldName = unionTypeFieldDef->name;
-                            int64_t value = GetValueFromString<int64_t>(unionTypeFieldDef->value.constant.c_str());
-                            value = GetOrDefault(jsonData.m_data, unionTypeJsonPathItem, value);
-
-                            const auto& enumVals = unionTypeFieldDef->value.type.enum_def->Vals();
-
-                            std::string selectedValue = "";
-                            if (value >= 0 && value < (int64_t)enumVals.size())
-                                selectedValue = enumVals[value]->name;
-
-                            if (ImGui::BeginCombo("Type", selectedValue.c_str()))
-                            {
-                                for (const flatbuffers::EnumVal* enumItem : unionTypeFieldDef->value.type.enum_def->Vals())
-                                {
-                                    int64_t enumValue = enumItem->GetAsInt64();
-
-                                    const bool selected = (value == enumValue);
-
-                                    if (ImGui::Selectable(enumItem->name.c_str(), selected))
-                                    {
-                                        jsonData.m_data[unionTypeJsonPathItem] = enumValue;
-                                        MarkDirty(editorData, jsonData);
-                                    }
-
-                                    if (selected)
-                                        ImGui::SetItemDefaultFocus();
-                                }
-
-                                ImGui::EndCombo();
-                            }
-                        }
-
-                        // Show the union itself
-                        {
-                            int64_t value = GetValueFromString<int64_t>(unionTypeFieldDef->value.constant.c_str());
-                            value = GetOrDefault(jsonData.m_data, unionTypeJsonPathItem, value);
-
-                            for (const flatbuffers::EnumVal* enumItem : type.details.Union.enumDef->Vals())
-                            {
-                                if (value == enumItem->GetAsInt64() && enumItem->union_type.struct_def)
-                                {
-                                    AddUIForType(editorData, parser, *enumItem->union_type.struct_def, fieldName.c_str(), jsonData, jsonPathItem, false);
-                                    break;
-                                }
-                            }
-                        }
-
-                        ImGui::TreePop();
-                    }
-
+                    const DefParser::Struct* structDef = parser.GetStructByName(fieldDef.structName.c_str());
+                    AddUIForType(editorData, parser, *structDef, fieldName.c_str(), jsonData, jsonPathItem, true);
                     break;
                 }
             }
         }
 
-        if (!type.isVector)
-            ShowToolTip(fieldDef.doc_comment);
-
-        if (type.isVector)
+        if (fieldDef.isArray)
         {
-            if (TypeCategoryIsScalar(type.category))
+            if (IsScalar(fieldDef.fieldType))
                 ImGui::SameLine();
 
             {
@@ -685,19 +392,11 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
         ImGui::PopID();
     }
 
-    if (type.isVector)
+    if (fieldDef.isArray)
     {
         if (!fixedSizedArray && ImGui::Button("Add Item"))
         {
-            if (type.category == TypeCategory::Union)
-            {
-                jsonData.m_data[jsonPath].push_back(json::object());
-                jsonData.m_data[unionTypeFieldJsonPath].push_back(0);
-            }
-            else
-            {
-                jsonData.m_data[jsonPath].push_back(MakeDefaultArrayItem(fieldDef));
-            }
+            jsonData.m_data[jsonPath].push_back(MakeDefaultArrayItem(parser, fieldDef));
             MarkDirty(editorData, jsonData);
         }
 
@@ -741,7 +440,7 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
     }
 }
 
-static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& parser, const flatbuffers::StructDef& structDef, const char* structFieldName, DBTable::JSONData& jsonData, const json_pointer& path, bool makeTreeNode)
+static void AddUIForType(EditorData& editorData, const DefParser& parser, const DefParser::Struct& structDef, const char* structFieldName, DBTable::JSONData& jsonData, const json_pointer& path, bool makeTreeNode)
 {
     if (makeTreeNode)
     {
@@ -750,21 +449,12 @@ static void AddUIForType(EditorData& editorData, const flatbuffers::Parser& pars
     }
 
     // Add the fields
-    for (const flatbuffers::FieldDef* fieldDef : structDef.fields.vec)
+    for (const DefParser::StructField& fieldDef : structDef.fields)
     {
         json_pointer fieldPath = path;
-        fieldPath /= fieldDef->name.c_str();
+        fieldPath /= fieldDef.name.c_str();
 
-        // If this is a union field, find the union type field
-        flatbuffers::FieldDef* unionTypeFieldDef = structDef.fields.Lookup(fieldDef->name + "_type");
-        json_pointer unionTypeFieldJsonPath;
-        if (unionTypeFieldDef)
-        {
-            unionTypeFieldJsonPath = path;
-            unionTypeFieldJsonPath /= unionTypeFieldDef->name.c_str();
-        }
-
-        AddUIForType(editorData, parser, *fieldDef, jsonData, fieldPath, unionTypeFieldDef, unionTypeFieldJsonPath);
+        AddUIForType(editorData, parser, fieldDef, jsonData, fieldPath);
     }
 
     if (makeTreeNode)
@@ -781,7 +471,7 @@ void ShowDataEditor(EditorData& editorData)
         return;
     DBTable::JSONData& data = *table.m_data[editorData.m_selectedDataItemName].get();
 
-    const flatbuffers::Parser& parser = table.GetParser();
+    const DefParser& parser = table.GetParser();
 
-    AddUIForType(editorData, parser, *parser.root_struct_def_, parser.root_struct_def_->name.c_str(), data, json_pointer(""), true);
+    AddUIForType(editorData, parser, *parser.GetRootStruct(), parser.GetRootStructName().c_str(), data, json_pointer(""), true);
 }

@@ -1,6 +1,5 @@
 #include "Compile.h"
 
-#include "flatbuffers/idl.h"
 #include "../loader/JSON.h"
 #include "Editor.h"
 #include "Platform.h"
@@ -92,7 +91,7 @@ bool CompileData(EditorData& editorData)
 
             // load the schema
             std::string schemaString;
-            if (!flatbuffers::LoadFile(table.GetPath(), false, &schemaString))
+            if (!LoadTextFile(table.GetPath(), schemaString))
                 return false;
 
             // remove the root_type line since we are
@@ -139,7 +138,7 @@ bool CompileData(EditorData& editorData)
         }
         fullSchema += "}\n\nroot_type dbroot;\n\n";
 
-        fullSchemaFileName = std::filesystem::path(tempDir).replace_filename("schema.fbs").generic_string();
+        fullSchemaFileName = std::filesystem::path(tempDir).replace_filename("schema.def").generic_string();
 
         FILE* file = nullptr;
         fopen_s(&file, fullSchemaFileName.c_str(), "wb");
@@ -175,7 +174,7 @@ bool CompileData(EditorData& editorData)
             {
                 // load the json data
                 std::string jsonString;
-                if (!flatbuffers::LoadFile(pair.second->m_path.c_str(), false, &jsonString))
+                if (!LoadTextFile(pair.second->m_path.c_str(), jsonString))
                     return false;
 
                 StringReplaceAll(jsonString, "\n", "\n        ");

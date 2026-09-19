@@ -3,8 +3,6 @@
 #include <vector>
 #include <string>
 
-#include "flatbuffers/idl.h"
-
 #include "JSON.h"
 
 #include "FileWatcher.h"
@@ -35,7 +33,7 @@ public:
 
     bool LoadFile(const char* fileName);
 
-    const flatbuffers::Parser& GetParser() const
+    const DefParser& GetParser() const
     {
         return m_parser;
     }
@@ -60,16 +58,7 @@ private:
     std::string m_path;
     std::string m_errorText;
 
-    std::string m_fbsFile;
-    std::vector<std::string> m_includeDirsStr;
-    std::vector<const char*> m_includeDirs;
-
-    DefParser m_defParser;
-
-    // Parser needs all inputs to last as long as it lasts, so:
-    // 1) Everything it needs is a member
-    // 2) It is last in the class, to be destructed first
-    flatbuffers::Parser m_parser;
+    DefParser m_parser;
 };
 
 class DBRoot
@@ -117,3 +106,5 @@ private:
 
     std::string m_path;
 };
+
+bool LoadTextFile(const char* fileName, std::string& contents);

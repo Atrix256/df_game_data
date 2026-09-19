@@ -1,6 +1,7 @@
 #include "DefParser.h"
 
 #include <filesystem>
+#include "loader.h"
 
 enum class TokenType : uint8_t
 {
@@ -27,25 +28,6 @@ enum class TokenType : uint8_t
     LessThan,
     GreaterThan
 };
-
-static bool LoadTextFile(const char* fileName, std::string& contents)
-{
-    FILE* file = nullptr;
-    fopen_s(&file, fileName, "rb");
-    if (!file)
-        return false;
-
-    fseek(file, 0, SEEK_END);
-    size_t fileSize = ftell(file);
-    contents.resize(fileSize);
-    fseek(file, 0, SEEK_SET);
-
-    fread(contents.data(), 1, fileSize, file);
-
-    fclose(file);
-
-    return true;
-}
 
 static bool IsNewLine(char c)
 {

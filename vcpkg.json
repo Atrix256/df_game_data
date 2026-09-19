@@ -1,6 +1,5 @@
 {
   "dependencies": [
-    "flatbuffers",
     "nlohmann-json",
     {
       "name": "imgui",

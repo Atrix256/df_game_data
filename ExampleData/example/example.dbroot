@@ -3,7 +3,7 @@
     "nameSpace": "GameData",
     "targetLanguage": "cpp",
     "tables": [
-        "Items/schema.fbs",
-        "Characters/schema.fbs"
+        "Items/items.def",
+        "Characters/characters.def"
     ]
 }

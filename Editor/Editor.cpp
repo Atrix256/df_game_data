@@ -92,7 +92,7 @@ static void OnFileOpen()
 
     nfdu8filteritem_t filters[] =
     {
-        { "Supported Files (*.dbroot, *.fbs)", "dbroot,fbs" }
+        { "Supported Files (*.dbroot, *.def)", "dbroot,def" }
     };
 
     nfdresult_t result = NFD_OpenDialogU8(&outPath, filters, IM_COUNTOF(filters), nullptr);
@@ -106,7 +106,7 @@ static void OnFileOpen()
 
 // Make the JSON items be in the order that they are defined in the schema.
 // Useful for making sure union types come before union fields
-void CanonicalizeFieldOrder(nlohmann::ordered_json& value, const flatbuffers::StructDef& structDef)
+void CanonicalizeFieldOrder(nlohmann::ordered_json& value, const DefParser& parser, const DefParser::Struct& structDef)
 {
     if (!value.is_object())
         return;
@@ -114,12 +114,12 @@ void CanonicalizeFieldOrder(nlohmann::ordered_json& value, const flatbuffers::St
     nlohmann::ordered_json reordered = nlohmann::ordered_json::object();
 
     // put things in order
-    for (auto* field : structDef.fields.vec)
+    for (auto& field : structDef.fields)
     {
-        auto it = value.find(field->name);
+        auto it = value.find(field.name);
         if (it == value.end())
             continue;
-        reordered[field->name] = std::move(it.value());
+        reordered[field.name] = std::move(it.value());
     }
 
     // Anything not in the schema (shouldn't normally exist) goes last.
@@ -132,23 +132,25 @@ void CanonicalizeFieldOrder(nlohmann::ordered_json& value, const flatbuffers::St
     value = std::move(reordered);
 
     // Recurse into nested structs/tables and arrays thereof.
-    for (auto* field : structDef.fields.vec)
+    for (auto& field : structDef.fields)
     {
-        auto it = value.find(field->name);
+        auto it = value.find(field.name);
         if (it == value.end())
             continue;
 
-        const flatbuffers::Type& type = field->value.type;
+        if (field.fieldType == DefParser::FieldType::_struct)
+        {
+            const DefParser::Struct& s = *parser.GetStructByName(field.structName.c_str());
 
-        if (type.base_type == flatbuffers::BASE_TYPE_STRUCT && type.struct_def)
-        {
-            CanonicalizeFieldOrder(it.value(), *type.struct_def);
-        }
-        else if (type.base_type == flatbuffers::BASE_TYPE_VECTOR &&
-                 type.element == flatbuffers::BASE_TYPE_STRUCT && type.struct_def)
-        {
-            for (auto& element : it.value())
-                CanonicalizeFieldOrder(element, *type.struct_def);
+            if (field.isArray)
+            {
+                for (auto& element : it.value())
+                    CanonicalizeFieldOrder(element, parser, s);
+            }
+            else
+            {
+                CanonicalizeFieldOrder(it.value(), parser, s);
+            }
         }
     }
 }
@@ -156,7 +158,7 @@ void CanonicalizeFieldOrder(nlohmann::ordered_json& value, const flatbuffers::St
 static void SaveJSON(DBTable& table, const json& jsonIn, const char* fileName)
 {
     json jsonOut = jsonIn;
-    CanonicalizeFieldOrder(jsonOut, *table.GetParser().root_struct_def_);
+    CanonicalizeFieldOrder(jsonOut, table.GetParser(), *table.GetParser().GetRootStruct());
 
     std::string jsonString = jsonOut.dump(4);
 
@@ -402,7 +404,7 @@ static void ShowTableList()
 
             nfdu8filteritem_t filters[] =
             {
-                { "Flatbuffer Schema (*.fbs)", "fbs" }
+                { "Flatbuffer Schema (*.def)", "def" }
             };
 
             nfdresult_t result = NFD_OpenDialogU8(&outPath, filters, IM_COUNTOF(filters), nullptr);
@@ -1044,6 +1046,10 @@ TODO:
   * may need to put a hash of schema in data to know when it's no longer compatible.
   * need to describe what is possible in schema: pods, strings, fixed size and variable arrays, structs, enums. links.
 
+! add an issue for supporting comments in the def file becoming documentation strings, and using them as tooltips in the editor
+! add an issue for supporting enums if they are desired
+! add an issue to support enum labels having values, if desired
+
 * the example data needs a small c++ main.cpp that loads the data and prints something from it.
  * ExampleData\example_code\main.cpp when it's time to do this again.
 
@@ -1083,7 +1089,7 @@ Schema documentation:
  * if there is a namespace on a type, only searches that namespace.
 
 Notes:
-* This works as a flatbuffer data editor too (can open fbs or dbroot files)
+* This works as a flatbuffer data editor too (can open def or dbroot files)
  * not quite. a json editor where the schema is defined as flatbuffers.
 * explain the design decisions (each data item as a json data file for easier merging. flat tables for speed. multiple tables because that's whats needed. table links)
 * Explain how to use it
