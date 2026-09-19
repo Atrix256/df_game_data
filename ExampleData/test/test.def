@@ -8,26 +8,26 @@ struct EntryAll
     //8 bits
     bool _bool;
     uint8 _uint8;
-    sint8 _sint8;
+    int8 _int8;
 
     // 16 bits
     uint16 _uint16;
-    sint16 _sint16;
+    int16 _int16;
 
     // 32 bits
     uint32 _uint32;
-    sint32 _sint32;
+    int32 _int32;
 
     // 64 bits
     uint64 _uint64;
-    sint64 _sint64;
+    int64 _int64;
 
     // floating point
     float _float;
     double _double;
 
-    TestInclude.Color _color;
-    TestInclude.Pos _pos;
+    TestInclude::Color _color;
+    TestInclude::Pos _pos;
 };
 
 /* All types with default values */
@@ -36,26 +36,26 @@ struct EntryDefault
     //8 bits
     bool _bool = false;
     uint8 _uint8 = 1;
-    sint8 _sint8 = -2;
+    int8 _int8 = -2;
 
     // 16 bits
     uint16 _uint16 = 3;
-    sint16 _sint16 = -4;
+    int16 _int16 = -4;
 
     // 32 bits
     uint32 _uint32 = 5;
-    sint32 _sint32 = -6;
+    int32 _int32 = -6;
 
     // 64 bits
     uint64 _uint64 = 7;
-    sint64 _sint64 = -8;
+    int64 _int64 = -8;
 
     // floating point
     float _float = 1e4;
     double _double = 1000.0;
 
-    TestInclude.Color _color = Hazel;
-    TestInclude.Pos _pos = {32, 45};
+    TestInclude::Color _color = Hazel;
+    TestInclude::Pos _pos = {32, 45};
 };
 
 // All types in dynamic arrays
@@ -64,26 +64,26 @@ struct EntryArrayDynamic
     //8 bits
     bool _bool[];
     uint8 _uint8[];
-    sint8 _sint8[];
+    int8 _int8[];
 
     // 16 bits
     uint16 _uint16[];
-    sint16 _sint16[];
+    int16 _int16[];
 
     // 32 bits
     uint32 _uint32[];
-    sint32 _sint32[];
+    int32 _int32[];
 
     // 64 bits
     uint64 _uint64[];
-    sint64 _sint64[];
+    int64 _int64[];
 
     // floating point
     float _float[];
     double _double[];
 
-    TestInclude.Color _color[];
-    TestInclude.Pos _pos[];
+    TestInclude::Color _color[];
+    TestInclude::Pos _pos[];
 };
 
 // All types as static sized arrays
@@ -92,26 +92,26 @@ struct EntryArray4
     //8 bits
     bool _bool[4];
     uint8 _uint8[4];
-    sint8 _sint8[4];
+    int8 _int8[4];
 
     // 16 bits
     uint16 _uint16[4];
-    sint16 _sint16[4];
+    int16 _int16[4];
 
     // 32 bits
     uint32 _uint32[4];
-    sint32 _sint32[4];
+    int32 _int32[4];
 
     // 64 bits
     uint64 _uint64[4];
-    sint64 _sint64[4];
+    int64 _int64[4];
 
     // floating point
     float _float[4];
     double _double[4];
 
-    TestInclude.Color _color[4];
-    TestInclude.Pos _pos[4];
+    TestInclude::Color _color[4];
+    TestInclude::Pos _pos[4];
 };
 
 struct Entry

@@ -116,6 +116,8 @@ private:
     bool ParseEnumDef(const char*& cursor);
     bool ParseDirectiveRoot(const char*& cursor);
     bool ParseDirectiveInclude(const char*& cursor);
+    bool ParseNamespace(const char*& cursor);
+    bool ParseNamespacedIdentifier(const char*& cursor, Token& token);
 
     void GetToken(const char*& cursor, Token& token);
 

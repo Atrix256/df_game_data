@@ -11,6 +11,7 @@ enum class TokenType : uint8_t
 
     StructDef,
     EnumDef,
+    Namespace,
 
     DirectiveRoot,
     DirectiveInclude,
@@ -150,6 +151,7 @@ static void ConvertIdentifierToken(Token& token)
     {
         {"struct", TokenType::StructDef},
         {"enum", TokenType::EnumDef},
+        {"namespace", TokenType::Namespace},
     };
 
     for (const IdentifierToTokenType& m : map)
@@ -201,7 +203,7 @@ static bool IdentifierToFieldType(const char* identifier, DefParser::FieldType& 
 
 void DefParser::GetToken(const char*& cursor, Token& token)
 {
-    SkipWhiteSpaceAndNewlines(cursor);
+    SkipWhiteSpaceAndNewlinesAndComments(cursor);
 
     if (*cursor == 0)
     {
@@ -306,6 +308,33 @@ void DefParser::GetToken(const char*& cursor, Token& token)
     return;
 }
 
+bool DefParser::ParseNamespacedIdentifier(const char*& cursor, Token& token)
+{
+    // This comes in with a token, which needs to be an identifier
+    if (!TokenTypeExpected(token, TokenType::Identifier))
+        return false;
+
+    // In a loop:
+    // If there not a "::" after the token, we are done.
+    // If there is one, there needs to be an identifier after it too, and the string view expands to both
+    while (true)
+    {
+        // eat the :: if there, else we are done
+        if (!(cursor[0] == ':' && cursor[1] == ':'))
+            return true;
+        cursor += 2;
+
+        // move to the end of the typical identifier
+        while (IsValidSymbolCharacter(*cursor, false))
+            cursor++;
+
+        // extend the view
+        token.token = std::string_view(token.token.data(), cursor - token.token.data());
+    }
+
+    return true;
+}
+
 bool DefParser::ParseStructDef(const char*& cursor)
 {
     Token token;
@@ -328,7 +357,7 @@ bool DefParser::ParseStructDef(const char*& cursor)
         if (token.type == TokenType::BraceEnd)
             break;
 
-        if (!TokenTypeExpected(token, TokenType::Identifier))
+        if (!ParseNamespacedIdentifier(cursor, token))
             return false;
 
         StructField& newField = newStruct.fields.emplace_back();
@@ -366,7 +395,7 @@ bool DefParser::ParseStructDef(const char*& cursor)
                         return false;
 
                     GetToken(cursor, token);
-                    if (!TokenTypeExpected(token, TokenType::Identifier))
+                    if (!ParseNamespacedIdentifier(cursor, token))
                         return false;
 
                     newField.fieldType = FieldType::_link;
@@ -543,6 +572,17 @@ bool DefParser::ParseDirectiveInclude(const char*& cursor)
     return true;
 }
 
+bool DefParser::ParseNamespace(const char*& cursor)
+{
+    Token token;
+    GetToken(cursor, token);
+    if (!ParseNamespacedIdentifier(cursor, token))
+        return false;
+
+    m_currentNamespace = std::string(token.token);
+    return true;
+}
+
 bool DefParser::TokenTypeExpected(const Token& token, TokenType expectedType)
 {
     if (token.type == expectedType)
@@ -554,27 +594,28 @@ bool DefParser::TokenTypeExpected(const Token& token, TokenType expectedType)
     return false;
 }
 
-static void GetTypeNameAndNamespaceSearchPaths(const char* nameIn, std::string& nameOut, std::vector<std::string>& namespaces)
+static void GetTypeNameAndNamespaceSearchPaths(const char* nameIn, const char* currentNamespace, std::string& nameOut, std::vector<std::string>& namespaces)
 {
+    // If no namespace in the name, check current namespace, then global namespace
     size_t namespaceEnd = std::string(nameIn).rfind("::");
-
     if (namespaceEnd == std::string::npos)
     {
         nameOut = nameIn;
+        namespaces.push_back(currentNamespace);
         namespaces.push_back("");
         return;
     }
 
+    // If there's a namspace in the name, only look in that namespace
     nameOut = &nameIn[namespaceEnd+2];
     namespaces.push_back(std::string(nameIn).substr(0, namespaceEnd));
-    namespaces.push_back("");
 }
 
 const DefParser::Struct* DefParser::GetStructByName(const char* name) const
 {
     std::string typeName;
     std::vector<std::string> namespaces;
-    GetTypeNameAndNamespaceSearchPaths(name, typeName, namespaces);
+    GetTypeNameAndNamespaceSearchPaths(name, m_currentNamespace.c_str(), typeName, namespaces);
 
     for (const std::string& n : namespaces)
     {
@@ -591,7 +632,7 @@ const DefParser::Enum* DefParser::GetEnumByName(const char* name) const
 {
     std::string typeName;
     std::vector<std::string> namespaces;
-    GetTypeNameAndNamespaceSearchPaths(name, typeName, namespaces);
+    GetTypeNameAndNamespaceSearchPaths(name, m_currentNamespace.c_str(), typeName, namespaces);
 
     for (const std::string& n : namespaces)
     {
@@ -623,6 +664,12 @@ bool DefParser::Parse(const char* fileName)
     {
         switch (token.type)
         {
+            case TokenType::Namespace:
+            {
+                if (!ParseNamespace(cursor))
+                    return false;
+                break;
+            }
             case TokenType::StructDef:
             {
                 if (!ParseStructDef(cursor))
@@ -649,6 +696,7 @@ bool DefParser::Parse(const char* fileName)
             }
             case TokenType::Semicolon:
             {
+                int ijkl = 0;
                 // no-op
                 break;
             }
