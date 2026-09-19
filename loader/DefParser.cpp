@@ -18,6 +18,7 @@ enum class TokenType : uint8_t
 
     LiteralString,
     LiteralString_Unterminated,
+    LiteralBool,
 
     BraceBegin,
     BraceEnd,
@@ -152,6 +153,8 @@ static void ConvertIdentifierToken(Token& token)
         {"struct", TokenType::StructDef},
         {"enum", TokenType::EnumDef},
         {"namespace", TokenType::Namespace},
+        {"false", TokenType::LiteralBool},
+        {"true", TokenType::LiteralBool},
     };
 
     for (const IdentifierToTokenType& m : map)
@@ -468,6 +471,13 @@ bool DefParser::ParseStructDef(const char*& cursor)
                     m_errorText << "Error in " << m_path << "(" << m_lineNumber << ") : Unknown enum value: " << token.token;
                     return false;
                 }
+                newField.dflt = std::string(token.token);
+                break;
+            }
+            case FieldType::_bool:
+            {
+                if (!TokenTypeExpected(token, TokenType::LiteralBool))
+                    return false;
                 newField.dflt = std::string(token.token);
                 break;
             }
