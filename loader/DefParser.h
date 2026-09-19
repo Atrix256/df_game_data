@@ -5,6 +5,12 @@
 #include <memory>
 #include <sstream>
 
+template <typename T>
+void hash_combine(std::size_t& seed, const T& value) {
+    std::hash<T> hasher;
+    // 0x9e3779b9 is the golden ratio constant used to disperse bits
+    seed ^= hasher(value) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
 
 enum class TokenType : uint8_t;
 
@@ -110,6 +116,9 @@ public:
     std::string GetRootStructName() const { return m_rootStruct; }
 
     std::string GetErrorText() const { return m_errorText.str(); }
+
+    // Returns the hash of the schema
+    size_t GetHash() const;
 
 private:
     bool ParseStructDef(const char*& cursor);

@@ -6,7 +6,7 @@
 
 static std::ostringstream s_error;
 
-static bool MakeHeader(EditorData& editorData, const char* fileName)
+static bool MakeHeader(EditorData& editorData, const char* fileName, size_t hash)
 {
     // TODO: this
     s_error << "Writing header not yet implemented";
@@ -16,13 +16,16 @@ static bool MakeHeader(EditorData& editorData, const char* fileName)
 static bool MakeBin_Table_Item(EditorData& editorData, DBTable& table, json& json, FILE* file)
 {
     // TODO: continue
-    s_error << "Writing bin not yet implemented";
-    return false;
+    //s_error << "Writing bin not yet implemented";
+    //return false;
+    return true;
 }
 
 static bool MakeBin_Table(EditorData& editorData, DBTable& table, FILE* file)
 {
-    // TODO: write number of items?
+    // Write how many items are in this table
+    uint32_t numItems = (uint32_t)table.m_data.size();
+    fwrite(&numItems, sizeof(numItems), 1, file);
 
     bool ret = true;
     for (auto& it : table.m_data)
@@ -35,7 +38,7 @@ static bool MakeBin_Table(EditorData& editorData, DBTable& table, FILE* file)
     return ret;
 }
 
-static bool MakeBin(EditorData& editorData, const char* fileName)
+static bool MakeBin(EditorData& editorData, const char* fileName, size_t hash)
 {
     FILE* file = nullptr;
     fopen_s(&file, fileName, "wb");
@@ -45,7 +48,8 @@ static bool MakeBin(EditorData& editorData, const char* fileName)
         return false;
     }
 
-    // TODO: write number of tables?
+    // Write schema hash
+    fwrite(&hash, sizeof(hash), 1, file);
 
     bool ret = true;
     for (auto& it : editorData.m_dbroot.m_tables)
@@ -71,12 +75,17 @@ bool Compile(EditorData& editorData, std::string& error)
         return false;
     }
 
+    // calculate schema hash
+    size_t hash = 0xbeefcafe;
+    for (auto& it : editorData.m_dbroot.m_tables)
+        hash_combine(hash, it.second->GetParser().GetHash());
+
     std::string dbRootPath = std::filesystem::path(editorData.m_dbroot.GetPath()).remove_filename().generic_string();
 
     std::string fileNameBin = std::filesystem::weakly_canonical(std::filesystem::path(dbRootPath) / editorData.m_dbroot.m_settings.compiledBinFileName).generic_string();
     std::string fileNameHeader = std::filesystem::weakly_canonical(std::filesystem::path(dbRootPath) / editorData.m_dbroot.m_settings.compiledHeaderFileName).generic_string();
 
-    bool ret = MakeBin(editorData, fileNameBin.c_str()) && MakeHeader(editorData, fileNameHeader.c_str());
+    bool ret = MakeBin(editorData, fileNameBin.c_str(), hash) && MakeHeader(editorData, fileNameHeader.c_str(), hash);
 
     error = s_error.str();
     return ret;

@@ -779,3 +779,39 @@ bool DefParser::Parse(const char* fileName)
 
     return true;
 }
+
+size_t DefParser::GetHash() const
+{
+    size_t ret = 0x1337beef;
+
+    hash_combine(ret, m_rootStruct);
+
+    for (const DefParser::Struct& s : m_structs)
+    {
+        hash_combine(ret, s.name);
+        hash_combine(ret, s.nameSpace);
+
+        for (const DefParser::StructField& f : s.fields)
+        {
+            hash_combine(ret, f.name);
+            hash_combine(ret, f.fieldType);
+            hash_combine(ret, f.isArray);
+            hash_combine(ret, f.fixedArraySize);
+            hash_combine(ret, f.structName);
+            hash_combine(ret, f.enumName);
+            hash_combine(ret, f.linkName);
+            hash_combine(ret, f.dflt);
+        }
+    }
+
+    for (const DefParser::Enum& e : m_enums)
+    {
+        hash_combine(ret, e.name);
+        hash_combine(ret, e.nameSpace);
+
+        for (const std::string& l : e.labels)
+            hash_combine(ret, l);
+    }
+
+    return ret;
+}
