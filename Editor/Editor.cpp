@@ -1023,28 +1023,14 @@ bool EditorOnAppLaunch(int argc, char** argv, int &returnCode)
 /*
 TODO:
 
-
-* have test.def use namespace to make sure they work.
-
-* switch to using json schema with custom attributes to specify uint8 etc. instead of flatbuffer
+* parse def files.
+ ! namespace in settings is used when generating code, to wrap everything in a namespace if present
+  * and use the namespaces of the types bleh.
  * write out binary data yourself
  * generate a header file
  * get rid of targetLanguage since there is only one now
- ? allow refs for json includes?
- * use .schema.json instead of .fbs everywhere
- * code that scans for *.json to load it, make it ignore .schema.json files
- * have a native-type for enums so they can be uint8 or whatever else
- * need to remake the test schema, not just example.
 
-* make an issue to make a better schema language, like flatbuffers etc have.
-
-! I think i need to replace flatbuffers. the generated headers require flatbuffers.h. Needs:
- 1) Describe schema (json schema?)
- 2) load json, ensure it follows schema (nlohmann-json-schema-validator? or just do it manually since you need to parse the schema for UI anyways)
- 3) generate binary data from combined json (custom)
- 4) generate standalone header from combined schema (custom)
-  * may need to put a hash of schema in data to know when it's no longer compatible.
-  * need to describe what is possible in schema: pods, strings, fixed size and variable arrays, structs, enums. links.
+* have test.def use namespace to make sure they work.
 
 ! add an issue for supporting comments in the def file becoming documentation strings, and using them as tooltips in the editor
 ! add an issue for supporting enums if they are desired
