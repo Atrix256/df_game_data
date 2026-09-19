@@ -88,7 +88,7 @@ bool GetValueFromString<bool>(const char* valueStr)
 template <>
 int64_t GetValueFromString<int64_t>(const char* valueStr)
 {
-    int64_t value;
+    int64_t value = 0;
     sscanf_s(valueStr, "%lld", &value);
     return value;
 }
@@ -96,7 +96,7 @@ int64_t GetValueFromString<int64_t>(const char* valueStr)
 template <>
 uint64_t GetValueFromString<uint64_t>(const char* valueStr)
 {
-    uint64_t value;
+    uint64_t value = 0;
     sscanf_s(valueStr, "%llu", &value);
     return value;
 }
@@ -104,7 +104,7 @@ uint64_t GetValueFromString<uint64_t>(const char* valueStr)
 template <>
 double GetValueFromString<double>(const char* valueStr)
 {
-    double value;
+    double value = 0.0;
     sscanf_s(valueStr, "%lf", &value);
     return value;
 }
@@ -112,7 +112,7 @@ double GetValueFromString<double>(const char* valueStr)
 template <>
 float GetValueFromString<float>(const char* valueStr)
 {
-    float value;
+    float value = 0.0f;
     sscanf_s(valueStr, "%f", &value);
     return value;
 }
@@ -170,28 +170,21 @@ static void AddUIForType(EditorData& editorData, const DefParser& parser, const 
         // If this is an enum
         if (fieldDef.fieldType == DefParser::FieldType::_enum)
         {
-            int64_t value = GetValueFromString<int64_t>(fieldDef.dflt.c_str());
+            std::string value = fieldDef.dflt;
             value = GetOrDefault(jsonData.m_data, jsonPathItem, value);
 
             const DefParser::Enum* e = parser.GetEnumByName(fieldDef.enumName.c_str());
             const auto& enumLabels = e->labels;
 
-            std::string selectedValue = "";
-            if (value >= 0 && value < (int64_t)enumLabels.size())
-                selectedValue = enumLabels[value];
-
-            if (ImGui::BeginCombo(fieldName.c_str(), selectedValue.c_str()))
+            if (ImGui::BeginCombo(fieldName.c_str(), value.c_str()))
             {
-                int64_t enumValue = -1;
                 for (const std::string& label : enumLabels)
                 {
-                    enumValue++;
-
-                    const bool selected = (value == enumValue);
+                    const bool selected = (value == label);
 
                     if (ImGui::Selectable(label.c_str(), selected))
                     {
-                        jsonData.m_data[jsonPathItem] = enumValue;
+                        jsonData.m_data[jsonPathItem] = label;
                         MarkDirty(editorData, jsonData);
                     }
 
