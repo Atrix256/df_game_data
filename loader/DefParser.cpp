@@ -19,6 +19,7 @@ enum class TokenType : uint8_t
     LiteralString,
     LiteralString_Unterminated,
     LiteralBool,
+    LiteralInt,
 
     BraceBegin,
     BraceEnd,
@@ -264,6 +265,18 @@ void DefParser::GetToken(const char*& cursor, Token& token)
             return;
         }
     }
+    // a number
+    else if (std::isdigit(*cursor) || *cursor=='-')
+    {
+        const char* start = cursor;
+        cursor++;
+        while (std::isdigit(*cursor))
+            cursor++;
+
+        token.token = std::string_view(start, cursor);
+        token.type = TokenType::LiteralInt;
+        return;
+    }
     else
     {
         // TODO: look for...
@@ -477,6 +490,20 @@ bool DefParser::ParseStructDef(const char*& cursor)
             case FieldType::_bool:
             {
                 if (!TokenTypeExpected(token, TokenType::LiteralBool))
+                    return false;
+                newField.dflt = std::string(token.token);
+                break;
+            }
+            case FieldType::_uint8:
+            case FieldType::_sint8:
+            case FieldType::_uint16:
+            case FieldType::_sint16:
+            case FieldType::_uint32:
+            case FieldType::_sint32:
+            case FieldType::_uint64:
+            case FieldType::_sint64:
+            {
+                if (!TokenTypeExpected(token, TokenType::LiteralInt))
                     return false;
                 newField.dflt = std::string(token.token);
                 break;
