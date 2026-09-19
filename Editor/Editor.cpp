@@ -989,15 +989,11 @@ bool EditorOnAppLaunch(int argc, char** argv, int &returnCode)
 /*
 TODO:
 
-* parse def files.
+* generate header file on compile for binary file
  ! namespace in settings is used when generating code, to wrap everything in a namespace if present
   * and use the namespaces of the types bleh.
- * write out binary data yourself
- * generate a header file
 
-! add an issue for supporting comments in the def file becoming documentation strings, and using them as tooltips in the editor
-! add an issue for supporting enums if they are desired
-! add an issue to support enum labels having values, if desired
+* generate binary packed data
 
 * the example data needs a small c++ main.cpp that loads the data and prints something from it.
  * ExampleData\example_code\main.cpp when it's time to do this again.
@@ -1024,6 +1020,10 @@ TODO:
 * Add a help about with version and contributor list.
  * could also put the larger df.png on there
 * make flatc.exe get copied to where the editor exe is, on compile and make it .gitignored. call it from there. needed for binaries / installer?
+
+Contributing:
+* I can't tell whether you made a contribution with AI or not, other than by the quality of the work.
+* poor quality changes will be met with guidance. If the guidance isn't fruitful, the changes will be rejected.
 
 Schema documentation:
 * Tries to be familiar to C++ programmers, the target user
