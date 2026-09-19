@@ -791,9 +791,13 @@ void HandleSettingsWindow()
         tmpBuffer.resize(4096);
 
         // Compile Output Directory
-        strcpy_s(tmpBuffer.data(), tmpBuffer.size(), settings.compileOutputDir.c_str());
-        if (ImGui::InputText("Compile Output Directory", tmpBuffer.data(), tmpBuffer.size()))
-            settings.compileOutputDir = tmpBuffer.data();
+        strcpy_s(tmpBuffer.data(), tmpBuffer.size(), settings.compiledHeaderFileName.c_str());
+        if (ImGui::InputText("Compile Output Header", tmpBuffer.data(), tmpBuffer.size()))
+            settings.compiledHeaderFileName = tmpBuffer.data();
+
+        strcpy_s(tmpBuffer.data(), tmpBuffer.size(), settings.compiledBinFileName.c_str());
+        if (ImGui::InputText("Compile Output Bin", tmpBuffer.data(), tmpBuffer.size()))
+            settings.compiledBinFileName = tmpBuffer.data();
 
         // Namespace
         strcpy_s(tmpBuffer.data(), tmpBuffer.size(), settings.nameSpace.c_str());

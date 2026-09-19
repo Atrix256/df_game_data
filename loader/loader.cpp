@@ -100,8 +100,11 @@ bool DBTable::Load(const char* path)
 
 void DBRoot::LoadSettings(json& data)
 {
-    if (data.contains("compileOutputDir"))
-        m_settings.compileOutputDir = data.at("compileOutputDir");
+    if (data.contains("compiledHeaderFileName"))
+        m_settings.compiledHeaderFileName = data.at("compiledHeaderFileName");
+
+    if (data.contains("compiledBinFileName"))
+        m_settings.compiledBinFileName = data.at("compiledBinFileName");
 
     if (data.contains("nameSpace"))
         m_settings.nameSpace = data.at("nameSpace");
@@ -115,7 +118,8 @@ void DBRoot::SaveDBRoot()
         tableOrder[pair.second->m_loadOrder] = pair.first;
 
     json doc = json::object();
-    doc["compileOutputDir"] = m_settings.compileOutputDir;
+    doc["compiledHeaderFileName"] = m_settings.compiledHeaderFileName;
+    doc["compiledBinFileName"] = m_settings.compiledBinFileName;
     doc["nameSpace"] = m_settings.nameSpace;
 
     doc["tables"] = json::array();

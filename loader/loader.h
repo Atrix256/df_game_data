@@ -11,7 +11,8 @@
 
 struct DBSettings
 {
-    std::string compileOutputDir;
+    std::string compiledHeaderFileName = "out.h";
+    std::string compiledBinFileName = "out.bin";
     std::string nameSpace;
 };
 
