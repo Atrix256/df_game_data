@@ -477,8 +477,12 @@ bool DefParser::ParseStructDef(const char*& cursor)
 
             GetToken(cursor, token);
 
-            // TODO: need to be able to read an integer and use that as the fixed array size
             newField.fixedArraySize = 0;
+            if (token.type == TokenType::LiteralInt)
+            {
+                newField.fixedArraySize = std::atoi(std::string(token.token).c_str());
+                GetToken(cursor, token);
+            }
 
             if (!TokenTypeExpected(token, TokenType::BracketEnd))
                 return false;
