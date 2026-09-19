@@ -25,6 +25,8 @@ struct EditorData
     bool m_compileSucceeded = false;
     bool m_showConfirmNew = false;
 
+    std::string m_compileOutput;
+
     RecentFiles m_recentFiles;
 };
 
