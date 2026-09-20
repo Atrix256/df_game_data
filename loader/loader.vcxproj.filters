@@ -10,5 +10,6 @@
     <ClInclude Include="FileWatcher.h" />
     <ClInclude Include="JSON.h" />
     <ClInclude Include="DefParser.h" />
+    <ClInclude Include="hash.h" />
   </ItemGroup>
 </Project>

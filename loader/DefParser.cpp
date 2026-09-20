@@ -3,6 +3,8 @@
 #include <filesystem>
 #include "loader.h"
 
+#include "hash.h"
+
 enum class TokenType : uint8_t
 {
     Unknown,
@@ -780,38 +782,37 @@ bool DefParser::Parse(const char* fileName)
     return true;
 }
 
-size_t DefParser::GetHash() const
+uint64_t DefParser::GetHash() const
 {
-    size_t ret = 0x1337beef;
-
-    hash_combine(ret, m_rootStruct);
+    Hasher hash(0x1337beef);
+    hash.Add(m_rootStruct);
 
     for (const DefParser::Struct& s : m_structs)
     {
-        hash_combine(ret, s.name);
-        hash_combine(ret, s.nameSpace);
+        hash.Add(s.name);
+        hash.Add(s.nameSpace);
 
         for (const DefParser::StructField& f : s.fields)
         {
-            hash_combine(ret, f.name);
-            hash_combine(ret, f.fieldType);
-            hash_combine(ret, f.isArray);
-            hash_combine(ret, f.fixedArraySize);
-            hash_combine(ret, f.structName);
-            hash_combine(ret, f.enumName);
-            hash_combine(ret, f.linkName);
-            hash_combine(ret, f.dflt);
+            hash.Add(f.name);
+            hash.Add(f.fieldType);
+            hash.Add(f.isArray);
+            hash.Add(f.fixedArraySize);
+            hash.Add(f.structName);
+            hash.Add(f.enumName);
+            hash.Add(f.linkName);
+            hash.Add(f.dflt);
         }
     }
 
     for (const DefParser::Enum& e : m_enums)
     {
-        hash_combine(ret, e.name);
-        hash_combine(ret, e.nameSpace);
+        hash.Add(e.name);
+        hash.Add(e.nameSpace);
 
         for (const std::string& l : e.labels)
-            hash_combine(ret, l);
+            hash.Add(l);
     }
 
-    return ret;
+    return hash.Result();
 }

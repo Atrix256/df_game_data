@@ -5,6 +5,7 @@
       "name": "imgui",
       "features": [ "docking-experimental", "win32-binding", "dx12-binding" ]
     },
-    "nativefiledialog-extended"
+    "nativefiledialog-extended",
+    "xxhash"
   ]
 }

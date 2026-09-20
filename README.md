@@ -25,8 +25,9 @@ TODO: fill out and continue
 
 ## Open Sourced Software Used
 
-| Software | Comment | URL |
+| Software | Use | URL |
 | -- | -- | -- |
 | rapidjson | To load json data | https://rapidjson.org/ |
 | Dear ImGui | For editor UI | https://github.com/ocornut/imgui |
 | Font Awesome | Editor button icons | https://github.com/FortAwesome/Font-Awesome |
+| xxHash | Portable non crypto hash | https://github.com/cyan4973/xxhash |

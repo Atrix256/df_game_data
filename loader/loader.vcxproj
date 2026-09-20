@@ -88,6 +88,7 @@
   <ItemGroup>
     <ClInclude Include="DefParser.h" />
     <ClInclude Include="FileWatcher.h" />
+    <ClInclude Include="hash.h" />
     <ClInclude Include="JSON.h" />
     <ClInclude Include="loader.h" />
   </ItemGroup>

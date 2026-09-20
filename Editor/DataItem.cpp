@@ -6,20 +6,6 @@
 #include <vector>
 #include "UIShared.h"
 
-static bool IsSigned(DefParser::FieldType fieldType)
-{
-    return
-        fieldType == DefParser::FieldType::_sint8  ||
-        fieldType == DefParser::FieldType::_sint16 ||
-        fieldType == DefParser::FieldType::_sint32 ||
-        fieldType == DefParser::FieldType::_sint64;
-}
-
-static bool IsScalar(DefParser::FieldType fieldType)
-{
-    return fieldType != DefParser::FieldType::_struct;
-}
-
 json MakeDefaultArrayItem(const DefParser& parser, const DefParser::StructField& field)
 {
     switch (field.fieldType)
@@ -43,19 +29,6 @@ json MakeDefaultArrayItem(const DefParser& parser, const DefParser::StructField&
     }
 }
 
-template <typename T>
-T GetOrDefault(const json& json, const json_pointer& path, T& defaultValue)
-{
-    if (!json.contains(path))
-        return defaultValue;
-
-    const auto& v = json.at(path);
-    if (v.is_null())
-        return defaultValue;
-
-    return json.value<T>(path, defaultValue);
-}
-
 static void ShowToolTip(const std::vector<std::string>& comments, bool showQ = true)
 {
     std::string text;
@@ -75,47 +48,6 @@ static void MarkDirty(EditorData& editorData, DBTable::JSONData& jsonData)
 }
 
 static void AddUIForType(EditorData& editorData, const DefParser& parser, const DefParser::Struct& structDef, const char* structFieldName, DBTable::JSONData& jsonData, const json_pointer& path, bool makeTreeNode);
-
-template <typename T>
-T GetValueFromString(const char* valueStr);
-
-template <>
-bool GetValueFromString<bool>(const char* valueStr)
-{
-    return (!_stricmp(valueStr, "true") || !_stricmp(valueStr, "1"));
-}
-
-template <>
-int64_t GetValueFromString<int64_t>(const char* valueStr)
-{
-    int64_t value = 0;
-    sscanf_s(valueStr, "%lld", &value);
-    return value;
-}
-
-template <>
-uint64_t GetValueFromString<uint64_t>(const char* valueStr)
-{
-    uint64_t value = 0;
-    sscanf_s(valueStr, "%llu", &value);
-    return value;
-}
-
-template <>
-double GetValueFromString<double>(const char* valueStr)
-{
-    double value = 0.0;
-    sscanf_s(valueStr, "%lf", &value);
-    return value;
-}
-
-template <>
-float GetValueFromString<float>(const char* valueStr)
-{
-    float value = 0.0f;
-    sscanf_s(valueStr, "%f", &value);
-    return value;
-}
 
 static void AddUIForType(EditorData& editorData, const DefParser& parser, const DefParser::StructField& fieldDef, DBTable::JSONData& jsonData, const json_pointer& jsonPath)
 {

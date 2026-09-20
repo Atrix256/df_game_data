@@ -5,13 +5,6 @@
 #include <memory>
 #include <sstream>
 
-template <typename T>
-void hash_combine(std::size_t& seed, const T& value) {
-    std::hash<T> hasher;
-    // 0x9e3779b9 is the golden ratio constant used to disperse bits
-    seed ^= hasher(value) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-}
-
 enum class TokenType : uint8_t;
 
 struct Token
@@ -118,7 +111,7 @@ public:
     std::string GetErrorText() const { return m_errorText.str(); }
 
     // Returns the hash of the schema
-    size_t GetHash() const;
+    uint64_t GetHash() const;
 
 private:
     bool ParseStructDef(const char*& cursor);
@@ -149,3 +142,36 @@ private:
     std::vector<Struct> m_structs;
     std::vector<Enum> m_enums;
 };
+
+inline bool IsSigned(DefParser::FieldType fieldType)
+{
+    return
+        fieldType == DefParser::FieldType::_sint8 ||
+        fieldType == DefParser::FieldType::_sint16 ||
+        fieldType == DefParser::FieldType::_sint32 ||
+        fieldType == DefParser::FieldType::_sint64;
+}
+
+inline bool IsScalar(DefParser::FieldType fieldType)
+{
+    return fieldType != DefParser::FieldType::_struct;
+}
+
+inline bool IsIntegral(DefParser::FieldType fieldType)
+{
+    switch (fieldType)
+    {
+        case DefParser::FieldType::_uint8:
+        case DefParser::FieldType::_sint8:
+        case DefParser::FieldType::_uint16:
+        case DefParser::FieldType::_sint16:
+        case DefParser::FieldType::_uint32:
+        case DefParser::FieldType::_sint32:
+        case DefParser::FieldType::_uint64:
+        case DefParser::FieldType::_sint64:
+        {
+            return true;
+        }
+    }
+    return false;
+}
