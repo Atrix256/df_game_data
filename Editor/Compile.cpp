@@ -8,14 +8,18 @@
 
 #include <type_traits>
 
-static std::ostringstream s_error;
+struct StaticData
+{
+    std::ostringstream error;
+};
+static StaticData s_data;
 
 static bool MakeBin_WriteStruct(EditorData& editorData, FILE* file, const DefParser::Struct& structDef, const json& json, const json_pointer& path);
 
 static bool MakeHeader(EditorData& editorData, const char* fileName, uint64_t hash)
 {
     // TODO: this. Maybe in a seperate file
-    s_error << "Writing header not yet implemented";
+    s_data.error << "Writing header not yet implemented";
     return false;
 }
 
@@ -174,7 +178,7 @@ static bool MakeBin(EditorData& editorData, const char* fileName, uint64_t hash)
     fopen_s(&file, fileName, "wb");
     if (!file)
     {
-        s_error << "Could not write to " << fileName;
+        s_data.error << "Could not write to " << fileName;
         return false;
     }
 
@@ -196,12 +200,12 @@ static bool MakeBin(EditorData& editorData, const char* fileName, uint64_t hash)
 
 bool Compile(EditorData& editorData, std::string& error)
 {
-    s_error = std::ostringstream();
+    s_data = StaticData();
 
     if (editorData.m_dbroot.m_tables.size() == 0)
     {
-        s_error << "No tables in database";
-        error = s_error.str();
+        s_data.error << "No tables in database";
+        error = s_data.error.str();
         return false;
     }
 
@@ -218,7 +222,7 @@ bool Compile(EditorData& editorData, std::string& error)
 
     bool ret = MakeBin(editorData, fileNameBin.c_str(), hash.Result()) && MakeHeader(editorData, fileNameHeader.c_str(), hash.Result());
 
-    error = s_error.str();
+    error = s_data.error.str();
     return ret;
 }
 
