@@ -11,10 +11,13 @@
 struct StaticData
 {
     std::ostringstream error;
+
+    // Data to hold strings and other data that is pointed to, but not stored directly inline.
+    std::vector<char> data;
 };
 static StaticData s_data;
 
-static bool MakeBin_WriteStruct(EditorData& editorData, FILE* file, const DefParser::Struct& structDef, const json& json, const json_pointer& path);
+static bool MakeBin_WriteStruct(EditorData& editorData, FILE* file, DBTable& table, const DefParser::Struct& structDef, const json& json, const json_pointer& path);
 
 static bool MakeHeader(EditorData& editorData, const char* fileName, uint64_t hash)
 {
@@ -86,10 +89,15 @@ static bool MakeBin_WriteField(EditorData& editorData, FILE* file, DBTable& tabl
             std::string value = fieldDef.dflt;
             value = GetOrDefault(json, jsonPathItem, value);
 
-            const DefParser::Enum& e = *table.GetParser().GetEnumByName(fieldDef.enumName.c_str());
+            const DefParser::Enum* enumDef = table.GetParser().GetEnumByName(fieldDef.enumName.c_str());
+            if (!enumDef)
+            {
+                s_data.error << "Could not find enum \"" << fieldDef.enumName << "\"";
+                return false;
+            }
 
             size_t index = 0;
-            e.GetLabelIndex(value.c_str(), index);
+            enumDef->GetLabelIndex(value.c_str(), index);
             uint16_t enumValue = (uint16_t)index;
 
             fwrite(&enumValue, sizeof(enumValue), 1, file);
@@ -122,12 +130,38 @@ static bool MakeBin_WriteField(EditorData& editorData, FILE* file, DBTable& tabl
             case DefParser::FieldType::_double: MakeBin_WriteFloat<double>(file, fieldDef.dflt, json, jsonPathItem); continue;
         }
 
+        // If it's a string, we write the string to the data block and point to it
+        if (fieldDef.fieldType == DefParser::FieldType::_string)
+        {
+            std::string value = GetOrDefault(json, jsonPathItem, fieldDef.dflt);
+            uint64_t dataOffset = (uint64_t)s_data.data.size();
+            uint64_t bytes = (uint64_t)value.length() + 1;
+
+            // Write to the data block
+            s_data.data.resize(dataOffset + bytes);
+            memcpy(&s_data.data[dataOffset], value.c_str(), bytes);
+
+            // write the data offset to the bin file
+            fwrite(&dataOffset, sizeof(dataOffset), 1, file);
+            continue;
+        }
+
+        if (fieldDef.fieldType == DefParser::FieldType::_struct)
+        {
+            const DefParser::Struct* structDef = table.GetParser().GetStructByName(fieldDef.structName.c_str());
+            if (!structDef)
+            {
+                s_data.error << "Could not find struct \"" << fieldDef.structName << "\"";
+                return false;
+            }
+            MakeBin_WriteStruct(editorData, file, table, *structDef, json, path);
+            continue;
+        }
+
         // TODO: continue
         int ijkl = 0;
 
-        // TODO: strings
         // TODO: links
-        // TODO: structs
         // TODO: what else?
     }
 
@@ -182,6 +216,10 @@ static bool MakeBin(EditorData& editorData, const char* fileName, uint64_t hash)
         return false;
     }
 
+    // Write a fourcc to verify the file type and endianness.
+    const char* fourcc = "DFGD";
+    fwrite(fourcc, 1, 4, file);
+
     // Write schema hash
     fwrite(&hash, sizeof(hash), 1, file);
 
@@ -192,6 +230,9 @@ static bool MakeBin(EditorData& editorData, const char* fileName, uint64_t hash)
         if (!ret)
             break;
     }
+
+    // Write the data block
+    fwrite(s_data.data.data(), 1, s_data.data.size(), file);
 
     fclose(file);
 
