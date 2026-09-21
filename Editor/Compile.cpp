@@ -41,6 +41,14 @@ static StaticData s_data;
 
 static bool MakeBin_WriteStruct(FILE* file, DBTable& table, const DefParser::Struct& structDef, const json& json, const json_pointer& path);
 
+inline constexpr uint32_t MakeFourCC(char a, char b, char c, char d)
+{
+    return (uint32_t)(uint8_t)a
+        | ((uint32_t)(uint8_t)b << 8)
+        | ((uint32_t)(uint8_t)c << 16)
+        | ((uint32_t)(uint8_t)d << 24);
+}
+
 static bool MakeHeader(const DBRoot& dbRoot, const char* fileName, uint64_t hash)
 {
     // TODO: this. Maybe in a seperate file
@@ -299,9 +307,9 @@ static bool MakeBin(const DBCompileSettings& compilerSettings, const DBRoot& dbR
         return false;
     }
 
-    // Write a fourcc to verify the file type and endianness.
-    const char* fourcc = "DFGD";
-    fwrite(fourcc, 1, 4, file);
+    // Write a fourcc to verify the file type and endianness when loading
+    uint32_t fourcc = MakeFourCC('D', 'F', 'G', 'D');
+    fwrite(&fourcc, sizeof(fourcc), 1, file);
 
     // Write schema hash
     fwrite(&hash, sizeof(hash), 1, file);
