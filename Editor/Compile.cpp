@@ -68,10 +68,10 @@ inline void StringReplaceAll(std::string& str, const std::string& from, const st
 
 static bool MakeHeader(const DBCompileSettings& compilerSettings, const DBRoot& dbRoot, const char* fileName, uint64_t hash)
 {
-    if (!compilerSettings.nameSpace.empty())
-        s_data.tokenReplacement["/*$namespace$*/"] << compilerSettings.nameSpace;
+    if (!compilerSettings.className.empty())
+        s_data.tokenReplacement["/*$ClassName$*/"] << compilerSettings.className;
     else
-        s_data.tokenReplacement["/*$namespace$*/"] << "dfgd";
+        s_data.tokenReplacement["/*$ClassName$*/"] << "dfgd";
 
     // Do token replacement on output.h
     std::string out = c_output_h;

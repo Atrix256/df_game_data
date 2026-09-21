@@ -836,10 +836,10 @@ void HandleSettingsWindow()
             ShowToolTip("Where to put the compiled data .bin file.");
 
             // Namespace
-            strcpy_s(tmpBuffer.data(), tmpBuffer.size(), s.nameSpace.c_str());
-            if (ImGui::InputText("Namespace", tmpBuffer.data(), tmpBuffer.size()))
-                s.nameSpace = tmpBuffer.data();
-            ShowToolTip("The generated header will wrap evrything in this namespace.");
+            strcpy_s(tmpBuffer.data(), tmpBuffer.size(), s.className.c_str());
+            if (ImGui::InputText("Class Name", tmpBuffer.data(), tmpBuffer.size()))
+                s.className = tmpBuffer.data();
+            ShowToolTip("The name of the object in the generated header file");
 
             // Entry LUT
             ImGui::Checkbox("Entry Look Up Table", &s.includeEntryLUT);

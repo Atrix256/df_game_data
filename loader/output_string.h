@@ -6,9 +6,18 @@ static constexpr const char* c_output_h = R"EMBED(/*
 #pragma once
 
 #include <stdint.h>
+#include <stdio.h>
 
-namespace /*$namespace$*/
+class /*$ClassName$*/
 {
+public:
+    ~/*$ClassName$*/()
+    {
+        delete[] m_ownedMemory;
+        m_ownedMemory = nullptr;
+    }
+
+    // Note: the memory will be modified, and it must stay around for the life of the object.
     bool LoadFromMemory(void* mem, uint64_t size)
     {
         // TODO: do it!
@@ -17,8 +26,28 @@ namespace /*$namespace$*/
 
     bool LoadFromFile(const char* fileName)
     {
-        // TODO: load into memory and then call LoadFromMemory
-        return false;
+        FILE* file = nullptr;
+        fopen_s(&file, fileName, "rb");
+        if (!file)
+            return false;
+
+        fseek(file, 0, SEEK_END);
+        long fileSize = ftell(file);
+
+        m_ownedMemory = new uint8_t[fileSize];
+        fseek(file, 0, SEEK_SET);
+
+        if (fread(m_ownedMemory, fileSize, 1, file) != 1)
+            return false;
+
+        fclose(file);
+
+        bool ret = LoadFromMemory(m_ownedMemory, fileSize);
+
+        return ret;
     }
+
+private:
+    uint8_t* m_ownedMemory = nullptr;
 };
 )EMBED";

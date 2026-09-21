@@ -13,7 +13,7 @@ struct DBCompileSettings
 {
     std::string compiledHeaderFileName = "out.h";
     std::string compiledBinFileName = "out.bin";
-    std::string nameSpace = "dfgd";
+    std::string className = "dfgd";
     bool includeEntryLUT = true;
 };
 

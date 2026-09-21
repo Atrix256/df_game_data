@@ -122,8 +122,8 @@ void DBRoot::LoadSettings(json& data)
         if (data.contains(indexPtr / "compiledBinFileName"))
             m_compileSettings[index].compiledBinFileName = data.at(indexPtr / "compiledBinFileName");
 
-        if (data.contains(indexPtr / "nameSpace"))
-            m_compileSettings[index].nameSpace = data.at(indexPtr / "nameSpace");
+        if (data.contains(indexPtr / "className"))
+            m_compileSettings[index].className = data.at(indexPtr / "className");
 
         if (data.contains(indexPtr / "includeEntryLUT"))
             m_compileSettings[index].includeEntryLUT = data.at(indexPtr / "includeEntryLUT");
@@ -151,7 +151,7 @@ void DBRoot::SaveDBRoot()
 
             compilerSettingObject["compiledHeaderFileName"] = setting.compiledHeaderFileName;
             compilerSettingObject["compiledBinFileName"] = setting.compiledBinFileName;
-            compilerSettingObject["nameSpace"] = setting.nameSpace;
+            compilerSettingObject["className"] = setting.className;
             compilerSettingObject["includeEntryLUT"] = setting.includeEntryLUT;
 
             compilerSettingsArray.push_back(compilerSettingObject);
