@@ -5,7 +5,19 @@
 
 #pragma once
 
+#include <stdint.h>
+
 namespace /*$namespace$*/
 {
-    int i;
-}
+    bool LoadFromMemory(void* mem, uint64_t size)
+    {
+        // TODO: do it!
+        return false;
+    }
+
+    bool LoadFromFile(const char* fileName)
+    {
+        // TODO: load into memory and then call LoadFromMemory
+        return false;
+    }
+};

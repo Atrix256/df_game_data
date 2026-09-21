@@ -8,6 +8,8 @@
 
 #include <type_traits>
 
+#include "../loader/output_string.h"
+
 struct StaticData
 {
     std::ostringstream error;
@@ -36,6 +38,9 @@ struct StaticData
 
     // Places in the file that point at an offset in the data, and what that offset is
     std::vector<DataTableOffsets> dataOffsets;
+
+    // A map to replace tokens in output.h with strings
+    std::unordered_map<std::string, std::ostringstream> tokenReplacement;
 };
 static StaticData s_data;
 
@@ -49,11 +54,42 @@ inline constexpr uint32_t MakeFourCC(char a, char b, char c, char d)
         | ((uint32_t)(uint8_t)d << 24);
 }
 
-static bool MakeHeader(const DBRoot& dbRoot, const char* fileName, uint64_t hash)
+inline void StringReplaceAll(std::string& str, const std::string& from, const std::string& to)
 {
-    // TODO: this. Maybe in a seperate file
-    s_data.error << "Writing header not yet implemented";
-    return false;
+    if (from.empty())
+        return;
+    size_t start_pos = 0;
+    while ((start_pos = str.find(from, start_pos)) != std::string::npos)
+    {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length();
+    }
+}
+
+static bool MakeHeader(const DBCompileSettings& compilerSettings, const DBRoot& dbRoot, const char* fileName, uint64_t hash)
+{
+    if (!compilerSettings.nameSpace.empty())
+        s_data.tokenReplacement["/*$namespace$*/"] << compilerSettings.nameSpace;
+    else
+        s_data.tokenReplacement["/*$namespace$*/"] << "dfgd";
+
+    // Do token replacement on output.h
+    std::string out = c_output_h;
+    for (const auto& pair : s_data.tokenReplacement)
+        StringReplaceAll(out, pair.first, pair.second.str());
+
+    // write file out
+    FILE* file = nullptr;
+    fopen_s(&file, fileName, "wb");
+    if (!file)
+    {
+        s_data.error << "Could not write to " << fileName;
+        return false;
+    }
+    fwrite(out.data(), out.length(), 1, file);
+    fclose(file);
+
+    return true;
 }
 
 template <typename T>
@@ -384,7 +420,7 @@ bool Compile(const DBRoot& dbRoot, const DBCompileSettings& compilerSettings, st
     std::string fileNameBin = std::filesystem::weakly_canonical(std::filesystem::path(dbRootPath) / compilerSettings.compiledBinFileName).generic_string();
     std::string fileNameHeader = std::filesystem::weakly_canonical(std::filesystem::path(dbRootPath) / compilerSettings.compiledHeaderFileName).generic_string();
 
-    bool ret = MakeBin(compilerSettings, dbRoot, fileNameBin.c_str(), hash.Result()) && MakeHeader(dbRoot, fileNameHeader.c_str(), hash.Result());
+    bool ret = MakeBin(compilerSettings, dbRoot, fileNameBin.c_str(), hash.Result()) && MakeHeader(compilerSettings, dbRoot, fileNameHeader.c_str(), hash.Result());
 
     error = s_data.error.str();
     return ret;
@@ -395,6 +431,7 @@ TODO:
 * if no namespace given, use dfgd.
 * maybe have code that writes bin file also generate the strings needed for the generated header at the same time
 ? how to properly read/write fourcc?
+* need to use it for a bit before announcing. adding array items in the editor is crashing
 */
 
 /*
