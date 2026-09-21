@@ -76,7 +76,7 @@ public:
                 return nameSpace + "::" + name;
         }
 
-        bool GetLabelIndex(const char* name, size_t& index) const
+        bool GetLabelIndex(const char* name, uint64_t& index) const
         {
             index = 0;
             while (index < labels.size())

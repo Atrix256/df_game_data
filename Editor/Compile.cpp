@@ -14,6 +14,28 @@ struct StaticData
 
     // Data to hold strings and other data that is pointed to, but not stored directly inline.
     std::vector<char> data;
+
+    struct TableEntryLocation
+    {
+        std::string table;
+        std::string entry;
+        uint64_t fileOffset;
+    };
+
+    // Places in the file that want offsets to entries in tables
+    std::vector<TableEntryLocation> links;
+
+    // Where the entries live in the file
+    std::vector<TableEntryLocation> entries;
+
+    struct DataTableOffsets
+    {
+        uint64_t fileOffset;
+        uint64_t dataOffset;
+    };
+
+    // Places in the file that point at an offset in the data, and what that offset is
+    std::vector<DataTableOffsets> dataOffsets;
 };
 static StaticData s_data;
 
@@ -77,7 +99,7 @@ static bool MakeBin_WriteField(EditorData& editorData, FILE* file, DBTable& tabl
         }
     }
 
-    for (size_t arrayIndex = 0; arrayIndex < arrayItemCount; ++arrayIndex)
+    for (uint64_t arrayIndex = 0; arrayIndex < arrayItemCount; ++arrayIndex)
     {
         json_pointer jsonPathItem = path;
         if (fieldDef.isArray)
@@ -96,7 +118,7 @@ static bool MakeBin_WriteField(EditorData& editorData, FILE* file, DBTable& tabl
                 return false;
             }
 
-            size_t index = 0;
+            uint64_t index = 0;
             enumDef->GetLabelIndex(value.c_str(), index);
             uint16_t enumValue = (uint16_t)index;
 
@@ -141,8 +163,12 @@ static bool MakeBin_WriteField(EditorData& editorData, FILE* file, DBTable& tabl
             s_data.data.resize(dataOffset + bytes);
             memcpy(&s_data.data[dataOffset], value.c_str(), bytes);
 
-            // write the data offset to the bin file
-            fwrite(&dataOffset, sizeof(dataOffset), 1, file);
+            // Remember that we want a data offset here, and what it is, so we can fill it in later
+            s_data.dataOffsets.push_back({ (uint64_t)ftell(file), dataOffset });
+
+            // write a null for now
+            static const uint64_t offset = 0;
+            fwrite(&offset, sizeof(offset), 1, file);
             continue;
         }
 
@@ -158,15 +184,23 @@ static bool MakeBin_WriteField(EditorData& editorData, FILE* file, DBTable& tabl
             continue;
         }
 
-        // TODO: continue
-        int ijkl = 0;
+        if (fieldDef.fieldType == DefParser::FieldType::_link)
+        {
+            // Remember where this link is and what entry it wants, so we can fill it in later
+            std::string value = GetOrDefault(json, jsonPathItem, fieldDef.dflt);
+            s_data.links.push_back({ fieldDef.linkName, value, (uint64_t)ftell(file) });
 
-        // TODO: links
-        // TODO: what else?
+            // Write a null for now
+            static const uint64_t offset = 0;
+            fwrite(&offset, sizeof(offset), 1, file);
+            continue;
+        }
+
+        // TODO: anything else?
+        int ijkl = 0;
     }
 
-    // TODO: continue
-    return false;
+    return true;
 }
 
 static bool MakeBin_WriteStruct(EditorData& editorData, FILE* file, DBTable& table, const DefParser::Struct& structDef, const json& json, const json_pointer& path)
@@ -198,6 +232,9 @@ static bool MakeBin_Table(EditorData& editorData, DBTable& table, FILE* file)
     bool ret = true;
     for (auto& it : table.m_data)
     {
+        // remember where this entry is, in the file
+        s_data.entries.push_back({ table.m_rootType, it.first, (uint64_t)ftell(file) });
+
         ret &= MakeBin_Table_Item(editorData, table, it.second->m_data, file);
         if (!ret)
             break;
@@ -232,7 +269,39 @@ static bool MakeBin(EditorData& editorData, const char* fileName, uint64_t hash)
     }
 
     // Write the data block
+    uint64_t dataStart = (uint64_t)ftell(file);
     fwrite(s_data.data.data(), 1, s_data.data.size(), file);
+
+    // Do fixups for data pointers
+    for (const StaticData::DataTableOffsets& dataOffset : s_data.dataOffsets)
+    {
+        fseek(file, (long)dataOffset.fileOffset, SEEK_SET);
+        uint64_t offset = dataStart + dataOffset.dataOffset;
+        fwrite(&offset, sizeof(offset), 1, file);
+    }
+
+    // Do the fixups for links
+    for (const StaticData::TableEntryLocation& linkLocation : s_data.links)
+    {
+        bool found = false;
+        for (const StaticData::TableEntryLocation& entryLocation : s_data.entries)
+        {
+            if (linkLocation.table != entryLocation.table || linkLocation.entry != entryLocation.entry)
+                continue;
+
+            found = true;
+
+            // write the offset
+            fseek(file, (long)linkLocation.fileOffset, SEEK_SET);
+            fwrite(&entryLocation.fileOffset, sizeof(entryLocation.fileOffset), 1, file);
+        }
+        if (found)
+            continue;
+
+        s_data.error << "Could not find entry \"" << linkLocation.entry << "\" in table \"" << linkLocation.table << "\"";
+        ret = false;
+        break;
+    }
 
     fclose(file);
 
@@ -269,6 +338,12 @@ bool Compile(EditorData& editorData, std::string& error)
 
 /*
 TODO:
-* can we make editor data const when it's passed in?
-* may want to move the bin and header code into separate files for organization purposes
+* can we make editor data const when it's passed in? it also isn't used by many functions that take it as a parameter
+* get the todos & issues from email and from notebook
+* may want to move the bin and header code into separate files for organization purposes. or not, maybe make code while writing bin?
+*/
+
+/*
+TODO:
+* in loader, fixing up endianness is a conditional pass on the data.
 */
