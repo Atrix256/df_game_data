@@ -392,6 +392,7 @@ bool Compile(const DBRoot& dbRoot, const DBCompileSettings& compilerSettings, st
 
 /*
 TODO:
+* if no namespace given, use dfgd.
 * maybe have code that writes bin file also generate the strings needed for the generated header at the same time
 ? how to properly read/write fourcc?
 */

@@ -13,8 +13,7 @@ struct DBCompileSettings
 {
     std::string compiledHeaderFileName = "out.h";
     std::string compiledBinFileName = "out.bin";
-    std::string nameSpace;
-    // if true, includes a LUT that maps table entries to names, sorted by name.
+    std::string nameSpace = "dfgd";
     bool includeEntryLUT = true;
 };
 
