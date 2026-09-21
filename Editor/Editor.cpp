@@ -15,6 +15,26 @@ static EditorData s_editorData;
 std::string s_commandLineFileName;
 static bool s_loadCommandLine = false;
 
+static void OnFileSaveAll();
+
+static bool DoCompile()
+{
+    OnFileSaveAll();
+    s_editorData.m_compileSucceeded = true;
+    s_editorData.m_showCompileResultsWindow = true;
+
+    for (const DBCompileSettings& settings : s_editorData.m_dbroot.m_compileSettings)
+    {
+        if (!Compile(s_editorData.m_dbroot, settings, s_editorData.m_compileOutput))
+        {
+            s_editorData.m_compileSucceeded = false;
+            break;
+        }
+    }
+
+    return s_editorData.m_compileSucceeded;
+}
+
 static void LoadFile(const char* fileName)
 {
     s_editorData.m_dbroot.Clear();
@@ -294,11 +314,7 @@ static bool ShowMenuBar()
         if (ImGui::BeginMenu("Compile"))
         {
             if (ImGui::MenuItem("Compile", "Ctrl+C", false, s_editorData.m_dbroot.Loaded()))
-            {
-                OnFileSaveAll();
-                s_editorData.m_compileSucceeded = Compile(s_editorData, s_editorData.m_compileOutput);
-                s_editorData.m_showCompileResultsWindow = true;
-            }
+                DoCompile();
 
             ImGui::EndMenu();
         }
@@ -322,11 +338,7 @@ static bool ShowMenuBar()
         ret = true;
 
     if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_C))
-    {
-        OnFileSaveAll();
-        s_editorData.m_compileSucceeded = Compile(s_editorData, s_editorData.m_compileOutput);
-        s_editorData.m_showCompileResultsWindow = true;
-    }
+        DoCompile();
 
     return ret;
 }
@@ -779,39 +791,80 @@ void HandleCompileResults()
 
 void HandleSettingsWindow()
 {
-    static DBSettings settings;
+    static std::vector<DBCompileSettings> settings;
 
     if (s_editorData.m_openSettingsWindow)
     {
         ImGui::OpenPopup("Settings");
         s_editorData.m_openSettingsWindow = false;
-        settings = s_editorData.m_dbroot.m_settings;
+        settings = s_editorData.m_dbroot.m_compileSettings;
     }
 
     if (ImGui::BeginPopupModal("Settings", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {
+        // Make sure there is always at least one default row
+        if (settings.size() == 0)
+            settings.resize(1);
+
         static std::vector<char> tmpBuffer;
         tmpBuffer.resize(4096);
 
-        // Compile Output Directory
-        strcpy_s(tmpBuffer.data(), tmpBuffer.size(), settings.compiledHeaderFileName.c_str());
-        if (ImGui::InputText("Compile Output Header", tmpBuffer.data(), tmpBuffer.size()))
-            settings.compiledHeaderFileName = tmpBuffer.data();
+        int deleteIndex = -1;
+        int index = -1;
+        for (DBCompileSettings& s : settings)
+        {
+            index++;
+            bool treeOpened = ImGui::TreeNodeEx(std::to_string(index + 1).c_str(), ImGuiTreeNodeFlags_DefaultOpen);
 
-        strcpy_s(tmpBuffer.data(), tmpBuffer.size(), settings.compiledBinFileName.c_str());
-        if (ImGui::InputText("Compile Output Bin", tmpBuffer.data(), tmpBuffer.size()))
-            settings.compiledBinFileName = tmpBuffer.data();
+            ImGui::SameLine();
+            if (ImGui::SmallButton("Delete"))
+                deleteIndex = index;
 
-        // Namespace
-        strcpy_s(tmpBuffer.data(), tmpBuffer.size(), settings.nameSpace.c_str());
-        if (ImGui::InputText("Namespace", tmpBuffer.data(), tmpBuffer.size()))
-            settings.nameSpace = tmpBuffer.data();
+            if (!treeOpened)
+                continue;
+
+            // Compile Output Header File
+            strcpy_s(tmpBuffer.data(), tmpBuffer.size(), s.compiledHeaderFileName.c_str());
+            if (ImGui::InputText("Compile Output Header", tmpBuffer.data(), tmpBuffer.size()))
+                s.compiledHeaderFileName = tmpBuffer.data();
+            ShowToolTip("Where to put the generated .h file.");
+
+            // Compile Output Bin File
+            strcpy_s(tmpBuffer.data(), tmpBuffer.size(), s.compiledBinFileName.c_str());
+            if (ImGui::InputText("Compile Output Bin", tmpBuffer.data(), tmpBuffer.size()))
+                s.compiledBinFileName = tmpBuffer.data();
+            ShowToolTip("Where to put the compiled data .bin file.");
+
+            // Namespace
+            strcpy_s(tmpBuffer.data(), tmpBuffer.size(), s.nameSpace.c_str());
+            if (ImGui::InputText("Namespace", tmpBuffer.data(), tmpBuffer.size()))
+                s.nameSpace = tmpBuffer.data();
+            ShowToolTip("The generated header will wrap evrything in this namespace.");
+
+            // Entry LUT
+            ImGui::Checkbox("Entry Look Up Table", &s.includeEntryLUT);
+            ShowToolTip("If true, the generated header will have functions to look up table entries by name\n"
+                        "by using look up tables in the bin file.  If you don't look up table entries by name,\n"
+                        "turning this off makes entry names not appear in the bin file, which can help deter\n"
+                        "casual data editing by users.\n"
+                        "Hot reloading requires this to be on.");
+
+            ImGui::TreePop();
+        }
+
+        // delete a row if we should
+        if (deleteIndex >= 0)
+            settings.erase(settings.begin() + deleteIndex);
+
+        if (ImGui::Button("Add"))
+            settings.emplace_back();
+
 
         ImGui::Separator();
 
         if (ImGui::Button("OK", ImVec2(120, 0)))
         {
-            s_editorData.m_dbroot.m_settings = settings;
+            s_editorData.m_dbroot.m_compileSettings = settings;
             s_editorData.m_dbroot.SaveDBRoot();
             ImGui::CloseCurrentPopup();
         }
@@ -982,7 +1035,7 @@ bool EditorOnAppLaunch(int argc, char** argv, int &returnCode)
             return false;
         }
 
-        if (!Compile(s_editorData, s_editorData.m_compileOutput))
+        if (!DoCompile())
         {
             printf("Error: could not compile data");
             if (!s_editorData.m_compileOutput.empty())

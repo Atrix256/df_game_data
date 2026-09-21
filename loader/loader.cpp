@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <filesystem>
+#include <algorithm>
 
 bool DBTable::LoadSchema()
 {
@@ -100,14 +101,33 @@ bool DBTable::Load(const char* path)
 
 void DBRoot::LoadSettings(json& data)
 {
-    if (data.contains("compiledHeaderFileName"))
-        m_settings.compiledHeaderFileName = data.at("compiledHeaderFileName");
+    json_pointer basePtr("/compilersettings");
 
-    if (data.contains("compiledBinFileName"))
-        m_settings.compiledBinFileName = data.at("compiledBinFileName");
+    uint32_t settingsCount = 0;
+    if (data.contains(basePtr))
+        settingsCount = (uint32_t)data.value(basePtr, json::array()).size();
 
-    if (data.contains("nameSpace"))
-        m_settings.nameSpace = data.at("nameSpace");
+    // Make a row for each setting row in the json.
+    // If there are no setting rows in the json, make one default row.
+    m_compileSettings.clear();
+    m_compileSettings.resize(std::max<uint32_t>(settingsCount, 1));
+
+    for (uint32_t index = 0; index < settingsCount; ++index)
+    {
+        json_pointer indexPtr = basePtr / index;
+
+        if (data.contains(indexPtr / "compiledHeaderFileName"))
+            m_compileSettings[index].compiledHeaderFileName = data.at(indexPtr / "compiledHeaderFileName");
+
+        if (data.contains(indexPtr / "compiledBinFileName"))
+            m_compileSettings[index].compiledBinFileName = data.at(indexPtr / "compiledBinFileName");
+
+        if (data.contains(indexPtr / "nameSpace"))
+            m_compileSettings[index].nameSpace = data.at(indexPtr / "nameSpace");
+
+        if (data.contains(indexPtr / "includeEntryLUT"))
+            m_compileSettings[index].includeEntryLUT = data.at(indexPtr / "includeEntryLUT");
+    }
 }
 
 void DBRoot::SaveDBRoot()
@@ -118,10 +138,29 @@ void DBRoot::SaveDBRoot()
         tableOrder[pair.second->m_loadOrder] = pair.first;
 
     json doc = json::object();
-    doc["compiledHeaderFileName"] = m_settings.compiledHeaderFileName;
-    doc["compiledBinFileName"] = m_settings.compiledBinFileName;
-    doc["nameSpace"] = m_settings.nameSpace;
 
+    // write compiler settings
+    {
+        auto compilerSettingsArray = json::array();
+
+        for (uint32_t index = 0; index < (uint32_t)m_compileSettings.size(); ++index)
+        {
+            const DBCompileSettings& setting = m_compileSettings[index];
+
+            auto compilerSettingObject = json::object();
+
+            compilerSettingObject["compiledHeaderFileName"] = setting.compiledHeaderFileName;
+            compilerSettingObject["compiledBinFileName"] = setting.compiledBinFileName;
+            compilerSettingObject["nameSpace"] = setting.nameSpace;
+            compilerSettingObject["includeEntryLUT"] = setting.includeEntryLUT;
+
+            compilerSettingsArray.push_back(compilerSettingObject);
+        }
+
+        doc["compilersettings"] = compilerSettingsArray;
+    }
+
+    // Write the tables
     doc["tables"] = json::array();
     std::filesystem::path basePath = std::filesystem::path(m_path).remove_filename();
     for (const std::string& tableName : tableOrder)
@@ -256,6 +295,9 @@ bool DBRoot::Load(const char* path)
         }
 
         m_fileWatcher.AddFile(path, nullptr);
+
+        // Load the settings
+        LoadSettings(data);
 
         // Load the tables
         int index = 0;

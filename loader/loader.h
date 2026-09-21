@@ -9,11 +9,13 @@
 
 #include "DefParser.h"
 
-struct DBSettings
+struct DBCompileSettings
 {
     std::string compiledHeaderFileName = "out.h";
     std::string compiledBinFileName = "out.bin";
     std::string nameSpace;
+    // if true, includes a LUT that maps table entries to names, sorted by name.
+    bool includeEntryLUT = true;
 };
 
 class DBTable
@@ -97,7 +99,7 @@ private:
 
 public:
     std::map<std::string, std::unique_ptr<DBTable>> m_tables;
-    DBSettings m_settings;
+    std::vector<DBCompileSettings> m_compileSettings;
 
 private:
     std::string m_errorText;

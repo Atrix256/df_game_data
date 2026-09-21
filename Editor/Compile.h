@@ -2,6 +2,7 @@
 
 #include <string>
 
-struct EditorData;
+class DBRoot;
+struct DBCompileSettings;
 
-bool Compile(const EditorData& editorData, std::string& error);
+bool Compile(const DBRoot& dbRoot, const DBCompileSettings& compilerSettings, std::string& error);

@@ -41,7 +41,7 @@ static StaticData s_data;
 
 static bool MakeBin_WriteStruct(FILE* file, DBTable& table, const DefParser::Struct& structDef, const json& json, const json_pointer& path);
 
-static bool MakeHeader(const EditorData& editorData, const char* fileName, uint64_t hash)
+static bool MakeHeader(const DBRoot& dbRoot, const char* fileName, uint64_t hash)
 {
     // TODO: this. Maybe in a seperate file
     s_data.error << "Writing header not yet implemented";
@@ -223,11 +223,57 @@ static bool MakeBin_Table_Item(DBTable& table, const json& json, FILE* file)
     return true;
 }
 
-static bool MakeBin_Table(DBTable& table, FILE* file)
+static bool MakeBin_Table(const DBCompileSettings& compilerSettings, DBTable& table, FILE* file)
 {
     // Write how many items are in this table
     uint32_t numItems = (uint32_t)table.m_data.size();
     fwrite(&numItems, sizeof(numItems), 1, file);
+
+    // Write the table entry LUT if we are supposed to include it
+    if (compilerSettings.includeEntryLUT)
+    {
+        struct EntryLutItem
+        {
+            std::string name;
+            uint32_t index;
+        };
+
+        std::vector<EntryLutItem> entries;
+
+        uint32_t index = 0;
+        for (auto& it : table.m_data)
+            entries.push_back({ it.first, index++ });
+
+        std::sort(entries.begin(), entries.end(),
+            [](const EntryLutItem& a, const EntryLutItem& b)
+            {
+                return a.name < b.name;
+            }
+        );
+
+        for (EntryLutItem& entry : entries)
+        {
+            // First write the name (pointer into data block)
+            {
+                uint64_t dataOffset = (uint64_t)s_data.data.size();
+                uint64_t bytes = (uint64_t)entry.name.length() + 1;
+
+                // write the string to the data block
+                s_data.data.resize(dataOffset + bytes);
+                memcpy(&s_data.data[dataOffset], entry.name.c_str(), bytes);
+
+                // Remember that we want a data offset here, and what it is, so we can fill it in later
+                s_data.dataOffsets.push_back({ (uint64_t)ftell(file), dataOffset });
+
+                // write a null for now
+                static const uint64_t offset = 0;
+                fwrite(&offset, sizeof(offset), 1, file);
+            }
+
+            // Then write the index
+            fwrite(&entry.index, sizeof(entry.index), 1, file);
+        }
+    }
 
     bool ret = true;
     for (auto& it : table.m_data)
@@ -243,7 +289,7 @@ static bool MakeBin_Table(DBTable& table, FILE* file)
     return ret;
 }
 
-static bool MakeBin(const EditorData& editorData, const char* fileName, uint64_t hash)
+static bool MakeBin(const DBCompileSettings& compilerSettings, const DBRoot& dbRoot, const char* fileName, uint64_t hash)
 {
     FILE* file = nullptr;
     fopen_s(&file, fileName, "wb");
@@ -261,9 +307,9 @@ static bool MakeBin(const EditorData& editorData, const char* fileName, uint64_t
     fwrite(&hash, sizeof(hash), 1, file);
 
     bool ret = true;
-    for (const auto& it : editorData.m_dbroot.m_tables)
+    for (const auto& it : dbRoot.m_tables)
     {
-        ret &= MakeBin_Table(*it.second.get(), file);
+        ret &= MakeBin_Table(compilerSettings , *it.second.get(), file);
         if (!ret)
             break;
     }
@@ -308,11 +354,11 @@ static bool MakeBin(const EditorData& editorData, const char* fileName, uint64_t
     return ret;
 }
 
-bool Compile(const EditorData& editorData, std::string& error)
+bool Compile(const DBRoot& dbRoot, const DBCompileSettings& compilerSettings, std::string& error)
 {
     s_data = StaticData();
 
-    if (editorData.m_dbroot.m_tables.size() == 0)
+    if (dbRoot.m_tables.size() == 0)
     {
         s_data.error << "No tables in database";
         error = s_data.error.str();
@@ -320,17 +366,17 @@ bool Compile(const EditorData& editorData, std::string& error)
     }
 
     // calculate schema hash
-    // TODO: The compile settings which control the contents of the .bin file should be included in the hash.
     Hasher hash(0xbeefcafe);
-    for (auto& it : editorData.m_dbroot.m_tables)
+    for (auto& it : dbRoot.m_tables)
         hash.Add(it.second->GetParser().GetHash());
+    hash.Add(compilerSettings.includeEntryLUT);
 
-    std::string dbRootPath = std::filesystem::path(editorData.m_dbroot.GetPath()).remove_filename().generic_string();
+    std::string dbRootPath = std::filesystem::path(dbRoot.GetPath()).remove_filename().generic_string();
 
-    std::string fileNameBin = std::filesystem::weakly_canonical(std::filesystem::path(dbRootPath) / editorData.m_dbroot.m_settings.compiledBinFileName).generic_string();
-    std::string fileNameHeader = std::filesystem::weakly_canonical(std::filesystem::path(dbRootPath) / editorData.m_dbroot.m_settings.compiledHeaderFileName).generic_string();
+    std::string fileNameBin = std::filesystem::weakly_canonical(std::filesystem::path(dbRootPath) / compilerSettings.compiledBinFileName).generic_string();
+    std::string fileNameHeader = std::filesystem::weakly_canonical(std::filesystem::path(dbRootPath) / compilerSettings.compiledHeaderFileName).generic_string();
 
-    bool ret = MakeBin(editorData, fileNameBin.c_str(), hash.Result()) && MakeHeader(editorData, fileNameHeader.c_str(), hash.Result());
+    bool ret = MakeBin(compilerSettings, dbRoot, fileNameBin.c_str(), hash.Result()) && MakeHeader(dbRoot, fileNameHeader.c_str(), hash.Result());
 
     error = s_data.error.str();
     return ret;
@@ -338,10 +384,7 @@ bool Compile(const EditorData& editorData, std::string& error)
 
 /*
 TODO:
-* optional table entry lut thing
-* array of compilation settings
-* include compilation settings in hash that affect binary contents
-* maybe have code that writes bin file also generate the strings needed for the generated header
+* maybe have code that writes bin file also generate the strings needed for the generated header at the same time
 ? how to properly read/write fourcc?
 */
 

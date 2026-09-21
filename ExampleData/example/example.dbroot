@@ -1,7 +1,12 @@
 {
-    "compileOutputDir": "../example_code/data",
-    "nameSpace": "GameData",
-    "targetLanguage": "cpp",
+    "compilersettings": [
+        {
+            "compiledHeaderFileName": "out.h",
+            "compiledBinFileName": "out.bin",
+            "nameSpace": "",
+            "includeEntryLUT": true
+        }
+    ],
     "tables": [
         "Items/items.def",
         "Characters/characters.def"
