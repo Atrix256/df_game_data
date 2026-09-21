@@ -91,6 +91,13 @@
     <ClInclude Include="hash.h" />
     <ClInclude Include="JSON.h" />
     <ClInclude Include="loader.h" />
+    <ClInclude Include="output_string.h" />
+    <CustomBuild Include="output.h">
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">call "$(ProjectDir)output_h.bat"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">output_string.h</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">call "$(ProjectDir)output_h.bat"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">output_string.h</Outputs>
+    </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

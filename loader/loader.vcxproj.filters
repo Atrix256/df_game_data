@@ -11,5 +11,9 @@
     <ClInclude Include="JSON.h" />
     <ClInclude Include="DefParser.h" />
     <ClInclude Include="hash.h" />
+    <ClInclude Include="output_string.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="output.h" />
   </ItemGroup>
 </Project>
