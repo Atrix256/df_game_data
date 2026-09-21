@@ -47,6 +47,7 @@ private:
 
 private:
     uint8_t* m_ownedMemory = nullptr;
+/*$PrivateStorage$*/
 };
 
 // ================================= Misc =================================
@@ -92,6 +93,11 @@ bool /*$ClassName$*/::LoadFromMemory(void* mem, uint32_t memSize)
         if (!Read(hash, mem, memIndex, memSize) || hash != /*$SchemaHash*/)
             return false;
     }
+
+    // TODO: for each table:
+    // * entry count
+    // * LUT if it's supposed to be there
+    // * pointer to first table (can index)
 
     // TODO: do it!
     return false;

@@ -195,9 +195,37 @@ static bool MakeHeader_EnumAndStructDefs(const DBRoot& dbRoot)
     return true;
 }
 
+static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, const DBRoot& dbRoot)
+{
+    std::ostringstream& privateStorage = s_data.tokenReplacement["/*$PrivateStorage$*/"];
+
+    for (const auto& pair : dbRoot.m_tables)
+    {
+        std::string indent = "    ";
+
+        const DefParser& parser = pair.second->GetParser();
+
+        // Make an extra newline to separate them
+        privateStorage << "\n";
+
+        privateStorage << indent << "uint32_t m_table_" << parser.GetRootStructName() << "_count = 0;\n";
+
+        // The sorted list of table names. Tables are written in sorted order
+        if (compilerSettings.includeEntryLUT)
+            privateStorage << indent << "Ptr64<char> *m_table_" << parser.GetRootStructName() << "_Names = 0;\n";
+
+        privateStorage << indent << "Ptr64<" << parser.GetRootStructName() << "> m_table_" << parser.GetRootStructName() << ";\n";
+    }
+
+    return true;
+}
+
 static bool MakeHeader(const DBCompileSettings& compilerSettings, const DBRoot& dbRoot, const char* fileName, uint64_t hash)
 {
     if (!MakeHeader_EnumAndStructDefs(dbRoot))
+        return false;
+
+    if (!MakeHeader_StructLoading(compilerSettings, dbRoot))
         return false;
 
     if (!compilerSettings.className.empty())
@@ -564,6 +592,7 @@ bool Compile(const DBRoot& dbRoot, const DBCompileSettings& compilerSettings, st
 TODO:
 * when opening test.def, it makes a dbroot without compile settings, is that ok?
 * need to use it for a bit before announcing. adding array items in the editor is crashing
+* If the names are written in sorted order, don't need to write index, for LUT. I think they are. verify. comment that in the code if so
 */
 
 /*
