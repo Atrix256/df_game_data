@@ -1066,4 +1066,8 @@ Notes:
 * command line options:
  * put a filename on command line to load it
  * If there is a -c or --compile before it, compiles the data file without making a window
+
+* compile options can change the contents of the bin file, which affects whether a header can load it or not.
+* hot reloading requires the entry LUT
+ 
 */

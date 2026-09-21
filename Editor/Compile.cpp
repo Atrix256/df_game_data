@@ -39,9 +39,9 @@ struct StaticData
 };
 static StaticData s_data;
 
-static bool MakeBin_WriteStruct(EditorData& editorData, FILE* file, DBTable& table, const DefParser::Struct& structDef, const json& json, const json_pointer& path);
+static bool MakeBin_WriteStruct(FILE* file, DBTable& table, const DefParser::Struct& structDef, const json& json, const json_pointer& path);
 
-static bool MakeHeader(EditorData& editorData, const char* fileName, uint64_t hash)
+static bool MakeHeader(const EditorData& editorData, const char* fileName, uint64_t hash)
 {
     // TODO: this. Maybe in a seperate file
     s_data.error << "Writing header not yet implemented";
@@ -76,7 +76,7 @@ void MakeBin_WriteFloat(FILE* file, const std::string& dflt, const json& json, c
     fwrite(&value, sizeof(value), 1, file);
 }
 
-static bool MakeBin_WriteField(EditorData& editorData, FILE* file, DBTable& table, const DefParser::StructField& fieldDef, const json& json, const json_pointer& path)
+static bool MakeBin_WriteField(FILE* file, DBTable& table, const DefParser::StructField& fieldDef, const json& json, const json_pointer& path)
 {
     // Figure out how many items are in this array (1 item for non arrays)
     // If this is a dynamic array, write out the number of items.
@@ -180,7 +180,7 @@ static bool MakeBin_WriteField(EditorData& editorData, FILE* file, DBTable& tabl
                 s_data.error << "Could not find struct \"" << fieldDef.structName << "\"";
                 return false;
             }
-            MakeBin_WriteStruct(editorData, file, table, *structDef, json, path);
+            MakeBin_WriteStruct(file, table, *structDef, json, path);
             continue;
         }
 
@@ -196,14 +196,14 @@ static bool MakeBin_WriteField(EditorData& editorData, FILE* file, DBTable& tabl
             continue;
         }
 
-        // TODO: anything else?
-        int ijkl = 0;
+        s_data.error << "Unhandled field type for entry \"" << fieldDef.name << "\" in table \"" << table.m_rootType << "\"";
+        return false;
     }
 
     return true;
 }
 
-static bool MakeBin_WriteStruct(EditorData& editorData, FILE* file, DBTable& table, const DefParser::Struct& structDef, const json& json, const json_pointer& path)
+static bool MakeBin_WriteStruct(FILE* file, DBTable& table, const DefParser::Struct& structDef, const json& json, const json_pointer& path)
 {
     bool ret = true;
     for (const DefParser::StructField& fieldDef : structDef.fields)
@@ -211,19 +211,19 @@ static bool MakeBin_WriteStruct(EditorData& editorData, FILE* file, DBTable& tab
         json_pointer fieldPath = path;
         fieldPath /= fieldDef.name.c_str();
 
-        ret &= MakeBin_WriteField(editorData, file, table, fieldDef, json, fieldPath);
+        ret &= MakeBin_WriteField(file, table, fieldDef, json, fieldPath);
     }
     return ret;
 }
 
-static bool MakeBin_Table_Item(EditorData& editorData, DBTable& table, const json& json, FILE* file)
+static bool MakeBin_Table_Item(DBTable& table, const json& json, FILE* file)
 {
     const DefParser::Struct& structDef = *table.GetParser().GetRootStruct();
-    MakeBin_WriteStruct(editorData, file, table, structDef, json, json_pointer(""));
+    MakeBin_WriteStruct(file, table, structDef, json, json_pointer(""));
     return true;
 }
 
-static bool MakeBin_Table(EditorData& editorData, DBTable& table, FILE* file)
+static bool MakeBin_Table(DBTable& table, FILE* file)
 {
     // Write how many items are in this table
     uint32_t numItems = (uint32_t)table.m_data.size();
@@ -235,7 +235,7 @@ static bool MakeBin_Table(EditorData& editorData, DBTable& table, FILE* file)
         // remember where this entry is, in the file
         s_data.entries.push_back({ table.m_rootType, it.first, (uint64_t)ftell(file) });
 
-        ret &= MakeBin_Table_Item(editorData, table, it.second->m_data, file);
+        ret &= MakeBin_Table_Item(table, it.second->m_data, file);
         if (!ret)
             break;
     }
@@ -243,7 +243,7 @@ static bool MakeBin_Table(EditorData& editorData, DBTable& table, FILE* file)
     return ret;
 }
 
-static bool MakeBin(EditorData& editorData, const char* fileName, uint64_t hash)
+static bool MakeBin(const EditorData& editorData, const char* fileName, uint64_t hash)
 {
     FILE* file = nullptr;
     fopen_s(&file, fileName, "wb");
@@ -261,9 +261,9 @@ static bool MakeBin(EditorData& editorData, const char* fileName, uint64_t hash)
     fwrite(&hash, sizeof(hash), 1, file);
 
     bool ret = true;
-    for (auto& it : editorData.m_dbroot.m_tables)
+    for (const auto& it : editorData.m_dbroot.m_tables)
     {
-        ret &= MakeBin_Table(editorData, *it.second.get(), file);
+        ret &= MakeBin_Table(*it.second.get(), file);
         if (!ret)
             break;
     }
@@ -308,7 +308,7 @@ static bool MakeBin(EditorData& editorData, const char* fileName, uint64_t hash)
     return ret;
 }
 
-bool Compile(EditorData& editorData, std::string& error)
+bool Compile(const EditorData& editorData, std::string& error)
 {
     s_data = StaticData();
 
@@ -338,9 +338,11 @@ bool Compile(EditorData& editorData, std::string& error)
 
 /*
 TODO:
-* can we make editor data const when it's passed in? it also isn't used by many functions that take it as a parameter
-* get the todos & issues from email and from notebook
-* may want to move the bin and header code into separate files for organization purposes. or not, maybe make code while writing bin?
+* optional table entry lut thing
+* array of compilation settings
+* include compilation settings in hash that affect binary contents
+* maybe have code that writes bin file also generate the strings needed for the generated header
+? how to properly read/write fourcc?
 */
 
 /*

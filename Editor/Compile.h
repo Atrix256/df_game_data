@@ -4,4 +4,4 @@
 
 struct EditorData;
 
-bool Compile(EditorData& editorData, std::string& error);
+bool Compile(const EditorData& editorData, std::string& error);
