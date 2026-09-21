@@ -1,12 +1,4 @@
 {
-    "compilersettings": [
-        {
-            "compiledHeaderFileName": "out.h",
-            "compiledBinFileName": "out.bin",
-            "nameSpace": "dfgd",
-            "includeEntryLUT": true
-        }
-    ],
     "tables": [
         "test.def"
     ]

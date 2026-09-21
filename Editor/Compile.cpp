@@ -66,12 +66,146 @@ inline void StringReplaceAll(std::string& str, const std::string& from, const st
     }
 }
 
+static bool MakeHeader_EnumAndStructDefs(const DBRoot& dbRoot)
+{
+    std::ostringstream& os = s_data.tokenReplacement["/*$EnumAndStructDefs$*/"];
+
+    // Make enum defs
+    for (const auto& pair : dbRoot.m_tables)
+    {
+        const DefParser& parser = pair.second->GetParser();
+
+        bool ret = parser.ForEachEnum(
+            [&os](const DefParser::Enum& e)
+            {
+                // If this isn't the first item written, make an extra newline to separate them
+                if (!os.view().empty())
+                    os << "\n";
+
+                std::string indent = "    ";
+
+                if (!e.nameSpace.empty())
+                {
+                    os << indent << "namespace " << e.nameSpace << "\n" << indent << "{\n";
+                    indent = "        ";
+                }
+
+                os << indent << "enum class " << e.name << " : uint16_t\n" << indent << "{\n";
+
+                for (const std::string& label : e.labels)
+                    os << indent << "    " << label << ",\n";
+
+                os << indent << "};\n";
+
+                if (!e.nameSpace.empty())
+                {
+                    indent = "    ";
+                    os << indent << "};\n";
+                }
+                return true;
+            }
+        );
+    }
+
+    // Make struct defs
+    for (const auto& pair : dbRoot.m_tables)
+    {
+        const DefParser& parser = pair.second->GetParser();
+
+        bool ret = parser.ForEachStruct(
+            [&os](const DefParser::Struct& s)
+            {
+                // If this isn't the first item written, make an extra newline to separate them
+                if (!os.view().empty())
+                    os << "\n";
+
+                std::string indent = "    ";
+
+                if (!s.nameSpace.empty())
+                {
+                    os << indent << "namespace " << s.nameSpace << "\n" << indent << "{\n";
+                    indent = "        ";
+                }
+
+                os << indent << "struct " << s.name << "\n" << indent << "{\n";
+
+                // Write the fields
+                for (const DefParser::StructField& field : s.fields)
+                {
+                    // Arrays are a count, and a pointer into the data block
+                    if (field.isArray)
+                    {
+                        if (field.fixedArraySize > 0)
+                            os << indent << "    static const uint32_t _" << field.name << "_count = " << field.fixedArraySize << ";\n";
+                        else
+                            os << indent << "    uint32_t _" << field.name << "_count = 0;\n";
+                        os << indent << "    uint64_t " << field.name << ";\n"; // TODO: use Ptr64? need to know the type though. maybe reuse switch below in a "type to string" function?
+                        // TODO: what to do when ptr64 is inside ptr64?
+                        // TODO: make arrays point into data table instead of being written inline
+                        // TODO: fixed sized arrays don't need to write the count
+                        // TODO: or maybe fixed sized arrays are written inline?
+                        continue;
+                    }
+
+                    // the field type
+                    os << indent << "    ";
+                    switch (field.fieldType)
+                    {
+                        case DefParser::FieldType::_bool: os << "uint8_t"; break;
+                        case DefParser::FieldType::_uint8: os << "uint8_t"; break;
+                        case DefParser::FieldType::_sint8: os << "int8_t"; break;
+                        case DefParser::FieldType::_uint16: os << "uint16_t"; break;
+                        case DefParser::FieldType::_sint16: os << "int16_t"; break;
+                        case DefParser::FieldType::_uint32: os << "uint32_t"; break;
+                        case DefParser::FieldType::_sint32: os << "int32_t"; break;
+                        case DefParser::FieldType::_uint64: os << "uint64_t"; break;
+                        case DefParser::FieldType::_sint64: os << "int64_t"; break;
+                        case DefParser::FieldType::_float: os << "float"; break;
+                        case DefParser::FieldType::_double: os << "double"; break;
+                        case DefParser::FieldType::_string: os << "Ptr64<char>"; break;
+                        case DefParser::FieldType::_enum: os << field.enumName; break;
+                        case DefParser::FieldType::_struct: os << field.structName; break;
+                        case DefParser::FieldType::_link: os << "Ptr64<" << field.linkName << ">"; break;
+                        default:
+                        {
+                            s_data.error << "Unhandled field type for " << s.name << "." << field.name;
+                            return false;
+                            break;
+                        }
+                    }
+
+                    // field name
+                    os << " " << field.name << ";\n";
+                }
+
+                os << indent << "};\n";
+
+                if (!s.nameSpace.empty())
+                {
+                    indent = "    ";
+                    os << indent << "};\n";
+                }
+                return true;
+            }
+        );
+        if (!ret)
+            return false;
+    }
+
+    return true;
+}
+
 static bool MakeHeader(const DBCompileSettings& compilerSettings, const DBRoot& dbRoot, const char* fileName, uint64_t hash)
 {
+    if (!MakeHeader_EnumAndStructDefs(dbRoot))
+        return false;
+
     if (!compilerSettings.className.empty())
         s_data.tokenReplacement["/*$ClassName$*/"] << compilerSettings.className;
     else
         s_data.tokenReplacement["/*$ClassName$*/"] << "dfgd";
+
+    s_data.tokenReplacement["/*$SchemaHash*/"] << "0x" << std::hex << std::setfill('0') << std::setw(16) << hash << "ULL";
 
     // Do token replacement on output.h
     std::string out = c_output_h;
@@ -428,9 +562,7 @@ bool Compile(const DBRoot& dbRoot, const DBCompileSettings& compilerSettings, st
 
 /*
 TODO:
-* if no namespace given, use dfgd.
-* maybe have code that writes bin file also generate the strings needed for the generated header at the same time
-? how to properly read/write fourcc?
+* when opening test.def, it makes a dbroot without compile settings, is that ok?
 * need to use it for a bit before announcing. adding array items in the editor is crashing
 */
 

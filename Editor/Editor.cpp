@@ -1122,5 +1122,7 @@ Notes:
 
 * compile options can change the contents of the bin file, which affects whether a header can load it or not.
 * hot reloading requires the entry LUT
- 
+
+! make a way for people to support the project with $ if they want to
+
 */

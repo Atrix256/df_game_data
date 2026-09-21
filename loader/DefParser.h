@@ -113,6 +113,32 @@ public:
     // Returns the hash of the schema
     uint64_t GetHash() const;
 
+    // Goes until the first lambda returns false.
+    // Returns whether or not any lambdas returned false.
+    template <typename LAMBDA>
+    bool ForEachStruct(const LAMBDA& lambda) const
+    {
+        for (const Struct& s : m_structs)
+        {
+            if (!lambda(s))
+                return false;
+        }
+        return true;
+    }
+
+    // Goes until the first lambda returns false.
+    // Returns whether or not any lambdas returned false.
+    template <typename LAMBDA>
+    bool ForEachEnum(const LAMBDA& lambda) const
+    {
+        for (const Enum& e : m_enums)
+        {
+            if (!lambda(e))
+                return false;
+        }
+        return true;
+    }
+
 private:
     bool ParseStructDef(const char*& cursor);
     bool ParseEnumDef(const char*& cursor);

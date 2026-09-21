@@ -7,47 +7,121 @@ static constexpr const char* c_output_h = R"EMBED(/*
 
 #include <stdint.h>
 #include <stdio.h>
+#include <cstring>
 
 class /*$ClassName$*/
 {
 public:
-    ~/*$ClassName$*/()
-    {
-        delete[] m_ownedMemory;
-        m_ownedMemory = nullptr;
-    }
+    ~/*$ClassName$*/();
 
     // Note: the memory will be modified, and it must stay around for the life of the object.
-    bool LoadFromMemory(void* mem, uint64_t size)
-    {
-        // TODO: do it!
-        return false;
-    }
+    bool LoadFromMemory(void* mem, uint64_t size);
 
-    bool LoadFromFile(const char* fileName)
+    bool LoadFromFile(const char* fileName);
+
+public:
+/*$EnumAndStructDefs$*/
+
+private:
+    template <typename T>
+    static bool Read(T& value, void* mem, uint32_t& memIndex, uint32_t memSize)
     {
-        FILE* file = nullptr;
-        fopen_s(&file, fileName, "rb");
-        if (!file)
+        if (memSize - memIndex < sizeof(T))
             return false;
 
-        fseek(file, 0, SEEK_END);
-        long fileSize = ftell(file);
+        memcpy(&value, &mem[memIndex], sizeof(value));
+        memIndex += sizeof(value);
 
-        m_ownedMemory = new uint8_t[fileSize];
-        fseek(file, 0, SEEK_SET);
-
-        if (fread(m_ownedMemory, fileSize, 1, file) != 1)
-            return false;
-
-        fclose(file);
-
-        bool ret = LoadFromMemory(m_ownedMemory, fileSize);
-
-        return ret;
+        return true;
     }
+
+    void DoEndianSwap();
+
+private:
+    template <typename T>
+    union Ptr64
+    {
+        uint64_t _64;
+        T* ptr;
+    };
 
 private:
     uint8_t* m_ownedMemory = nullptr;
 };
+
+// ================================= Misc =================================
+
+/*$ClassName$*/::~/*$ClassName$*/()
+{
+    delete[] m_ownedMemory;
+    m_ownedMemory = nullptr;
+}
+
+inline constexpr uint32_t MakeFourCC(char a, char b, char c, char d)
+{
+    return (uint32_t)(uint8_t)a
+        | ((uint32_t)(uint8_t)b << 8)
+        | ((uint32_t)(uint8_t)c << 16)
+        | ((uint32_t)(uint8_t)d << 24);
+}
+
+// ================================= LOADING =================================
+
+// Note: the memory will be modified, and it must stay around for the life of the object.
+bool /*$ClassName$*/::LoadFromMemory(void* mem, uint32_t memSize)
+{
+    uint32_t memIndex = 0;
+
+    // verify fourcc, and do endian swap if we need to
+    {
+        static const uint32_t fourcc_regular = MakeFourCC('D', 'F', 'G', 'D');
+        static const uint32_t fourcc_swapped = MakeFourCC('D', 'G', 'F', 'D');
+        uint32_t fourcc = 0;
+        if (!Read(fourcc, mem, memIndex, memSize))
+            return false;
+
+        if (fourcc == fourcc_swapped)
+            DoEndianSwap();
+        else if (fourcc != fourcc_regular)
+            return false;
+    }
+
+    // Verify that the schema hash in the binary data matches the schema hash this file was made for
+    {
+        uint32_t hash = 0;
+        if (!Read(hash, mem, memIndex, memSize) || hash != /*$SchemaHash*/)
+            return false;
+    }
+
+    // TODO: do it!
+    return false;
+}
+
+bool /*$ClassName$*/::LoadFromFile(const char* fileName);
+{
+    FILE* file = nullptr;
+    fopen_s(&file, fileName, "rb");
+    if (!file)
+        return false;
+
+    fseek(file, 0, SEEK_END);
+    uint32_t fileSize = (uint32_t)ftell(file);
+
+    m_ownedMemory = new uint8_t[fileSize];
+    fseek(file, 0, SEEK_SET);
+
+    if (fread(m_ownedMemory, fileSize, 1, file) != 1)
+        return false;
+
+    fclose(file);
+
+    bool ret = LoadFromMemory(m_ownedMemory, fileSize);
+
+    return ret;
+}
+
+void /*$ClassName$*/::DoEndianSwap()
+{
+    // TODO: implement
+}
 )EMBED";
