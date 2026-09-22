@@ -68,7 +68,6 @@ inline constexpr uint32_t MakeFourCC(char a, char b, char c, char d)
 
 // ================================= LOADING =================================
 
-// Note: the memory will be modified, and it must stay around for the life of the object.
 bool /*$ClassName$*/::LoadFromMemory(void* mem, uint32_t memSize)
 {
     uint32_t memIndex = 0;
@@ -126,7 +125,7 @@ bool /*$ClassName$*/::LoadFromFile(const char* fileName);
     return ret;
 }
 
+// TODO: this
 void /*$ClassName$*/::DoEndianSwap()
-{
-    // TODO: implement
+{/*DoEndianSwap*/
 }
