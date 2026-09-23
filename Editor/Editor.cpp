@@ -1070,6 +1070,9 @@ TODO:
  * maybe still need to check for massive schema changes that don't follow the rules of what's allowed for flatbuffer loading to continue working
 
 * use it a bit before announcing it and making builds available
+! make a blog post about the binary serialization stack. static size go in stack N, dynamic is written into N+1 and a pointer is written into N.
+ * could also talk about the multi pass approach, for final pointer fixup
+ * also talk about pointer fixup on load
 
 * Make a script to make binary releases.
 * installer

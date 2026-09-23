@@ -160,7 +160,7 @@ bool dfgd::LoadFromMemory(void* mem, uint32_t memSize)
 
         if (m_table_Character_count > 0)
         {
-            // get char** to LUT
+            // get char** to LUT and fixup string pointers
             if (memSize - memIndex < m_table_Character_count * sizeof(uint64_t))
                 return false;
             m_table_Character_names._64 = reinterpret_cast<uintptr_t>(mem) + memIndex;
@@ -183,7 +183,7 @@ bool dfgd::LoadFromMemory(void* mem, uint32_t memSize)
 
         if (m_table_Item_count > 0)
         {
-            // get char** to LUT
+            // get char** to LUT and fixup string pointers
             if (memSize - memIndex < m_table_Item_count * sizeof(uint64_t))
                 return false;
             m_table_Item_names._64 = reinterpret_cast<uintptr_t>(mem) + memIndex;
