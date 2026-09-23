@@ -24,7 +24,10 @@ public:
     union Ptr64
     {
         uint64_t _64 = 0;
-        T* ptr;
+        T* Get()
+        {
+            return reinterpret_cast<T*>(_64);
+        }
     };
 
 /*$EnumAndStructDefs$*/

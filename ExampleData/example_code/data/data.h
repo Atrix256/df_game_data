@@ -24,7 +24,10 @@ public:
     union Ptr64
     {
         uint64_t _64 = 0;
-        T* ptr;
+        T* Get()
+        {
+            return reinterpret_cast<T*>(_64);
+        }
     };
 
     enum class EyeColor : uint16_t
@@ -98,11 +101,11 @@ private:
     uint8_t* m_ownedMemory = nullptr;
 
     uint32_t m_table_Character_count = 0;
-    Ptr64<char> m_table_Character_names;
+    Ptr64<char*> m_table_Character_names;
     Ptr64<Character> m_table_Character;
 
     uint32_t m_table_Item_count = 0;
-    Ptr64<char> m_table_Item_names;
+    Ptr64<char*> m_table_Item_names;
     Ptr64<Item> m_table_Item;
 
 };
@@ -157,16 +160,18 @@ bool dfgd::LoadFromMemory(void* mem, uint32_t memSize)
 
         if (m_table_Character_count > 0)
         {
-            // get a pointer to the first string in the LUT
+            // get char** to LUT
             if (memSize - memIndex < m_table_Character_count * sizeof(uint64_t))
                 return false;
-            memcpy(&m_table_Character_names, (char*)mem + memIndex, sizeof(uint64_t));
+            m_table_Character_names._64 = reinterpret_cast<uintptr_t>(mem) + memIndex;
+            for (uint32_t i = 0; i < m_table_Character_count; ++i)
+                m_table_Character_names.Get()[i] = (char*)(uint64_t(m_table_Character_names.Get()[i]) + uint64_t(mem));
             memIndex += m_table_Character_count * sizeof(uint64_t);
 
             // Get a pointer to the first entry in the table
             if (memSize - memIndex < m_table_Character_count * sizeof(Character))
                 return false;
-            memcpy(&m_table_Character, (char*)mem + memIndex, sizeof(m_table_Character));
+            m_table_Character._64 = reinterpret_cast<uintptr_t>(mem) + memIndex;
             memIndex += m_table_Character_count * sizeof(Character);
         }
     }
@@ -178,16 +183,18 @@ bool dfgd::LoadFromMemory(void* mem, uint32_t memSize)
 
         if (m_table_Item_count > 0)
         {
-            // get a pointer to the first string in the LUT
+            // get char** to LUT
             if (memSize - memIndex < m_table_Item_count * sizeof(uint64_t))
                 return false;
-            memcpy(&m_table_Item_names, (char*)mem + memIndex, sizeof(uint64_t));
+            m_table_Item_names._64 = reinterpret_cast<uintptr_t>(mem) + memIndex;
+            for (uint32_t i = 0; i < m_table_Item_count; ++i)
+                m_table_Item_names.Get()[i] = (char*)(uint64_t(m_table_Item_names.Get()[i]) + uint64_t(mem));
             memIndex += m_table_Item_count * sizeof(uint64_t);
 
             // Get a pointer to the first entry in the table
             if (memSize - memIndex < m_table_Item_count * sizeof(Item))
                 return false;
-            memcpy(&m_table_Item, (char*)mem + memIndex, sizeof(m_table_Item));
+            m_table_Character._64 = reinterpret_cast<uintptr_t>(mem) + memIndex;
             memIndex += m_table_Item_count * sizeof(Item);
         }
     }

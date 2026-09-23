@@ -235,7 +235,7 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
 
         // The sorted list of table names. Tables are written in sorted order
         if (compilerSettings.includeEntryLUT)
-            privateStorage << indent << "Ptr64<char> m_table_" << parser.GetRootStructName() << "_names;\n";
+            privateStorage << indent << "Ptr64<char*> m_table_" << parser.GetRootStructName() << "_names;\n";
 
         privateStorage << indent << "Ptr64<" << parser.GetRootStructName() << "> m_table_" << parser.GetRootStructName() << ";\n";
     }
@@ -260,10 +260,12 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
 
         if (compilerSettings.includeEntryLUT)
         {
-            loadTables << indent << "        // get a pointer to the first string in the LUT\n";
+            loadTables << indent << "        // get char** to LUT and fixup string pointers\n";
             loadTables << indent << "        if (memSize - memIndex < m_table_" << pair.first << "_count * sizeof(uint64_t))\n";
             loadTables << indent << "            return false;\n";
-            loadTables << indent << "        memcpy(&m_table_" << pair.first << "_names, (char*)mem + memIndex, sizeof(uint64_t));\n";
+            loadTables << indent << "        m_table_" << pair.first << "_names._64 = reinterpret_cast<uintptr_t>(mem) + memIndex;\n";
+            loadTables << indent << "        for (uint32_t i = 0; i < m_table_" << pair.first << "_count; ++i)\n";
+            loadTables << indent << "            m_table_" << pair.first << "_names.Get()[i] = (char*)(uint64_t(m_table_" << pair.first << "_names.Get()[i]) + uint64_t(mem));\n";
             loadTables << indent << "        memIndex += m_table_" << pair.first << "_count * sizeof(uint64_t);\n";
             loadTables << "\n";
         }
@@ -271,7 +273,7 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
         loadTables << indent << "        // Get a pointer to the first entry in the table\n";
         loadTables << indent << "        if (memSize - memIndex < m_table_" << pair.first << "_count * sizeof(" << pair.first << "))\n";
         loadTables << indent << "            return false;\n";
-        loadTables << indent << "        memcpy(&m_table_" << pair.first << ", (char*)mem + memIndex, sizeof(m_table_" << pair.first << "));\n";
+        loadTables << indent << "        m_table_Character._64 = reinterpret_cast<uintptr_t>(mem) + memIndex;\n";
         loadTables << indent << "        memIndex += m_table_" << pair.first << "_count * sizeof(" << pair.first << ");\n";
 
         loadTables << indent << "    }\n";
@@ -668,7 +670,7 @@ bool Compile(const DBRoot& dbRoot, const DBCompileSettings& compilerSettings, st
 
 /*
 TODO:
-* Ptr64 shouldn't be a union. It should be a uint64_t internall, and should have a get() function which reinterpret casts it as T*.
+* do pointer fixup on the things you load at the root, then have some functions for each type to do pointer fixup
 * dynamic arrays should go in dynamic data. static arrays should go inline. every function that writes needs to get a bool for if it's writing to static or not.
 * need to use it for a bit before announcing. adding array items in the editor is crashing
 */
