@@ -15,11 +15,18 @@ public:
     ~/*$ClassName$*/();
 
     // Note: the memory will be modified, and it must stay around for the life of the object.
-    bool LoadFromMemory(void* mem, uint64_t size);
+    bool LoadFromMemory(void* mem, uint32_t size);
 
     bool LoadFromFile(const char* fileName);
 
 public:
+    template <typename T>
+    union Ptr64
+    {
+        uint64_t _64;
+        T* ptr;
+    };
+
 /*$EnumAndStructDefs$*/
 
 private:
@@ -36,14 +43,6 @@ private:
     }
 
     void DoEndianSwap();
-
-private:
-    template <typename T>
-    union Ptr64
-    {
-        uint64_t _64;
-        T* ptr;
-    };
 
 private:
     uint8_t* m_ownedMemory = nullptr;

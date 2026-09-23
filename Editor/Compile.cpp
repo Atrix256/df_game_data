@@ -7,6 +7,7 @@
 #include "../loader/hash.h"
 
 #include <type_traits>
+#include <unordered_set>
 
 #include "../loader/output_string.h"
 
@@ -81,13 +82,19 @@ static bool MakeHeader_EnumAndStructDefs(const DBRoot& dbRoot)
     std::ostringstream& os = s_data.tokenReplacement["/*$EnumAndStructDefs$*/"];
 
     // Make enum defs
+    std::unordered_set<std::string> enumsWritten;
     for (const auto& pair : dbRoot.m_tables)
     {
         const DefParser& parser = pair.second->GetParser();
 
         bool ret = parser.ForEachEnum(
-            [&os](const DefParser::Enum& e)
+            [&os, &enumsWritten](const DefParser::Enum& e)
             {
+                // only write the same type once
+                if (enumsWritten.contains(e.FullName()))
+                    return true;
+                enumsWritten.insert(e.FullName());
+
                 // If this isn't the first item written, make an extra newline to separate them
                 if (!os.view().empty())
                     os << "\n";
@@ -118,13 +125,19 @@ static bool MakeHeader_EnumAndStructDefs(const DBRoot& dbRoot)
     }
 
     // Make struct defs
+    std::unordered_set<std::string> structsWritten;
     for (const auto& pair : dbRoot.m_tables)
     {
         const DefParser& parser = pair.second->GetParser();
 
         bool ret = parser.ForEachStruct(
-            [&os](const DefParser::Struct& s)
+            [&os, &structsWritten](const DefParser::Struct& s)
             {
+                // only write the same type once
+                if (structsWritten.contains(s.FullName()))
+                    return true;
+                structsWritten.insert(s.FullName());
+
                 // If this isn't the first item written, make an extra newline to separate them
                 if (!os.view().empty())
                     os << "\n";

@@ -9,10 +9,10 @@
 #include <stdio.h>
 #include <cstring>
 
-class /*$ClassName$*/
+class dfgd
 {
 public:
-    ~/*$ClassName$*/();
+    ~dfgd();
 
     // Note: the memory will be modified, and it must stay around for the life of the object.
     bool LoadFromMemory(void* mem, uint32_t size);
@@ -27,7 +27,57 @@ public:
         T* ptr;
     };
 
-/*$EnumAndStructDefs$*/
+    enum class EyeColor : uint16_t
+    {
+        Brown,
+        Hazel,
+        Blue,
+        Green,
+    };
+
+    enum class Alignment : uint16_t
+    {
+        Good,
+        Neutral,
+        Evil,
+    };
+
+    enum class Class : uint16_t
+    {
+        Warrior,
+        Wizard,
+        Cleric,
+        Druid,
+    };
+
+    struct Vec3
+    {
+        float x;
+        float y;
+        float z;
+    };
+
+    struct Item
+    {
+        Ptr64<char> name;
+    };
+
+    struct Character
+    {
+        Ptr64<char> name;
+        EyeColor eyeColor;
+        Alignment alignment;
+        Class playerClass;
+        Vec3 location;
+        uint16_t max_hp;
+        uint16_t max_mp;
+        uint8_t playable;
+        uint32_t _favorite_numbers_count = 0;
+        uint64_t favorite_numbers;
+        uint32_t _inventory_count = 0;
+        uint64_t inventory;
+    };
+
 
 private:
     template <typename T>
@@ -46,12 +96,20 @@ private:
 
 private:
     uint8_t* m_ownedMemory = nullptr;
-/*$PrivateStorage$*/
+
+    uint32_t m_table_Character_count = 0;
+    Ptr64<char> *m_table_Character_Names = 0;
+    Ptr64<Character> m_table_Character;
+
+    uint32_t m_table_Item_count = 0;
+    Ptr64<char> *m_table_Item_Names = 0;
+    Ptr64<Item> m_table_Item;
+
 };
 
 // ================================= Misc =================================
 
-/*$ClassName$*/::~/*$ClassName$*/()
+dfgd::~dfgd()
 {
     delete[] m_ownedMemory;
     m_ownedMemory = nullptr;
@@ -67,7 +125,7 @@ inline constexpr uint32_t MakeFourCC(char a, char b, char c, char d)
 
 // ================================= LOADING =================================
 
-bool /*$ClassName$*/::LoadFromMemory(void* mem, uint32_t memSize)
+bool dfgd::LoadFromMemory(void* mem, uint32_t memSize)
 {
     uint32_t memIndex = 0;
 
@@ -88,7 +146,7 @@ bool /*$ClassName$*/::LoadFromMemory(void* mem, uint32_t memSize)
     // Verify that the schema hash in the binary data matches the schema hash this file was made for
     {
         uint32_t hash = 0;
-        if (!Read(hash, mem, memIndex, memSize) || hash != /*$SchemaHash*/)
+        if (!Read(hash, mem, memIndex, memSize) || hash != 0x4d6fca5bde6206b2ULL)
             return false;
     }
 
@@ -101,7 +159,7 @@ bool /*$ClassName$*/::LoadFromMemory(void* mem, uint32_t memSize)
     return false;
 }
 
-bool /*$ClassName$*/::LoadFromFile(const char* fileName);
+bool dfgd::LoadFromFile(const char* fileName);
 {
     FILE* file = nullptr;
     fopen_s(&file, fileName, "rb");
@@ -125,6 +183,6 @@ bool /*$ClassName$*/::LoadFromFile(const char* fileName);
 }
 
 // TODO: this
-void /*$ClassName$*/::DoEndianSwap()
+void dfgd::DoEndianSwap()
 {/*DoEndianSwap*/
 }

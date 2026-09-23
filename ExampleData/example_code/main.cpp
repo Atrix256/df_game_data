@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "data/schema_generated.h"
+#include "data/data.h"
 
 int main(int argc, char** argv)
 {

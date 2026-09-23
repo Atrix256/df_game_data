@@ -1,9 +1,9 @@
 {
     "compilersettings": [
         {
-            "compiledHeaderFileName": "out.h",
-            "compiledBinFileName": "out.bin",
-            "nameSpace": "dfgd",
+            "compiledHeaderFileName": "../example_code/data/data.h",
+            "compiledBinFileName": "../example_code/data/data.bin",
+            "className": "dfgd",
             "includeEntryLUT": true
         }
     ],
