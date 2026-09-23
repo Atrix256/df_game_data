@@ -10,18 +10,28 @@
 
 #include "../loader/output_string.h"
 
+struct DataOffset
+{
+    bool toStatic = false;
+    size_t offset = 0;
+};
+
 struct StaticData
 {
     std::ostringstream error;
 
-    // Data to hold strings and other data that is pointed to, but not stored directly inline.
-    std::vector<char> data;
+    // This is where fixed sized objects are stored.
+    // Dynamic arrays, strings, and similar point into data_dynamic.
+    std::vector<char> dataStatic;
+
+    // This is where dynamic sized objects are stored
+    std::vector<char> dataDynamic;
 
     struct TableEntryLocation
     {
         std::string table;
         std::string entry;
-        uint64_t fileOffset;
+        DataOffset offset;
     };
 
     // Places in the file that want offsets to entries in tables
@@ -32,8 +42,8 @@ struct StaticData
 
     struct DataTableOffsets
     {
-        uint64_t fileOffset;
-        uint64_t dataOffset;
+        DataOffset srcOffset;
+        DataOffset destoffset;
     };
 
     // Places in the file that point at an offset in the data, and what that offset is
@@ -44,7 +54,7 @@ struct StaticData
 };
 static StaticData s_data;
 
-static bool MakeBin_WriteStruct(FILE* file, DBTable& table, const DefParser::Struct& structDef, const json& json, const json_pointer& path);
+static bool MakeBin_WriteStruct(DBTable& table, const DefParser::Struct& structDef, const json& json, const json_pointer& path);
 
 inline constexpr uint32_t MakeFourCC(char a, char b, char c, char d)
 {
@@ -254,8 +264,42 @@ static bool MakeHeader(const DBCompileSettings& compilerSettings, const DBRoot& 
     return true;
 }
 
+static DataOffset MakeBin_GetOffset(bool toStatic)
+{
+    std::vector<char>& dest = toStatic ? s_data.dataStatic : s_data.dataDynamic;
+
+    DataOffset ret;
+    ret.toStatic = toStatic;
+    ret.offset = dest.size();
+    return ret;
+}
+
+static DataOffset MakeBin_Write(bool toStatic, void* data, size_t size)
+{
+    std::vector<char>& dest = toStatic ? s_data.dataStatic : s_data.dataDynamic;
+    size_t offset = dest.size();
+    dest.resize(offset + size);
+    memcpy(&dest[offset], data, size);
+
+    DataOffset ret;
+    ret.toStatic = toStatic;
+    ret.offset = offset;
+    return ret;
+}
+
+static DataOffset MakeBin_Write(bool toStatic, const char* data)
+{
+    return MakeBin_Write(toStatic, (void*)data, strlen(data) + 1);
+}
+
 template <typename T>
-void MakeBin_WriteInt(FILE* file, const std::string& dflt, const json& json, const json_pointer& path)
+static DataOffset MakeBin_Write(bool toStatic, const T& data)
+{
+    return MakeBin_Write(toStatic, (void*)&data, sizeof(T));
+}
+
+template <typename T>
+void MakeBin_WriteInt(const std::string& dflt, const json& json, const json_pointer& path)
 {
     T actualValue;
     if (std::is_signed_v<T>)
@@ -271,18 +315,18 @@ void MakeBin_WriteInt(FILE* file, const std::string& dflt, const json& json, con
         actualValue = (T)value;
     }
 
-    fwrite(&actualValue, sizeof(actualValue), 1, file);
+    MakeBin_Write(true, actualValue);
 }
 
 template <typename T>
-void MakeBin_WriteFloat(FILE* file, const std::string& dflt, const json& json, const json_pointer& path)
+void MakeBin_WriteFloat(const std::string& dflt, const json& json, const json_pointer& path)
 {
     T value = GetValueFromString<T>(dflt.c_str());
     value = GetOrDefault(json, path, value);
-    fwrite(&value, sizeof(value), 1, file);
+    MakeBin_Write(true, value);
 }
 
-static bool MakeBin_WriteField(FILE* file, DBTable& table, const DefParser::StructField& fieldDef, const json& json, const json_pointer& path)
+static bool MakeBin_WriteField(DBTable& table, const DefParser::StructField& fieldDef, const json& json, const json_pointer& path)
 {
     // Figure out how many items are in this array (1 item for non arrays)
     // If this is a dynamic array, write out the number of items.
@@ -301,7 +345,7 @@ static bool MakeBin_WriteField(FILE* file, DBTable& table, const DefParser::Stru
                 arrayItemCount = (uint32_t)json.value(path, json::array()).size();
             else
                 arrayItemCount = 0;
-            fwrite(&arrayItemCount, sizeof(arrayItemCount), 1, file);
+            MakeBin_Write(true, arrayItemCount);
         }
     }
 
@@ -328,7 +372,7 @@ static bool MakeBin_WriteField(FILE* file, DBTable& table, const DefParser::Stru
             enumDef->GetLabelIndex(value.c_str(), index);
             uint16_t enumValue = (uint16_t)index;
 
-            fwrite(&enumValue, sizeof(enumValue), 1, file);
+            MakeBin_Write(true, enumValue);
             continue;
         }
 
@@ -339,42 +383,38 @@ static bool MakeBin_WriteField(FILE* file, DBTable& table, const DefParser::Stru
             bool value = GetOrDefault(json, jsonPathItem, dflt);
 
             uint8_t boolValue = (value != false);
-            fwrite(&boolValue, sizeof(boolValue), 1, file);
+            MakeBin_Write(true, boolValue);
             continue;
         }
 
         // Integers and floats
         switch (fieldDef.fieldType)
         {
-            case DefParser::FieldType::_uint8: MakeBin_WriteInt<uint8_t>(file, fieldDef.dflt, json, jsonPathItem); continue;
-            case DefParser::FieldType::_sint8: MakeBin_WriteInt<int8_t>(file, fieldDef.dflt, json, jsonPathItem); continue;
-            case DefParser::FieldType::_uint16: MakeBin_WriteInt<uint16_t>(file, fieldDef.dflt, json, jsonPathItem); continue;
-            case DefParser::FieldType::_sint16: MakeBin_WriteInt<int16_t>(file, fieldDef.dflt, json, jsonPathItem); continue;
-            case DefParser::FieldType::_uint32: MakeBin_WriteInt<uint32_t>(file, fieldDef.dflt, json, jsonPathItem); continue;
-            case DefParser::FieldType::_sint32: MakeBin_WriteInt<int32_t>(file, fieldDef.dflt, json, jsonPathItem); continue;
-            case DefParser::FieldType::_uint64: MakeBin_WriteInt<uint64_t>(file, fieldDef.dflt, json, jsonPathItem); continue;
-            case DefParser::FieldType::_sint64: MakeBin_WriteInt<int8_t>(file, fieldDef.dflt, json, jsonPathItem); continue;
-            case DefParser::FieldType::_float: MakeBin_WriteFloat<float>(file, fieldDef.dflt, json, jsonPathItem); continue;
-            case DefParser::FieldType::_double: MakeBin_WriteFloat<double>(file, fieldDef.dflt, json, jsonPathItem); continue;
+            case DefParser::FieldType::_uint8: MakeBin_WriteInt<uint8_t>(fieldDef.dflt, json, jsonPathItem); continue;
+            case DefParser::FieldType::_sint8: MakeBin_WriteInt<int8_t>(fieldDef.dflt, json, jsonPathItem); continue;
+            case DefParser::FieldType::_uint16: MakeBin_WriteInt<uint16_t>(fieldDef.dflt, json, jsonPathItem); continue;
+            case DefParser::FieldType::_sint16: MakeBin_WriteInt<int16_t>(fieldDef.dflt, json, jsonPathItem); continue;
+            case DefParser::FieldType::_uint32: MakeBin_WriteInt<uint32_t>(fieldDef.dflt, json, jsonPathItem); continue;
+            case DefParser::FieldType::_sint32: MakeBin_WriteInt<int32_t>(fieldDef.dflt, json, jsonPathItem); continue;
+            case DefParser::FieldType::_uint64: MakeBin_WriteInt<uint64_t>(fieldDef.dflt, json, jsonPathItem); continue;
+            case DefParser::FieldType::_sint64: MakeBin_WriteInt<int8_t>(fieldDef.dflt, json, jsonPathItem); continue;
+            case DefParser::FieldType::_float: MakeBin_WriteFloat<float>(fieldDef.dflt, json, jsonPathItem); continue;
+            case DefParser::FieldType::_double: MakeBin_WriteFloat<double>(fieldDef.dflt, json, jsonPathItem); continue;
         }
 
         // If it's a string, we write the string to the data block and point to it
         if (fieldDef.fieldType == DefParser::FieldType::_string)
         {
+            // Get the string value and write it to dynamic memory
             std::string value = GetOrDefault(json, jsonPathItem, fieldDef.dflt);
-            uint64_t dataOffset = (uint64_t)s_data.data.size();
-            uint64_t bytes = (uint64_t)value.length() + 1;
-
-            // Write to the data block
-            s_data.data.resize(dataOffset + bytes);
-            memcpy(&s_data.data[dataOffset], value.c_str(), bytes);
-
-            // Remember that we want a data offset here, and what it is, so we can fill it in later
-            s_data.dataOffsets.push_back({ (uint64_t)ftell(file), dataOffset });
+            DataOffset stringOffset = MakeBin_Write(false, value.c_str());
 
             // write a null for now
-            static const uint64_t offset = 0;
-            fwrite(&offset, sizeof(offset), 1, file);
+            DataOffset ptrOffset = MakeBin_Write(true, (uint64_t)0);
+
+            // Remember that we want a data offset here, and what it is, so we can fill it in later
+            s_data.dataOffsets.push_back({ stringOffset, ptrOffset });
+
             continue;
         }
 
@@ -386,7 +426,7 @@ static bool MakeBin_WriteField(FILE* file, DBTable& table, const DefParser::Stru
                 s_data.error << "Could not find struct \"" << fieldDef.structName << "\"";
                 return false;
             }
-            MakeBin_WriteStruct(file, table, *structDef, json, path);
+            MakeBin_WriteStruct(table, *structDef, json, path);
             continue;
         }
 
@@ -394,11 +434,10 @@ static bool MakeBin_WriteField(FILE* file, DBTable& table, const DefParser::Stru
         {
             // Remember where this link is and what entry it wants, so we can fill it in later
             std::string value = GetOrDefault(json, jsonPathItem, fieldDef.dflt);
-            s_data.links.push_back({ fieldDef.linkName, value, (uint64_t)ftell(file) });
 
             // Write a null for now
-            static const uint64_t offset = 0;
-            fwrite(&offset, sizeof(offset), 1, file);
+            DataOffset linkOffset = MakeBin_Write(true, (uint64_t)0);
+            s_data.links.push_back({ fieldDef.linkName, value, linkOffset });
             continue;
         }
 
@@ -409,7 +448,7 @@ static bool MakeBin_WriteField(FILE* file, DBTable& table, const DefParser::Stru
     return true;
 }
 
-static bool MakeBin_WriteStruct(FILE* file, DBTable& table, const DefParser::Struct& structDef, const json& json, const json_pointer& path)
+static bool MakeBin_WriteStruct(DBTable& table, const DefParser::Struct& structDef, const json& json, const json_pointer& path)
 {
     bool ret = true;
     for (const DefParser::StructField& fieldDef : structDef.fields)
@@ -417,23 +456,23 @@ static bool MakeBin_WriteStruct(FILE* file, DBTable& table, const DefParser::Str
         json_pointer fieldPath = path;
         fieldPath /= fieldDef.name.c_str();
 
-        ret &= MakeBin_WriteField(file, table, fieldDef, json, fieldPath);
+        ret &= MakeBin_WriteField(table, fieldDef, json, fieldPath);
     }
     return ret;
 }
 
-static bool MakeBin_Table_Item(DBTable& table, const json& json, FILE* file)
+static bool MakeBin_Table_Item(DBTable& table, const json& json)
 {
     const DefParser::Struct& structDef = *table.GetParser().GetRootStruct();
-    MakeBin_WriteStruct(file, table, structDef, json, json_pointer(""));
+    MakeBin_WriteStruct(table, structDef, json, json_pointer(""));
     return true;
 }
 
-static bool MakeBin_Table(const DBCompileSettings& compilerSettings, DBTable& table, FILE* file)
+static bool MakeBin_Table(const DBCompileSettings& compilerSettings, DBTable& table)
 {
     // Write how many items are in this table
     uint32_t numItems = (uint32_t)table.m_data.size();
-    fwrite(&numItems, sizeof(numItems), 1, file);
+    MakeBin_Write(true, numItems);
 
     // Write the table entry LUT if we are supposed to include it
     if (compilerSettings.includeEntryLUT)
@@ -459,25 +498,20 @@ static bool MakeBin_Table(const DBCompileSettings& compilerSettings, DBTable& ta
 
         for (EntryLutItem& entry : entries)
         {
-            // First write the name (pointer into data block)
+            // First write the name
             {
-                uint64_t dataOffset = (uint64_t)s_data.data.size();
-                uint64_t bytes = (uint64_t)entry.name.length() + 1;
-
-                // write the string to the data block
-                s_data.data.resize(dataOffset + bytes);
-                memcpy(&s_data.data[dataOffset], entry.name.c_str(), bytes);
-
-                // Remember that we want a data offset here, and what it is, so we can fill it in later
-                s_data.dataOffsets.push_back({ (uint64_t)ftell(file), dataOffset });
+                // Get the string value and write it to dynamic memory
+                DataOffset stringOffset = MakeBin_Write(false, entry.name.c_str());
 
                 // write a null for now
-                static const uint64_t offset = 0;
-                fwrite(&offset, sizeof(offset), 1, file);
+                DataOffset ptrOffset = MakeBin_Write(true, (uint64_t)0);
+
+                // Remember that we want a data offset here, and what it is, so we can fill it in later
+                s_data.dataOffsets.push_back({ stringOffset, ptrOffset });
             }
 
             // Then write the index
-            fwrite(&entry.index, sizeof(entry.index), 1, file);
+            MakeBin_Write(true, entry.index);
         }
     }
 
@@ -485,9 +519,9 @@ static bool MakeBin_Table(const DBCompileSettings& compilerSettings, DBTable& ta
     for (auto& it : table.m_data)
     {
         // remember where this entry is, in the file
-        s_data.entries.push_back({ table.m_rootType, it.first, (uint64_t)ftell(file) });
+        s_data.entries.push_back({ table.m_rootType, it.first, MakeBin_GetOffset(true) });
 
-        ret &= MakeBin_Table_Item(table, it.second->m_data, file);
+        ret &= MakeBin_Table_Item(table, it.second->m_data);
         if (!ret)
             break;
     }
@@ -497,39 +531,34 @@ static bool MakeBin_Table(const DBCompileSettings& compilerSettings, DBTable& ta
 
 static bool MakeBin(const DBCompileSettings& compilerSettings, const DBRoot& dbRoot, const char* fileName, uint64_t hash)
 {
-    FILE* file = nullptr;
-    fopen_s(&file, fileName, "wb");
-    if (!file)
-    {
-        s_data.error << "Could not write to " << fileName;
-        return false;
-    }
 
     // Write a fourcc to verify the file type and endianness when loading
     uint32_t fourcc = MakeFourCC('D', 'F', 'G', 'D');
-    fwrite(&fourcc, sizeof(fourcc), 1, file);
+    MakeBin_Write(true, fourcc);
 
     // Write schema hash
-    fwrite(&hash, sizeof(hash), 1, file);
+    MakeBin_Write(true, hash);
 
     bool ret = true;
     for (const auto& it : dbRoot.m_tables)
     {
-        ret &= MakeBin_Table(compilerSettings , *it.second.get(), file);
+        ret &= MakeBin_Table(compilerSettings , *it.second.get());
         if (!ret)
             break;
     }
 
-    // Write the data block
-    uint64_t dataStart = (uint64_t)ftell(file);
-    fwrite(s_data.data.data(), 1, s_data.data.size(), file);
+    // Append the dynamic data to the static data
+    uint64_t dynamicStart = s_data.dataStatic.size();
+    s_data.dataStatic.reserve(s_data.dataStatic.size() + s_data.dataDynamic.size());
+    s_data.dataStatic.insert(s_data.dataStatic.end(), s_data.dataDynamic.begin(), s_data.dataDynamic.end());
+    s_data.dataDynamic.clear();
 
     // Do fixups for data pointers
     for (const StaticData::DataTableOffsets& dataOffset : s_data.dataOffsets)
     {
-        fseek(file, (long)dataOffset.fileOffset, SEEK_SET);
-        uint64_t offset = dataStart + dataOffset.dataOffset;
-        fwrite(&offset, sizeof(offset), 1, file);
+        uint64_t dest = dataOffset.destoffset.offset + (dataOffset.destoffset.toStatic ? 0 : dynamicStart);
+        uint64_t src = dataOffset.srcOffset.offset + (dataOffset.srcOffset.toStatic ? 0 : dynamicStart);
+        ((uint64_t*)(&s_data.dataStatic[dest]))[0] = src;
     }
 
     // Do the fixups for links
@@ -544,8 +573,9 @@ static bool MakeBin(const DBCompileSettings& compilerSettings, const DBRoot& dbR
             found = true;
 
             // write the offset
-            fseek(file, (long)linkLocation.fileOffset, SEEK_SET);
-            fwrite(&entryLocation.fileOffset, sizeof(entryLocation.fileOffset), 1, file);
+            uint64_t dest = linkLocation.offset.offset + (linkLocation.offset.toStatic ? 0 : dynamicStart);
+            uint64_t src = entryLocation.offset.offset + (entryLocation.offset.toStatic ? 0 : dynamicStart);
+            ((uint64_t*)(&s_data.dataStatic[dest]))[0] = src;
         }
         if (found)
             continue;
@@ -555,9 +585,21 @@ static bool MakeBin(const DBCompileSettings& compilerSettings, const DBRoot& dbR
         break;
     }
 
+    if (!ret)
+        return false;
+
+    // write the data to disk
+    FILE* file = nullptr;
+    fopen_s(&file, fileName, "wb");
+    if (!file)
+    {
+        s_data.error << "Could not write to " << fileName;
+        return false;
+    }
+    fwrite(s_data.dataStatic.data(), s_data.dataStatic.size(), 1, file);
     fclose(file);
 
-    return ret;
+    return true;
 }
 
 bool Compile(const DBRoot& dbRoot, const DBCompileSettings& compilerSettings, std::string& error)
@@ -590,9 +632,9 @@ bool Compile(const DBRoot& dbRoot, const DBCompileSettings& compilerSettings, st
 
 /*
 TODO:
-* when opening test.def, it makes a dbroot without compile settings, is that ok?
-* need to use it for a bit before announcing. adding array items in the editor is crashing
+* dynamic arrays should go in dynamic data. static arrays should go inline. every function that writes needs to get a bool for if it's writing to static or not.
 * If the names are written in sorted order, don't need to write index, for LUT. I think they are. verify. comment that in the code if so
+* need to use it for a bit before announcing. adding array items in the editor is crashing
 */
 
 /*

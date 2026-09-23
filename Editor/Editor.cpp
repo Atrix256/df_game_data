@@ -1086,6 +1086,7 @@ TODO:
 Contributing:
 * I can't tell whether you made a contribution with AI or not, other than by the quality of the work.
 * poor quality changes will be met with guidance. If the guidance isn't fruitful, the changes will be rejected.
+* There are tasks up for grab in the issues list
 
 Schema documentation:
 * Tries to be familiar to C++ programmers, the target user
