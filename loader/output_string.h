@@ -23,7 +23,7 @@ public:
     template <typename T>
     union Ptr64
     {
-        uint64_t _64;
+        uint64_t _64 = 0;
         T* ptr;
     };
 
@@ -91,6 +91,10 @@ bool /*$ClassName$*/::LoadFromMemory(void* mem, uint32_t memSize)
         if (!Read(hash, mem, memIndex, memSize) || hash != /*$SchemaHash*/)
             return false;
     }
+
+/*$LoadTables$*/
+
+    // TODO: In load tables, if the count is 0, skip the lut and data loading. leave at null
 
     // TODO: for each table:
     // * entry count

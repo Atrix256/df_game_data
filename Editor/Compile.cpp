@@ -220,8 +220,8 @@ static bool MakeHeader_EnumAndStructDefs(const DBRoot& dbRoot)
 
 static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, const DBRoot& dbRoot)
 {
+    // make storage for each table
     std::ostringstream& privateStorage = s_data.tokenReplacement["/*$PrivateStorage$*/"];
-
     for (const auto& pair : dbRoot.m_tables)
     {
         std::string indent = "    ";
@@ -235,9 +235,47 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
 
         // The sorted list of table names. Tables are written in sorted order
         if (compilerSettings.includeEntryLUT)
-            privateStorage << indent << "Ptr64<char> *m_table_" << parser.GetRootStructName() << "_Names = 0;\n";
+            privateStorage << indent << "Ptr64<char> m_table_" << parser.GetRootStructName() << "_names;\n";
 
         privateStorage << indent << "Ptr64<" << parser.GetRootStructName() << "> m_table_" << parser.GetRootStructName() << ";\n";
+    }
+
+    // make the code to load each table
+    std::ostringstream& loadTables = s_data.tokenReplacement["/*$LoadTables$*/"];
+    for (const auto& pair : dbRoot.m_tables)
+    {
+        // seperate table loading with an extra newline
+        if (!loadTables.view().empty())
+            loadTables << "\n";
+
+        std::string indent = "    ";
+
+        loadTables << indent << "// " << pair.first << " Table\n";
+        loadTables << indent << "{\n";
+        loadTables << indent << "    if (!Read(m_table_" << pair.first << "_count, mem, memIndex, memSize))\n";
+        loadTables << indent << "        return false;\n";
+        loadTables << "\n";
+        loadTables << indent << "    if (m_table_" << pair.first << "_count > 0)\n";
+        loadTables << indent << "    {\n";
+
+        if (compilerSettings.includeEntryLUT)
+        {
+            loadTables << indent << "        // get a pointer to the first string in the LUT\n";
+            loadTables << indent << "        if (memSize - memIndex < m_table_" << pair.first << "_count * sizeof(uint64_t))\n";
+            loadTables << indent << "            return false;\n";
+            loadTables << indent << "        memcpy(&m_table_" << pair.first << "_names, (char*)mem + memIndex, sizeof(uint64_t));\n";
+            loadTables << indent << "        memIndex += m_table_" << pair.first << "_count * sizeof(uint64_t);\n";
+            loadTables << "\n";
+        }
+
+        loadTables << indent << "        // Get a pointer to the first entry in the table\n";
+        loadTables << indent << "        if (memSize - memIndex < m_table_" << pair.first << "_count * sizeof(" << pair.first << "))\n";
+        loadTables << indent << "            return false;\n";
+        loadTables << indent << "        memcpy(&m_table_" << pair.first << ", (char*)mem + memIndex, sizeof(m_table_" << pair.first << "));\n";
+        loadTables << indent << "        memIndex += m_table_" << pair.first << "_count * sizeof(" << pair.first << ");\n";
+
+        loadTables << indent << "    }\n";
+        loadTables << indent << "}\n";
     }
 
     return true;
@@ -486,48 +524,33 @@ static bool MakeBin_Table(const DBCompileSettings& compilerSettings, DBTable& ta
     // Write how many items are in this table
     uint32_t numItems = (uint32_t)table.m_data.size();
     MakeBin_Write(true, numItems);
+    if (numItems == 0)
+        return true;
 
-    // Write the table entry LUT if we are supposed to include it
+    // Write the table entry LUT if we are supposed to include it.
+    // It's just a list of names. Their position is their index. They are alpha sorted.
+    //
+    // In the static data, we write a pointer to N pointers in the dynamic data.
+    // Those N pointers point to strings in the dynamic data.
     if (compilerSettings.includeEntryLUT)
     {
-        struct EntryLutItem
-        {
-            std::string name;
-            uint32_t index;
-        };
-
-        std::vector<EntryLutItem> entries;
-
-        uint32_t index = 0;
+        // Write N pointers (as null for right now) into static memory and store their addresses
+        std::vector<DataOffset> pointers;
         for (auto& it : table.m_data)
-            entries.push_back({ it.first, index++ });
+            pointers.push_back(MakeBin_Write(true, (uint64_t)0));
 
-        std::sort(entries.begin(), entries.end(),
-            [](const EntryLutItem& a, const EntryLutItem& b)
-            {
-                return a.name < b.name;
-            }
-        );
-
-        for (EntryLutItem& entry : entries)
+        // Write the N strings into dynamic memory
+        // also remember that we want to put their offsets into those N pointers
+        size_t i = 0;
+        for (auto& it : table.m_data)
         {
-            // First write the name
-            {
-                // Get the string value and write it to dynamic memory
-                DataOffset stringOffset = MakeBin_Write(false, entry.name.c_str());
-
-                // write a null for now
-                DataOffset ptrOffset = MakeBin_Write(true, (uint64_t)0);
-
-                // Remember that we want a data offset here, and what it is, so we can fill it in later
-                s_data.dataOffsets.push_back({ stringOffset, ptrOffset });
-            }
-
-            // Then write the index
-            MakeBin_Write(true, entry.index);
+            DataOffset stringOffset = MakeBin_Write(false, it.first.c_str());
+            s_data.dataOffsets.push_back({ stringOffset, pointers[i] });
+            i++;
         }
     }
 
+    // Write the data
     bool ret = true;
     for (auto& it : table.m_data)
     {
@@ -645,8 +668,8 @@ bool Compile(const DBRoot& dbRoot, const DBCompileSettings& compilerSettings, st
 
 /*
 TODO:
+* Ptr64 shouldn't be a union. It should be a uint64_t internall, and should have a get() function which reinterpret casts it as T*.
 * dynamic arrays should go in dynamic data. static arrays should go inline. every function that writes needs to get a bool for if it's writing to static or not.
-* If the names are written in sorted order, don't need to write index, for LUT. I think they are. verify. comment that in the code if so
 * need to use it for a bit before announcing. adding array items in the editor is crashing
 */
 

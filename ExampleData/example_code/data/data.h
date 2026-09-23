@@ -23,7 +23,7 @@ public:
     template <typename T>
     union Ptr64
     {
-        uint64_t _64;
+        uint64_t _64 = 0;
         T* ptr;
     };
 
@@ -98,11 +98,11 @@ private:
     uint8_t* m_ownedMemory = nullptr;
 
     uint32_t m_table_Character_count = 0;
-    Ptr64<char> *m_table_Character_Names = 0;
+    Ptr64<char> m_table_Character_names;
     Ptr64<Character> m_table_Character;
 
     uint32_t m_table_Item_count = 0;
-    Ptr64<char> *m_table_Item_Names = 0;
+    Ptr64<char> m_table_Item_names;
     Ptr64<Item> m_table_Item;
 
 };
@@ -149,6 +149,51 @@ bool dfgd::LoadFromMemory(void* mem, uint32_t memSize)
         if (!Read(hash, mem, memIndex, memSize) || hash != 0x4d6fca5bde6206b2ULL)
             return false;
     }
+
+    // Character Table
+    {
+        if (!Read(m_table_Character_count, mem, memIndex, memSize))
+            return false;
+
+        if (m_table_Character_count > 0)
+        {
+            // get a pointer to the first string in the LUT
+            if (memSize - memIndex < m_table_Character_count * sizeof(uint64_t))
+                return false;
+            memcpy(&m_table_Character_names, (char*)mem + memIndex, sizeof(uint64_t));
+            memIndex += m_table_Character_count * sizeof(uint64_t);
+
+            // Get a pointer to the first entry in the table
+            if (memSize - memIndex < m_table_Character_count * sizeof(Character))
+                return false;
+            memcpy(&m_table_Character, (char*)mem + memIndex, sizeof(m_table_Character));
+            memIndex += m_table_Character_count * sizeof(Character);
+        }
+    }
+
+    // Item Table
+    {
+        if (!Read(m_table_Item_count, mem, memIndex, memSize))
+            return false;
+
+        if (m_table_Item_count > 0)
+        {
+            // get a pointer to the first string in the LUT
+            if (memSize - memIndex < m_table_Item_count * sizeof(uint64_t))
+                return false;
+            memcpy(&m_table_Item_names, (char*)mem + memIndex, sizeof(uint64_t));
+            memIndex += m_table_Item_count * sizeof(uint64_t);
+
+            // Get a pointer to the first entry in the table
+            if (memSize - memIndex < m_table_Item_count * sizeof(Item))
+                return false;
+            memcpy(&m_table_Item, (char*)mem + memIndex, sizeof(m_table_Item));
+            memIndex += m_table_Item_count * sizeof(Item);
+        }
+    }
+
+
+    // TODO: In load tables, if the count is 0, skip the lut and data loading. leave at null
 
     // TODO: for each table:
     // * entry count
