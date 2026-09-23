@@ -36,7 +36,7 @@ private:
         if (memSize - memIndex < sizeof(T))
             return false;
 
-        memcpy(&value, &mem[memIndex], sizeof(value));
+        memcpy(&value, &((char*)mem)[memIndex], sizeof(value));
         memIndex += sizeof(value);
 
         return true;
@@ -87,7 +87,7 @@ bool /*$ClassName$*/::LoadFromMemory(void* mem, uint32_t memSize)
 
     // Verify that the schema hash in the binary data matches the schema hash this file was made for
     {
-        uint32_t hash = 0;
+        uint64_t hash = 0;
         if (!Read(hash, mem, memIndex, memSize) || hash != /*$SchemaHash*/)
             return false;
     }
@@ -101,7 +101,7 @@ bool /*$ClassName$*/::LoadFromMemory(void* mem, uint32_t memSize)
     return false;
 }
 
-bool /*$ClassName$*/::LoadFromFile(const char* fileName);
+bool /*$ClassName$*/::LoadFromFile(const char* fileName)
 {
     FILE* file = nullptr;
     fopen_s(&file, fileName, "rb");
