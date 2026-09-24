@@ -158,7 +158,8 @@ static bool MakeHeader_EnumAndStructDefs(const DBRoot& dbRoot)
                 // Write the fields
                 for (const DefParser::StructField& field : s.fields)
                 {
-                    // Arrays are a count, and a pointer into the data block
+                    // Arrays are a count and a pointer to the data.
+                    // Dynamic arrays get their count from the bin file. Static arrays know their count at compile time.
                     if (field.isArray)
                     {
                         if (field.fixedArraySize > 0)
@@ -173,11 +174,13 @@ static bool MakeHeader_EnumAndStructDefs(const DBRoot& dbRoot)
                         continue;
                     }
 
+                    // TODO: on pointer fixup, dynamic arrays with count of 0 should have their pointer set to null
+
                     // the field type
                     os << indent << "    ";
                     switch (field.fieldType)
                     {
-                        case DefParser::FieldType::_bool: os << "uint8_t"; break;
+                        case DefParser::FieldType::_bool: os << "Bool"; break;
                         case DefParser::FieldType::_uint8: os << "uint8_t"; break;
                         case DefParser::FieldType::_sint8: os << "int8_t"; break;
                         case DefParser::FieldType::_uint16: os << "uint16_t"; break;
@@ -411,6 +414,18 @@ static bool MakeBin_WriteField(DBTable& table, const DefParser::StructField& fie
         }
     }
 
+    // Dynamic arrays have their contents written to stackIndex + 1.
+    // A pointer is written to stackIndex.
+    // That pointer is put into the fixup list for post flattening.
+    size_t fieldStackIndex = stackIndex;
+    DataOffset dynamicArrayPtr;
+    if (fieldDef.isArray && fieldDef.fixedArraySize == 0)
+    {
+        fieldStackIndex = stackIndex + 1;
+        dynamicArrayPtr = MakeBin_Write(stackIndex, (uint64_t)0);
+        s_data.dataOffsets.push_back({ MakeBin_GetOffset(fieldStackIndex), dynamicArrayPtr });
+    }
+
     for (uint64_t arrayIndex = 0; arrayIndex < arrayItemCount; ++arrayIndex)
     {
         json_pointer jsonPathItem = path;
@@ -434,7 +449,7 @@ static bool MakeBin_WriteField(DBTable& table, const DefParser::StructField& fie
             enumDef->GetLabelIndex(value.c_str(), index);
             uint16_t enumValue = (uint16_t)index;
 
-            MakeBin_Write(stackIndex, enumValue);
+            MakeBin_Write(fieldStackIndex, enumValue);
             continue;
         }
 
@@ -445,23 +460,23 @@ static bool MakeBin_WriteField(DBTable& table, const DefParser::StructField& fie
             bool value = GetOrDefault(json, jsonPathItem, dflt);
 
             uint8_t boolValue = (value != false);
-            MakeBin_Write(stackIndex, boolValue);
+            MakeBin_Write(fieldStackIndex, boolValue);
             continue;
         }
 
         // Integers and floats
         switch (fieldDef.fieldType)
         {
-            case DefParser::FieldType::_uint8:  MakeBin_WriteInt<uint8_t>(stackIndex, fieldDef.dflt, json, jsonPathItem);  continue;
-            case DefParser::FieldType::_sint8:  MakeBin_WriteInt<int8_t>(stackIndex, fieldDef.dflt, json, jsonPathItem);   continue;
-            case DefParser::FieldType::_uint16: MakeBin_WriteInt<uint16_t>(stackIndex, fieldDef.dflt, json, jsonPathItem); continue;
-            case DefParser::FieldType::_sint16: MakeBin_WriteInt<int16_t>(stackIndex, fieldDef.dflt, json, jsonPathItem);  continue;
-            case DefParser::FieldType::_uint32: MakeBin_WriteInt<uint32_t>(stackIndex, fieldDef.dflt, json, jsonPathItem); continue;
-            case DefParser::FieldType::_sint32: MakeBin_WriteInt<int32_t>(stackIndex, fieldDef.dflt, json, jsonPathItem);  continue;
-            case DefParser::FieldType::_uint64: MakeBin_WriteInt<uint64_t>(stackIndex, fieldDef.dflt, json, jsonPathItem); continue;
-            case DefParser::FieldType::_sint64: MakeBin_WriteInt<int8_t>(stackIndex, fieldDef.dflt, json, jsonPathItem);   continue;
-            case DefParser::FieldType::_float:  MakeBin_WriteFloat<float>(stackIndex, fieldDef.dflt, json, jsonPathItem);  continue;
-            case DefParser::FieldType::_double: MakeBin_WriteFloat<double>(stackIndex, fieldDef.dflt, json, jsonPathItem); continue;
+            case DefParser::FieldType::_uint8:  MakeBin_WriteInt<uint8_t> (fieldStackIndex, fieldDef.dflt, json, jsonPathItem);  continue;
+            case DefParser::FieldType::_sint8:  MakeBin_WriteInt<int8_t>  (fieldStackIndex, fieldDef.dflt, json, jsonPathItem);   continue;
+            case DefParser::FieldType::_uint16: MakeBin_WriteInt<uint16_t>(fieldStackIndex, fieldDef.dflt, json, jsonPathItem); continue;
+            case DefParser::FieldType::_sint16: MakeBin_WriteInt<int16_t> (fieldStackIndex, fieldDef.dflt, json, jsonPathItem);  continue;
+            case DefParser::FieldType::_uint32: MakeBin_WriteInt<uint32_t>(fieldStackIndex, fieldDef.dflt, json, jsonPathItem); continue;
+            case DefParser::FieldType::_sint32: MakeBin_WriteInt<int32_t> (fieldStackIndex, fieldDef.dflt, json, jsonPathItem);  continue;
+            case DefParser::FieldType::_uint64: MakeBin_WriteInt<uint64_t>(fieldStackIndex, fieldDef.dflt, json, jsonPathItem); continue;
+            case DefParser::FieldType::_sint64: MakeBin_WriteInt<int8_t>  (fieldStackIndex, fieldDef.dflt, json, jsonPathItem);   continue;
+            case DefParser::FieldType::_float:  MakeBin_WriteFloat<float> (fieldStackIndex, fieldDef.dflt, json, jsonPathItem);  continue;
+            case DefParser::FieldType::_double: MakeBin_WriteFloat<double>(fieldStackIndex, fieldDef.dflt, json, jsonPathItem); continue;
         }
 
         // If it's a string, we write the string to the data block and point to it
@@ -469,10 +484,10 @@ static bool MakeBin_WriteField(DBTable& table, const DefParser::StructField& fie
         {
             // Get the string value and write it to dynamic memory
             std::string value = GetOrDefault(json, jsonPathItem, fieldDef.dflt);
-            DataOffset stringOffset = MakeBin_Write(stackIndex+1, value.c_str());
+            DataOffset stringOffset = MakeBin_Write(fieldStackIndex + 1, value.c_str());
 
             // write a null for now
-            DataOffset ptrOffset = MakeBin_Write(stackIndex, (uint64_t)0);
+            DataOffset ptrOffset = MakeBin_Write(fieldStackIndex, (uint64_t)0);
 
             // Remember that we want a data offset here, and what it is, so we can fill it in later
             s_data.dataOffsets.push_back({ stringOffset, ptrOffset });
@@ -488,7 +503,7 @@ static bool MakeBin_WriteField(DBTable& table, const DefParser::StructField& fie
                 s_data.error << "Could not find struct \"" << fieldDef.structName << "\"";
                 return false;
             }
-            MakeBin_WriteStruct(table, *structDef, json, path, stackIndex);
+            MakeBin_WriteStruct(table, *structDef, json, path, fieldStackIndex);
             continue;
         }
 
@@ -498,7 +513,7 @@ static bool MakeBin_WriteField(DBTable& table, const DefParser::StructField& fie
             std::string value = GetOrDefault(json, jsonPathItem, fieldDef.dflt);
 
             // Write a null for now
-            DataOffset linkOffset = MakeBin_Write(stackIndex, (uint64_t)0);
+            DataOffset linkOffset = MakeBin_Write(fieldStackIndex, (uint64_t)0);
             s_data.links.push_back({ fieldDef.linkName, value, linkOffset });
             continue;
         }
@@ -691,7 +706,6 @@ bool Compile(const DBRoot& dbRoot, const DBCompileSettings& compilerSettings, st
 
 /*
 TODO:
-* loading is going well, but is derailing on the dynamic array. need to fix
 * do pointer fixup on the things you load at the root, then have some functions for each type to do pointer fixup
 * dynamic arrays should go in dynamic data. static arrays should go inline. every function that writes needs to get a bool for if it's writing to static or not.
 * need to use it for a bit before announcing. adding array items in the editor is crashing

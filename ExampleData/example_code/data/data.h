@@ -21,15 +21,25 @@ public:
 
 public:
     template <typename T>
-    union Ptr64
+    struct Ptr64
     {
         uint64_t _64 = 0;
-        T* Get()
+        T* Get() const
         {
             return reinterpret_cast<T*>(_64);
         }
     };
 
+    struct Bool
+    {
+        uint8_t _8 = 0;
+        bool Get() const
+        {
+            return _8 != 0;
+        }
+    };
+
+    #pragma pack(push, 1)
     enum class EyeColor : uint16_t
     {
         Brown,
@@ -74,13 +84,14 @@ public:
         Vec3 location;
         uint16_t max_hp;
         uint16_t max_mp;
-        uint8_t playable;
+        Bool playable;
         uint32_t _favorite_numbers_count = 0;
         uint64_t favorite_numbers;
         uint32_t _inventory_count = 0;
         uint64_t inventory;
     };
 
+    #pragma pack(pop)
 
 private:
     template <typename T>

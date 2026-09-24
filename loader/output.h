@@ -21,16 +21,27 @@ public:
 
 public:
     template <typename T>
-    union Ptr64
+    struct Ptr64
     {
         uint64_t _64 = 0;
-        T* Get()
+        T* Get() const
         {
             return reinterpret_cast<T*>(_64);
         }
     };
 
+    struct Bool
+    {
+        uint8_t _8 = 0;
+        bool Get() const
+        {
+            return _8 != 0;
+        }
+    };
+
+    #pragma pack(push, 1)
 /*$EnumAndStructDefs$*/
+    #pragma pack(pop)
 
 private:
     template <typename T>
