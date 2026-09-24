@@ -98,9 +98,8 @@ static bool MakeHeader_EnumAndStructDefs(const DBRoot& dbRoot)
                     return true;
                 enumsWritten.insert(e.FullName());
 
-                // If this isn't the first item written, make an extra newline to separate them
-                if (!os.view().empty())
-                    os << "\n";
+                // make an extra newline to separate them
+                os << "\n";
 
                 std::string indent = "    ";
 
@@ -270,9 +269,9 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
             loadTables << indent << "        // get char** to LUT and fixup string pointers\n";
             loadTables << indent << "        if (memSize - memIndex < m_table_" << pair.first << "_count * sizeof(uint64_t))\n";
             loadTables << indent << "            return false;\n";
-            loadTables << indent << "        m_table_" << pair.first << "_names._64 = reinterpret_cast<uintptr_t>(mem) + memIndex;\n";
+            loadTables << indent << "        m_table_" << pair.first << "_names.Set(mem, memIndex);\n";
             loadTables << indent << "        for (uint32_t i = 0; i < m_table_" << pair.first << "_count; ++i)\n";
-            loadTables << indent << "            m_table_" << pair.first << "_names.Get()[i] = (char*)(uint64_t(m_table_" << pair.first << "_names.Get()[i]) + uint64_t(mem));\n";
+            loadTables << indent << "            DoPointerFixup(m_table_" << pair.first << "_names.ptr[i], mem);\n";
             loadTables << indent << "        memIndex += m_table_" << pair.first << "_count * sizeof(uint64_t);\n";
             loadTables << "\n";
         }
@@ -280,11 +279,54 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
         loadTables << indent << "        // Get a pointer to the first entry in the table\n";
         loadTables << indent << "        if (memSize - memIndex < m_table_" << pair.first << "_count * sizeof(" << pair.first << "))\n";
         loadTables << indent << "            return false;\n";
-        loadTables << indent << "        m_table_" << pair.first << "._64 = reinterpret_cast<uintptr_t>(mem) + memIndex;\n";
+        loadTables << indent << "        m_table_" << pair.first << ".Set(mem, memIndex);\n";
         loadTables << indent << "        memIndex += m_table_" << pair.first << "_count * sizeof(" << pair.first << ");\n";
+        loadTables << "\n";
+        loadTables << indent << "        // Do pointer fixup\n";
+        loadTables << indent << "        for (uint32_t i = 0; i < m_table_" << pair.first << "_count; ++i)\n";
+        loadTables << indent << "            DoPointerFixup(m_table_" << pair.first << ".ptr[i], mem);\n";
 
         loadTables << indent << "    }\n";
         loadTables << indent << "}\n";
+    }
+
+    // make pointer fixup code for each table
+    {
+        std::string className = s_data.tokenReplacement["/*$ClassName$*/"].str();
+
+        std::unordered_set<std::string> structsHandled;
+        std::ostringstream& pointerFixup = s_data.tokenReplacement["/*$PointerFixup$*/"];
+        std::ostringstream& pointerFixupFwd = s_data.tokenReplacement["/*$PointerFixupForwardDeclare$*/"];
+        for (const auto& pair : dbRoot.m_tables)
+        {
+            bool ret = pair.second->GetParser().ForEachStruct(
+                [&structsHandled, &pointerFixup, &pointerFixupFwd, &className](const DefParser::Struct& structDef)
+                {
+                    // Only need to write each DoPointerFixup() function once
+                    if (structsHandled.contains(structDef.name))
+                        return true;
+                    structsHandled.insert(structDef.name);
+
+                    pointerFixupFwd << "    static void DoPointerFixup(" << structDef.name << "& v, void* base);\n";
+
+                    std::string indent = "";
+                    pointerFixup << "\n";
+                    pointerFixup << indent << "void " << className << "::DoPointerFixup(" << className << "::" << structDef.name << "& v, void* base)\n";
+                    pointerFixup << indent << "{\n";
+
+                    for (const DefParser::StructField& field : structDef.fields)
+                        pointerFixup << indent << "    DoPointerFixup(v." << field.name << ", base);\n";
+
+                    pointerFixup << indent << "}\n";
+
+                    // TODO: handle arrays (dynamic and static)
+
+                    return true;
+                }
+            );
+            if (!ret)
+                return false;
+        }
     }
 
     return true;
@@ -292,18 +334,18 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
 
 static bool MakeHeader(const DBCompileSettings& compilerSettings, const DBRoot& dbRoot, const char* fileName, uint64_t hash)
 {
-    if (!MakeHeader_EnumAndStructDefs(dbRoot))
-        return false;
-
-    if (!MakeHeader_StructLoading(compilerSettings, dbRoot))
-        return false;
-
     if (!compilerSettings.className.empty())
         s_data.tokenReplacement["/*$ClassName$*/"] << compilerSettings.className;
     else
         s_data.tokenReplacement["/*$ClassName$*/"] << "dfgd";
 
     s_data.tokenReplacement["/*$SchemaHash*/"] << "0x" << std::hex << std::setfill('0') << std::setw(16) << hash << "ULL";
+
+    if (!MakeHeader_EnumAndStructDefs(dbRoot))
+        return false;
+
+    if (!MakeHeader_StructLoading(compilerSettings, dbRoot))
+        return false;
 
     // Do token replacement on output.h
     std::string out = c_output_h;

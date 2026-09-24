@@ -21,12 +21,14 @@ public:
 
 public:
     template <typename T>
-    struct Ptr64
+    union Ptr64
     {
+        T* ptr;
         uint64_t _64 = 0;
-        T* Get() const
+
+        void Set(void* base, uint64_t offset)
         {
-            return reinterpret_cast<T*>(_64);
+            _64 = reinterpret_cast<uintptr_t>(base) + offset;
         }
     };
 
@@ -57,8 +59,25 @@ private:
     }
 
     void DoEndianSwap();
-    void DoPointerFixup();
 
+    template <typename T>
+    inline static void DoPointerFixup(T& v, void* base)
+    {
+    }
+
+    template <typename T>
+    inline static void DoPointerFixup(T*& v, void* base)
+    {
+        v = reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(base) + reinterpret_cast<uintptr_t>(v));
+    }
+
+    template <typename T>
+    inline static void DoPointerFixup(Ptr64<T>& v, void* base)
+    {
+        v._64 += reinterpret_cast<uintptr_t>(base);
+    }
+
+/*$PointerFixupForwardDeclare$*/
 private:
     uint8_t* m_ownedMemory = nullptr;
 
@@ -91,7 +110,7 @@ bool /*$ClassName$*/::LoadFromMemory(void* mem, uint32_t memSize)
     // verify fourcc, and do endian swap if we need to
     {
         static const uint32_t fourcc_regular = MakeFourCC('D', 'F', 'G', 'D');
-        static const uint32_t fourcc_swapped = MakeFourCC('D', 'G', 'F', 'D');
+        static const uint32_t fourcc_swapped = MakeFourCC('D', 'G', 'F', 'D'); // TODO: make this by endian swapping fourcc_regular
         uint32_t fourcc = 0;
         if (!Read(fourcc, mem, memIndex, memSize))
             return false;
@@ -109,9 +128,6 @@ bool /*$ClassName$*/::LoadFromMemory(void* mem, uint32_t memSize)
             return false;
     }
 /*$LoadTables$*/
-
-    DoPointerFixup();
-
     return true;
 }
 
@@ -138,12 +154,11 @@ bool /*$ClassName$*/::LoadFromFile(const char* fileName)
     return ret;
 }
 
+// ================================= Pointer Fixup =================================
+/*$PointerFixup$*/
+// ================================= Endian Swap =================================
+
 // TODO: this
 void /*$ClassName$*/::DoEndianSwap()
 {/*DoEndianSwap*/
-}
-
-// TODO: this
-void /*$ClassName$*/::DoPointerFixup()
-{/*DoPointerFixup*/
 }

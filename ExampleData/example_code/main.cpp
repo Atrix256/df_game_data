@@ -11,11 +11,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    auto blah1 = data.m_table_Character_names.Get();
-    auto blah2 = data.m_table_Character.Get();
+    auto blah1 = data.m_table_Character_names.ptr;
+    auto blah2 = data.m_table_Character.ptr;
 
-    auto blah3 = data.m_table_Item_names.Get();
-    auto blah4 = data.m_table_Item.Get();
+    auto blah3 = data.m_table_Item_names.ptr;
+    auto blah4 = data.m_table_Item.ptr;
 
     // TODO: load data
     return 0;
