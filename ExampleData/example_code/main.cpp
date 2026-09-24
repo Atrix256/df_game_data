@@ -10,7 +10,12 @@ int main(int argc, char** argv)
         printf("Could not load data!\n");
         return 1;
     }
-    int ijkl = 0;
+
+    auto blah1 = data.m_table_Character_names.Get();
+    auto blah2 = data.m_table_Character.Get();
+
+    auto blah3 = data.m_table_Item_names.Get();
+    auto blah4 = data.m_table_Item.Get();
 
     // TODO: load data
     return 0;

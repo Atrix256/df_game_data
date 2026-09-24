@@ -57,10 +57,13 @@ private:
     }
 
     void DoEndianSwap();
+    void DoPointerFixup();
 
 private:
     uint8_t* m_ownedMemory = nullptr;
-/*$PrivateStorage$*/
+
+public:
+/*$PublicStorage$*/
 };
 
 // ================================= Misc =================================
@@ -105,18 +108,11 @@ bool /*$ClassName$*/::LoadFromMemory(void* mem, uint32_t memSize)
         if (!Read(hash, mem, memIndex, memSize) || hash != /*$SchemaHash*/)
             return false;
     }
-
 /*$LoadTables$*/
 
-    // TODO: In load tables, if the count is 0, skip the lut and data loading. leave at null
+    DoPointerFixup();
 
-    // TODO: for each table:
-    // * entry count
-    // * LUT if it's supposed to be there
-    // * pointer to first table (can index)
-
-    // TODO: do it!
-    return false;
+    return true;
 }
 
 bool /*$ClassName$*/::LoadFromFile(const char* fileName)
@@ -145,4 +141,9 @@ bool /*$ClassName$*/::LoadFromFile(const char* fileName)
 // TODO: this
 void /*$ClassName$*/::DoEndianSwap()
 {/*DoEndianSwap*/
+}
+
+// TODO: this
+void /*$ClassName$*/::DoPointerFixup()
+{/*DoPointerFixup*/
 }

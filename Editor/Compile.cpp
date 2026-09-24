@@ -227,7 +227,7 @@ static bool MakeHeader_EnumAndStructDefs(const DBRoot& dbRoot)
 static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, const DBRoot& dbRoot)
 {
     // make storage for each table
-    std::ostringstream& privateStorage = s_data.tokenReplacement["/*$PrivateStorage$*/"];
+    std::ostringstream& privateStorage = s_data.tokenReplacement["/*$PublicStorage$*/"];
     for (const auto& pair : dbRoot.m_tables)
     {
         std::string indent = "    ";
@@ -235,7 +235,8 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
         const DefParser& parser = pair.second->GetParser();
 
         // Make an extra newline to separate them
-        privateStorage << "\n";
+        if (!privateStorage.view().empty())
+            privateStorage << "\n";
 
         privateStorage << indent << "uint32_t m_table_" << parser.GetRootStructName() << "_count = 0;\n";
 
@@ -279,7 +280,7 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
         loadTables << indent << "        // Get a pointer to the first entry in the table\n";
         loadTables << indent << "        if (memSize - memIndex < m_table_" << pair.first << "_count * sizeof(" << pair.first << "))\n";
         loadTables << indent << "            return false;\n";
-        loadTables << indent << "        m_table_Character._64 = reinterpret_cast<uintptr_t>(mem) + memIndex;\n";
+        loadTables << indent << "        m_table_" << pair.first << "._64 = reinterpret_cast<uintptr_t>(mem) + memIndex;\n";
         loadTables << indent << "        memIndex += m_table_" << pair.first << "_count * sizeof(" << pair.first << ");\n";
 
         loadTables << indent << "    }\n";

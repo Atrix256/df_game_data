@@ -107,10 +107,12 @@ private:
     }
 
     void DoEndianSwap();
+    void DoPointerFixup();
 
 private:
     uint8_t* m_ownedMemory = nullptr;
 
+public:
     uint32_t m_table_Character_count = 0;
     Ptr64<char*> m_table_Character_names;
     Ptr64<Character> m_table_Character;
@@ -163,7 +165,6 @@ bool dfgd::LoadFromMemory(void* mem, uint32_t memSize)
         if (!Read(hash, mem, memIndex, memSize) || hash != 0x4d6fca5bde6206b2ULL)
             return false;
     }
-
     // Character Table
     {
         if (!Read(m_table_Character_count, mem, memIndex, memSize))
@@ -205,21 +206,15 @@ bool dfgd::LoadFromMemory(void* mem, uint32_t memSize)
             // Get a pointer to the first entry in the table
             if (memSize - memIndex < m_table_Item_count * sizeof(Item))
                 return false;
-            m_table_Character._64 = reinterpret_cast<uintptr_t>(mem) + memIndex;
+            m_table_Item._64 = reinterpret_cast<uintptr_t>(mem) + memIndex;
             memIndex += m_table_Item_count * sizeof(Item);
         }
     }
 
 
-    // TODO: In load tables, if the count is 0, skip the lut and data loading. leave at null
+    DoPointerFixup();
 
-    // TODO: for each table:
-    // * entry count
-    // * LUT if it's supposed to be there
-    // * pointer to first table (can index)
-
-    // TODO: do it!
-    return false;
+    return true;
 }
 
 bool dfgd::LoadFromFile(const char* fileName)
@@ -248,4 +243,9 @@ bool dfgd::LoadFromFile(const char* fileName)
 // TODO: this
 void dfgd::DoEndianSwap()
 {/*DoEndianSwap*/
+}
+
+// TODO: this
+void dfgd::DoPointerFixup()
+{/*DoPointerFixup*/
 }
