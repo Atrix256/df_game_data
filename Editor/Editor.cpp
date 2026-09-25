@@ -1051,12 +1051,6 @@ bool EditorOnAppLaunch(int argc, char** argv, int &returnCode)
 /*
 TODO:
 
-* generate header file on compile for binary file
- ! namespace in settings is used when generating code, to wrap everything in a namespace if present
-  * and use the namespaces of the types bleh.
-
-* generate binary packed data
-
 * the example data needs a small c++ main.cpp that loads the data and prints something from it.
  * ExampleData\example_code\main.cpp when it's time to do this again.
 
