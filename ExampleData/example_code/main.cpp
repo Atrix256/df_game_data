@@ -25,6 +25,9 @@ int main(int argc, char** argv)
     const dfgd::Character& c = characters[2].Get();
     const dfgd::Character& d = characters[3].Get();
 
+    auto test1 = data.GetCharacter("Larry");
+    auto test2 = data.GetCharacter("larry");
+
     // TODO: load data
     return 0;
 }

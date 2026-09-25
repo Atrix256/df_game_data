@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <cstring>
+#include <algorithm>
 
 class /*$ClassName$*/
 {

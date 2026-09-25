@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <cstring>
+#include <algorithm>
 
 class dfgd
 {
@@ -89,10 +90,14 @@ public:
         float z;
     };
 
+    using Vec3Record = Record<Vec3>;
+
     struct Item
     {
         Ptr64<char> name;
     };
+
+    using ItemRecord = Record<Item>;
 
     struct Character
     {
@@ -114,6 +119,8 @@ public:
         uint32_t _inventory_count = 0;
         Ptr64<Ptr64<Item>> inventory;
     };
+
+    using CharacterRecord = Record<Character>;
 
     #pragma pack(pop)
 
@@ -183,8 +190,6 @@ private:
     uint8_t* m_ownedMemory = nullptr;
 
 public:
-    using CharacterRecord = Record<Character>;
-
     uint32_t GetCharacterCount() const
     {
         return m_table_Character_count;
@@ -198,7 +203,28 @@ public:
         return ret;
     }
 
-    using ItemRecord = Record<Item>;
+    CharacterRecord GetCharacter(const char* name) const
+    {
+        CharacterRecord ret;
+
+        char** array = m_table_Character_names.ptr;
+        const uint32_t count = m_table_Character_count;
+
+        auto it = std::lower_bound(
+            array,
+            array + count,
+            name,
+            [](const char* item, const char* val)
+            {
+                return strcmp(item, val) < 0;
+            }
+        );
+        uint32_t index = uint32_t(it - array);
+        if (index < count && !strcmp(*it, name))
+            ret.m_record = &m_table_Character.ptr[index];
+
+        return ret;
+    }
 
     uint32_t GetItemCount() const
     {
@@ -210,6 +236,29 @@ public:
         ItemRecord ret;
         if (index < m_table_Item_count)
             ret.m_record = &m_table_Item.ptr[index];
+        return ret;
+    }
+
+    ItemRecord GetItem(const char* name) const
+    {
+        ItemRecord ret;
+
+        char** array = m_table_Item_names.ptr;
+        const uint32_t count = m_table_Item_count;
+
+        auto it = std::lower_bound(
+            array,
+            array + count,
+            name,
+            [](const char* item, const char* val)
+            {
+                return strcmp(item, val) < 0;
+            }
+        );
+        uint32_t index = uint32_t(it - array);
+        if (index < count && !strcmp(*it, name))
+            ret.m_record = &m_table_Item.ptr[index];
+
         return ret;
     }
 

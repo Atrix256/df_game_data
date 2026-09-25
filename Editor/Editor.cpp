@@ -1126,4 +1126,10 @@ Notes:
 
 ! make a way for people to support the project with $ if they want to
 
+* how hot reloading works:
+ * if enabled, it stores the record name, data object ptr and generation counter inside every record.
+ * when you call .get(), it checks if the file on disk changed and reloads if so (gated by time to not happen too fast)
+ * when the file reloads, it increments the generation counter.
+ * the record checks if the generation counter it has is the one the data object ptr has. if not, it does a look up by name to get the record again.
+
 */

@@ -8,6 +8,7 @@ static constexpr const char* c_output_h = R"EMBED(/*
 #include <stdint.h>
 #include <stdio.h>
 #include <cstring>
+#include <algorithm>
 
 class /*$ClassName$*/
 {

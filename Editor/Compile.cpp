@@ -212,6 +212,9 @@ static bool MakeHeader_EnumAndStructDefs(const DBRoot& dbRoot)
 
                 os << indent << "};\n";
 
+                os << "\n";
+                os << indent << "using " << s.name << "Record = Record<" << s.name << ">;\n";
+
                 if (!s.nameSpace.empty())
                 {
                     indent = "    ";
@@ -262,8 +265,6 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
         if (!publicInterface.view().empty())
             publicInterface << "\n";
 
-        publicInterface << indent << "using " << pair.first << "Record = Record<" << pair.first << ">;\n";
-        publicInterface << "\n";
         publicInterface << indent << "uint32_t Get" << pair.first << "Count() const\n";
         publicInterface << indent << "{\n";
         publicInterface << indent << "    return m_table_" << pair.first << "_count;\n";
@@ -276,6 +277,34 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
         publicInterface << indent << "        ret.m_record = &m_table_" << pair.first << ".ptr[index];\n";
         publicInterface << indent << "    return ret;\n";
         publicInterface << indent << "}\n";
+
+        // If we have the name entries, have an interface to look up by name
+        if (compilerSettings.includeEntryLUT)
+        {
+            publicInterface << "\n";
+            publicInterface << indent << pair.first << "Record Get" << pair.first << "(const char* name) const\n";
+            publicInterface << indent << "{\n";
+            publicInterface << indent << "    " << pair.first << "Record ret;\n";
+            publicInterface << "\n";
+            publicInterface << indent << "    char** array = m_table_" << pair.first << "_names.ptr;\n";
+            publicInterface << indent << "    const uint32_t count = m_table_" << pair.first << "_count;\n";
+            publicInterface << "\n";
+            publicInterface << indent << "    auto it = std::lower_bound(\n";
+            publicInterface << indent << "        array,\n";
+            publicInterface << indent << "        array + count,\n";
+            publicInterface << indent << "        name,\n";
+            publicInterface << indent << "        [](const char* item, const char* val)\n";
+            publicInterface << indent << "        {\n";
+            publicInterface << indent << "            return strcmp(item, val) < 0;\n";
+            publicInterface << indent << "        }\n";
+            publicInterface << indent << "    );\n";
+            publicInterface << indent << "    uint32_t index = uint32_t(it - array);\n";
+            publicInterface << indent << "    if (index < count && !strcmp(*it, name))\n";
+            publicInterface << indent << "        ret.m_record = &m_table_" << pair.first << ".ptr[index];\n";
+            publicInterface << "\n";
+            publicInterface << indent << "    return ret;\n";
+            publicInterface << indent << "}\n";
+        }
     }
 
     // make the code to load each table
@@ -803,8 +832,10 @@ bool Compile(const DBRoot& dbRoot, const DBCompileSettings& compilerSettings, st
 
 /*
 TODO:
+* if entry names are included, have a get record by name interface
 * need to use it for a bit before announcing. adding array items in the editor is crashing
 * test data should have a struct of array of struct of array of struct or something
 * maybe have single link in test data too. Also static and dynamic array of links.
 * links can be optional - make them be null pointers if not set
+* unions may be worth while ):
 */
