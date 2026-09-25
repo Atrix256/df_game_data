@@ -230,7 +230,7 @@ static bool MakeHeader_EnumAndStructDefs(const DBRoot& dbRoot)
 static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, const DBRoot& dbRoot)
 {
     // make storage for each table
-    std::ostringstream& privateStorage = s_data.tokenReplacement["/*$PublicStorage$*/"];
+    std::ostringstream& privateStorage = s_data.tokenReplacement["/*$PrivateStorage$*/"];
     for (const auto& pair : dbRoot.m_tables)
     {
         std::string indent = "    ";
@@ -248,6 +248,34 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
             privateStorage << indent << "Ptr64<char*> m_table_" << parser.GetRootStructName() << "_names;\n";
 
         privateStorage << indent << "Ptr64<" << parser.GetRootStructName() << "> m_table_" << parser.GetRootStructName() << ";\n";
+    }
+
+    // make the public interface to get records
+    std::ostringstream& publicInterface = s_data.tokenReplacement["/*$PublicInterface$*/"];
+    for (const auto& pair : dbRoot.m_tables)
+    {
+        std::string indent = "    ";
+
+        const DefParser& parser = pair.second->GetParser();
+
+        // Make an extra newline to separate them
+        if (!publicInterface.view().empty())
+            publicInterface << "\n";
+
+        publicInterface << indent << "using " << pair.first << "Record = Record<" << pair.first << ">;\n";
+        publicInterface << "\n";
+        publicInterface << indent << "uint32_t Get" << pair.first << "Count() const\n";
+        publicInterface << indent << "{\n";
+        publicInterface << indent << "    return m_table_" << pair.first << "_count;\n";
+        publicInterface << indent << "}\n";
+        publicInterface << "\n";
+        publicInterface << indent << pair.first << "Record Get" << pair.first << "(uint32_t index) const\n";
+        publicInterface << indent << "{\n";
+        publicInterface << indent << "    " << pair.first << "Record ret;\n";
+        publicInterface << indent << "    if (index < m_table_" << pair.first << "_count)\n";
+        publicInterface << indent << "        ret.m_record = &m_table_" << pair.first << ".ptr[index];\n";
+        publicInterface << indent << "    return ret;\n";
+        publicInterface << indent << "}\n";
     }
 
     // make the code to load each table

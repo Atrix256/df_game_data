@@ -36,6 +36,27 @@ public:
         }
     };
 
+    template <typename T>
+    struct Record
+    {
+    public:
+        const T& Get() const
+        {
+            static const T s_dummy;
+            return m_record ? m_record : s_dummy;
+        }
+
+        bool Valid() const
+        {
+            return m_record != nullptr;
+        }
+
+    private:
+        friend class /*$ClassName$*/;
+        T* m_record = nullptr;
+    };
+
+public:
     #pragma pack(push, 1)
 /*$EnumAndStructDefs$*/
     #pragma pack(pop)
@@ -100,7 +121,9 @@ private:
     uint8_t* m_ownedMemory = nullptr;
 
 public:
-/*$PublicStorage$*/};
+/*$PublicInterface$*/
+private:
+/*$PrivateStorage$*/};
 
 // ================================= Misc =================================
 

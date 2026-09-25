@@ -36,6 +36,27 @@ public:
         }
     };
 
+    template <typename T>
+    struct Record
+    {
+    public:
+        const T& Get() const
+        {
+            static const T s_dummy = T();
+            return m_record ? *m_record : s_dummy;
+        }
+
+        bool Valid() const
+        {
+            return m_record != nullptr;
+        }
+
+    private:
+        friend class dfgd;
+        T* m_record = nullptr;
+    };
+
+public:
     #pragma pack(push, 1)
 
     enum class EyeColor : uint16_t
@@ -159,6 +180,37 @@ private:
     uint8_t* m_ownedMemory = nullptr;
 
 public:
+    using CharacterRecord = Record<Character>;
+
+    uint32_t GetCharacterCount() const
+    {
+        return m_table_Character_count;
+    }
+
+    CharacterRecord GetCharacter(uint32_t index) const
+    {
+        CharacterRecord ret;
+        if (index < m_table_Character_count)
+            ret.m_record = &m_table_Character.ptr[index];
+        return ret;
+    }
+
+    using ItemRecord = Record<Item>;
+
+    uint32_t GetItemCount() const
+    {
+        return m_table_Item_count;
+    }
+
+    ItemRecord GetItem(uint32_t index) const
+    {
+        ItemRecord ret;
+        if (index < m_table_Item_count)
+            ret.m_record = &m_table_Item.ptr[index];
+        return ret;
+    }
+
+private:
     uint32_t m_table_Character_count = 0;
     Ptr64<char*> m_table_Character_names;
     Ptr64<Character> m_table_Character;

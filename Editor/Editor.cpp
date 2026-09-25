@@ -1056,7 +1056,10 @@ TODO:
 
  ! look for TODOs
 
+* static analysis of generated code.
+
 * runtime file watching:
+ * probably have it opt in since it has to store a string per handle
  * Have a get() function on an entry pointer which returns an object.
  * Internally checks load version # to see if it needs to look entry up again by name.
  * If entry not found by name return default object with a invalid flag thay can be checked.
