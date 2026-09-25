@@ -775,4 +775,5 @@ bool Compile(const DBRoot& dbRoot, const DBCompileSettings& compilerSettings, st
 TODO:
 * need to use it for a bit before announcing. adding array items in the editor is crashing
 * test data should have a struct of array of struct of array of struct or something
+* maybe have single link in test data too. Also static and dynamic array of links.
 */
