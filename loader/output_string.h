@@ -25,11 +25,6 @@ public:
     {
         T* ptr;
         uint64_t _64 = 0;
-
-        void Set(void* base, uint64_t offset)
-        {
-            _64 = reinterpret_cast<uintptr_t>(base) + offset;
-        }
     };
 
     struct Bool
@@ -47,7 +42,19 @@ public:
 
 private:
     template <typename T>
-    static bool Read(T& value, void* mem, uint32_t& memIndex, uint32_t memSize)
+    inline static void EndianSwap(T& v)
+    {
+        uint8_t* bytes = reinterpret_cast<uint8_t*>(&v);
+        for (size_t i = 0; i < sizeof(T) / 2; ++i)
+        {
+            uint8_t tmp = bytes[i];
+            bytes[i] = bytes[sizeof(T) - 1 - i];
+            bytes[sizeof(T) - 1 - i] = tmp;
+        }
+    }
+
+    template <typename T>
+    static bool Read(T& value, void* mem, uint32_t& memIndex, uint32_t memSize, bool endianSwap)
     {
         if (memSize - memIndex < sizeof(T))
             return false;
@@ -55,11 +62,13 @@ private:
         memcpy(&value, &((char*)mem)[memIndex], sizeof(value));
         memIndex += sizeof(value);
 
+        if (endianSwap)
+            EndianSwap(value);
+
         return true;
     }
 
-    void DoEndianSwap();
-
+private:
     template <typename T>
     inline static void DoPointerFixup(T& v, void* base)
     {
@@ -77,13 +86,21 @@ private:
         v._64 += reinterpret_cast<uintptr_t>(base);
     }
 
+private:
+    template <typename T>
+    inline static void DoEndianSwapAndPointerFixup(T& v, void* base, bool endianSwap)
+    {
+        if (endianSwap)
+            EndianSwap(v);
+        DoPointerFixup(v, base);
+    }
+
 /*$PointerFixupForwardDeclare$*/
 private:
     uint8_t* m_ownedMemory = nullptr;
 
 public:
-/*$PublicStorage$*/
-};
+/*$PublicStorage$*/};
 
 // ================================= Misc =================================
 
@@ -107,16 +124,18 @@ bool /*$ClassName$*/::LoadFromMemory(void* mem, uint32_t memSize)
 {
     uint32_t memIndex = 0;
 
-    // verify fourcc, and do endian swap if we need to
+    // verify fourcc, and see if we need to do endian swaps
+    bool endianSwap = false;
     {
         static const uint32_t fourcc_regular = MakeFourCC('D', 'F', 'G', 'D');
-        static const uint32_t fourcc_swapped = MakeFourCC('D', 'G', 'F', 'D'); // TODO: make this by endian swapping fourcc_regular
+        static const uint32_t fourcc_swapped = MakeFourCC('D', 'G', 'F', 'D');
+
         uint32_t fourcc = 0;
-        if (!Read(fourcc, mem, memIndex, memSize))
+        if (!Read(fourcc, mem, memIndex, memSize, false))
             return false;
 
         if (fourcc == fourcc_swapped)
-            DoEndianSwap();
+            endianSwap = true;
         else if (fourcc != fourcc_regular)
             return false;
     }
@@ -124,7 +143,7 @@ bool /*$ClassName$*/::LoadFromMemory(void* mem, uint32_t memSize)
     // Verify that the schema hash in the binary data matches the schema hash this file was made for
     {
         uint64_t hash = 0;
-        if (!Read(hash, mem, memIndex, memSize) || hash != /*$SchemaHash*/)
+        if (!Read(hash, mem, memIndex, memSize, endianSwap) || hash != /*$SchemaHash*/)
             return false;
     }
 /*$LoadTables$*/
@@ -155,11 +174,4 @@ bool /*$ClassName$*/::LoadFromFile(const char* fileName)
 }
 
 // ================================= Pointer Fixup =================================
-/*$PointerFixup$*/
-// ================================= Endian Swap =================================
-
-// TODO: this
-void /*$ClassName$*/::DoEndianSwap()
-{/*DoEndianSwap*/
-}
-)EMBED";
+/*$PointerFixup$*/)EMBED";

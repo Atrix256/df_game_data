@@ -25,11 +25,6 @@ public:
     {
         T* ptr;
         uint64_t _64 = 0;
-
-        void Set(void* base, uint64_t offset)
-        {
-            _64 = reinterpret_cast<uintptr_t>(base) + offset;
-        }
     };
 
     struct Bool
@@ -98,7 +93,19 @@ public:
 
 private:
     template <typename T>
-    static bool Read(T& value, void* mem, uint32_t& memIndex, uint32_t memSize)
+    inline static void EndianSwap(T& v)
+    {
+        uint8_t* bytes = reinterpret_cast<uint8_t*>(&v);
+        for (size_t i = 0; i < sizeof(T) / 2; ++i)
+        {
+            uint8_t tmp = bytes[i];
+            bytes[i] = bytes[sizeof(T) - 1 - i];
+            bytes[sizeof(T) - 1 - i] = tmp;
+        }
+    }
+
+    template <typename T>
+    static bool Read(T& value, void* mem, uint32_t& memIndex, uint32_t memSize, bool endianSwap)
     {
         if (memSize - memIndex < sizeof(T))
             return false;
@@ -106,11 +113,13 @@ private:
         memcpy(&value, &((char*)mem)[memIndex], sizeof(value));
         memIndex += sizeof(value);
 
+        if (endianSwap)
+            EndianSwap(value);
+
         return true;
     }
 
-    void DoEndianSwap();
-
+private:
     template <typename T>
     inline static void DoPointerFixup(T& v, void* base)
     {
@@ -128,9 +137,18 @@ private:
         v._64 += reinterpret_cast<uintptr_t>(base);
     }
 
-    static void DoPointerFixup(Vec3& v, void* base);
-    static void DoPointerFixup(Item& v, void* base);
-    static void DoPointerFixup(Character& v, void* base);
+private:
+    template <typename T>
+    inline static void DoEndianSwapAndPointerFixup(T& v, void* base, bool endianSwap)
+    {
+        if (endianSwap)
+            EndianSwap(v);
+        DoPointerFixup(v, base);
+    }
+
+    static void DoEndianSwapAndPointerFixup(Vec3& v, void* base, bool endianSwap);
+    static void DoEndianSwapAndPointerFixup(Item& v, void* base, bool endianSwap);
+    static void DoEndianSwapAndPointerFixup(Character& v, void* base, bool endianSwap);
 
 private:
     uint8_t* m_ownedMemory = nullptr;
@@ -143,7 +161,6 @@ public:
     uint32_t m_table_Item_count = 0;
     Ptr64<char*> m_table_Item_names;
     Ptr64<Item> m_table_Item;
-
 };
 
 // ================================= Misc =================================
@@ -168,16 +185,18 @@ bool dfgd::LoadFromMemory(void* mem, uint32_t memSize)
 {
     uint32_t memIndex = 0;
 
-    // verify fourcc, and do endian swap if we need to
+    // verify fourcc, and see if we need to do endian swaps
+    bool endianSwap = false;
     {
         static const uint32_t fourcc_regular = MakeFourCC('D', 'F', 'G', 'D');
-        static const uint32_t fourcc_swapped = MakeFourCC('D', 'G', 'F', 'D'); // TODO: make this by endian swapping fourcc_regular
+        static const uint32_t fourcc_swapped = MakeFourCC('D', 'G', 'F', 'D');
+
         uint32_t fourcc = 0;
-        if (!Read(fourcc, mem, memIndex, memSize))
+        if (!Read(fourcc, mem, memIndex, memSize, false))
             return false;
 
         if (fourcc == fourcc_swapped)
-            DoEndianSwap();
+            endianSwap = true;
         else if (fourcc != fourcc_regular)
             return false;
     }
@@ -185,12 +204,13 @@ bool dfgd::LoadFromMemory(void* mem, uint32_t memSize)
     // Verify that the schema hash in the binary data matches the schema hash this file was made for
     {
         uint64_t hash = 0;
-        if (!Read(hash, mem, memIndex, memSize) || hash != 0x4d6fca5bde6206b2ULL)
+        if (!Read(hash, mem, memIndex, memSize, endianSwap) || hash != 0x4d6fca5bde6206b2ULL)
             return false;
     }
+
     // Character Table
     {
-        if (!Read(m_table_Character_count, mem, memIndex, memSize))
+        if (!Read(m_table_Character_count, mem, memIndex, memSize, endianSwap))
             return false;
 
         if (m_table_Character_count > 0)
@@ -198,26 +218,28 @@ bool dfgd::LoadFromMemory(void* mem, uint32_t memSize)
             // get char** to LUT and fixup string pointers
             if (memSize - memIndex < m_table_Character_count * sizeof(uint64_t))
                 return false;
-            m_table_Character_names.Set(mem, memIndex);
+            m_table_Character_names._64 = memIndex;
+            DoEndianSwapAndPointerFixup(m_table_Character_names, mem, endianSwap);
             for (uint32_t i = 0; i < m_table_Character_count; ++i)
-                DoPointerFixup(m_table_Character_names.ptr[i], mem);
+                DoEndianSwapAndPointerFixup(m_table_Character_names.ptr[i], mem, endianSwap);
             memIndex += m_table_Character_count * sizeof(uint64_t);
 
             // Get a pointer to the first entry in the table
             if (memSize - memIndex < m_table_Character_count * sizeof(Character))
                 return false;
-            m_table_Character.Set(mem, memIndex);
+            m_table_Character._64 = memIndex;
+            DoEndianSwapAndPointerFixup(m_table_Character, mem, endianSwap);
             memIndex += m_table_Character_count * sizeof(Character);
 
             // Do pointer fixup
             for (uint32_t i = 0; i < m_table_Character_count; ++i)
-                DoPointerFixup(m_table_Character.ptr[i], mem);
+                DoEndianSwapAndPointerFixup(m_table_Character.ptr[i], mem, endianSwap);
         }
     }
 
     // Item Table
     {
-        if (!Read(m_table_Item_count, mem, memIndex, memSize))
+        if (!Read(m_table_Item_count, mem, memIndex, memSize, endianSwap))
             return false;
 
         if (m_table_Item_count > 0)
@@ -225,20 +247,22 @@ bool dfgd::LoadFromMemory(void* mem, uint32_t memSize)
             // get char** to LUT and fixup string pointers
             if (memSize - memIndex < m_table_Item_count * sizeof(uint64_t))
                 return false;
-            m_table_Item_names.Set(mem, memIndex);
+            m_table_Item_names._64 = memIndex;
+            DoEndianSwapAndPointerFixup(m_table_Item_names, mem, endianSwap);
             for (uint32_t i = 0; i < m_table_Item_count; ++i)
-                DoPointerFixup(m_table_Item_names.ptr[i], mem);
+                DoEndianSwapAndPointerFixup(m_table_Item_names.ptr[i], mem, endianSwap);
             memIndex += m_table_Item_count * sizeof(uint64_t);
 
             // Get a pointer to the first entry in the table
             if (memSize - memIndex < m_table_Item_count * sizeof(Item))
                 return false;
-            m_table_Item.Set(mem, memIndex);
+            m_table_Item._64 = memIndex;
+            DoEndianSwapAndPointerFixup(m_table_Item, mem, endianSwap);
             memIndex += m_table_Item_count * sizeof(Item);
 
             // Do pointer fixup
             for (uint32_t i = 0; i < m_table_Item_count; ++i)
-                DoPointerFixup(m_table_Item.ptr[i], mem);
+                DoEndianSwapAndPointerFixup(m_table_Item.ptr[i], mem, endianSwap);
         }
     }
 
@@ -270,35 +294,28 @@ bool dfgd::LoadFromFile(const char* fileName)
 
 // ================================= Pointer Fixup =================================
 
-void dfgd::DoPointerFixup(dfgd::Vec3& v, void* base)
+void dfgd::DoEndianSwapAndPointerFixup(dfgd::Vec3& v, void* base, bool endianSwap)
 {
-    DoPointerFixup(v.x, base);
-    DoPointerFixup(v.y, base);
-    DoPointerFixup(v.z, base);
+    DoEndianSwapAndPointerFixup(v.x, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v.y, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v.z, base, endianSwap);
 }
 
-void dfgd::DoPointerFixup(dfgd::Item& v, void* base)
+void dfgd::DoEndianSwapAndPointerFixup(dfgd::Item& v, void* base, bool endianSwap)
 {
-    DoPointerFixup(v.name, base);
+    DoEndianSwapAndPointerFixup(v.name, base, endianSwap);
 }
 
-void dfgd::DoPointerFixup(dfgd::Character& v, void* base)
+void dfgd::DoEndianSwapAndPointerFixup(dfgd::Character& v, void* base, bool endianSwap)
 {
-    DoPointerFixup(v.name, base);
-    DoPointerFixup(v.eyeColor, base);
-    DoPointerFixup(v.alignment, base);
-    DoPointerFixup(v.playerClass, base);
-    DoPointerFixup(v.location, base);
-    DoPointerFixup(v.max_hp, base);
-    DoPointerFixup(v.max_mp, base);
-    DoPointerFixup(v.playable, base);
-    DoPointerFixup(v.favorite_numbers, base);
-    DoPointerFixup(v.inventory, base);
-}
-
-// ================================= Endian Swap =================================
-
-// TODO: this
-void dfgd::DoEndianSwap()
-{/*DoEndianSwap*/
+    DoEndianSwapAndPointerFixup(v.name, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v.eyeColor, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v.alignment, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v.playerClass, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v.location, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v.max_hp, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v.max_mp, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v.playable, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v.favorite_numbers, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v.inventory, base, endianSwap);
 }

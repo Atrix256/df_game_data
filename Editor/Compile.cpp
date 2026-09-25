@@ -251,14 +251,13 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
     for (const auto& pair : dbRoot.m_tables)
     {
         // seperate table loading with an extra newline
-        if (!loadTables.view().empty())
-            loadTables << "\n";
+        loadTables << "\n";
 
         std::string indent = "    ";
 
         loadTables << indent << "// " << pair.first << " Table\n";
         loadTables << indent << "{\n";
-        loadTables << indent << "    if (!Read(m_table_" << pair.first << "_count, mem, memIndex, memSize))\n";
+        loadTables << indent << "    if (!Read(m_table_" << pair.first << "_count, mem, memIndex, memSize, endianSwap))\n";
         loadTables << indent << "        return false;\n";
         loadTables << "\n";
         loadTables << indent << "    if (m_table_" << pair.first << "_count > 0)\n";
@@ -269,9 +268,10 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
             loadTables << indent << "        // get char** to LUT and fixup string pointers\n";
             loadTables << indent << "        if (memSize - memIndex < m_table_" << pair.first << "_count * sizeof(uint64_t))\n";
             loadTables << indent << "            return false;\n";
-            loadTables << indent << "        m_table_" << pair.first << "_names.Set(mem, memIndex);\n";
+            loadTables << indent << "        m_table_" << pair.first << "_names._64 = memIndex;\n";
+            loadTables << indent << "        DoEndianSwapAndPointerFixup(m_table_" << pair.first << "_names, mem, endianSwap);\n";
             loadTables << indent << "        for (uint32_t i = 0; i < m_table_" << pair.first << "_count; ++i)\n";
-            loadTables << indent << "            DoPointerFixup(m_table_" << pair.first << "_names.ptr[i], mem);\n";
+            loadTables << indent << "            DoEndianSwapAndPointerFixup(m_table_" << pair.first << "_names.ptr[i], mem, endianSwap);\n";
             loadTables << indent << "        memIndex += m_table_" << pair.first << "_count * sizeof(uint64_t);\n";
             loadTables << "\n";
         }
@@ -279,12 +279,13 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
         loadTables << indent << "        // Get a pointer to the first entry in the table\n";
         loadTables << indent << "        if (memSize - memIndex < m_table_" << pair.first << "_count * sizeof(" << pair.first << "))\n";
         loadTables << indent << "            return false;\n";
-        loadTables << indent << "        m_table_" << pair.first << ".Set(mem, memIndex);\n";
+        loadTables << indent << "        m_table_" << pair.first << "._64 = memIndex;\n";
+        loadTables << indent << "        DoEndianSwapAndPointerFixup(m_table_" << pair.first << ", mem, endianSwap);\n";
         loadTables << indent << "        memIndex += m_table_" << pair.first << "_count * sizeof(" << pair.first << ");\n";
         loadTables << "\n";
         loadTables << indent << "        // Do pointer fixup\n";
         loadTables << indent << "        for (uint32_t i = 0; i < m_table_" << pair.first << "_count; ++i)\n";
-        loadTables << indent << "            DoPointerFixup(m_table_" << pair.first << ".ptr[i], mem);\n";
+        loadTables << indent << "            DoEndianSwapAndPointerFixup(m_table_" << pair.first << ".ptr[i], mem, endianSwap);\n";
 
         loadTables << indent << "    }\n";
         loadTables << indent << "}\n";
@@ -302,20 +303,20 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
             bool ret = pair.second->GetParser().ForEachStruct(
                 [&structsHandled, &pointerFixup, &pointerFixupFwd, &className](const DefParser::Struct& structDef)
                 {
-                    // Only need to write each DoPointerFixup() function once
+                    // Only need to write each DoEndianSwapAndPointerFixup() function once
                     if (structsHandled.contains(structDef.name))
                         return true;
                     structsHandled.insert(structDef.name);
 
-                    pointerFixupFwd << "    static void DoPointerFixup(" << structDef.name << "& v, void* base);\n";
+                    pointerFixupFwd << "    static void DoEndianSwapAndPointerFixup(" << structDef.name << "& v, void* base, bool endianSwap);\n";
 
                     std::string indent = "";
                     pointerFixup << "\n";
-                    pointerFixup << indent << "void " << className << "::DoPointerFixup(" << className << "::" << structDef.name << "& v, void* base)\n";
+                    pointerFixup << indent << "void " << className << "::DoEndianSwapAndPointerFixup(" << className << "::" << structDef.name << "& v, void* base, bool endianSwap)\n";
                     pointerFixup << indent << "{\n";
 
                     for (const DefParser::StructField& field : structDef.fields)
-                        pointerFixup << indent << "    DoPointerFixup(v." << field.name << ", base);\n";
+                        pointerFixup << indent << "    DoEndianSwapAndPointerFixup(v." << field.name << ", base, endianSwap);\n";
 
                     pointerFixup << indent << "}\n";
 
