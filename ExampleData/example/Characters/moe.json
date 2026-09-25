@@ -1,5 +1,10 @@
 {
     "name": "Moe",
+    "bestFriend": "curly",
+    "other_inventory": [
+        "Sword",
+        "Dagger"
+    ],
     "favorite_numbers": [
         0,
         1,

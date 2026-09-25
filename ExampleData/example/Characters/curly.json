@@ -1,5 +1,16 @@
 {
     "name": "Curly",
+    "bestFriend": "larry",
+    "other_numbers": [
+        12,
+        9,
+        4,
+        8
+    ],
+    "other_inventory": [
+        "Dagger",
+        "Sword"
+    ],
     "inventory": [
         "Dagger",
         "Sword"

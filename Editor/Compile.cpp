@@ -191,14 +191,15 @@ static bool MakeHeader_EnumAndStructDefs(const DBRoot& dbRoot)
                     if (field.isArray)
                     {
                         if (field.fixedArraySize > 0)
+                        {
                             os << indent << "    static const uint32_t _" << field.name << "_count = " << field.fixedArraySize << ";\n";
+                            os << indent << "    " << typeName << " " << field.name << "[" << field.fixedArraySize << "];\n";
+                        }
                         else
+                        {
                             os << indent << "    uint32_t _" << field.name << "_count = 0;\n";
-                        os << indent << "    Ptr64<" << typeName << "> " << field.name << ";\n";
-                        // TODO: what to do when ptr64 is inside ptr64?
-                        // TODO: make arrays point into data table instead of being written inline
-                        // TODO: fixed sized arrays don't need to write the count
-                        // TODO: or maybe fixed sized arrays are written inline?
+                            os << indent << "    Ptr64<" << typeName << "> " << field.name << ";\n";
+                        }
                         continue;
                     }
 
@@ -315,11 +316,30 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
 
                     std::string indent = "";
                     pointerFixup << "\n";
-                    pointerFixup << indent << "void " << className << "::DoEndianSwapAndPointerFixup(" << className << "::" << structDef.name << "& v, void* base, bool endianSwap)\n";
+                    pointerFixup << indent << "void " << className << "::DoEndianSwapAndPointerFixup(" << structDef.name << "& v, void* base, bool endianSwap)\n";
                     pointerFixup << indent << "{\n";
 
                     for (const DefParser::StructField& field : structDef.fields)
-                        pointerFixup << indent << "    DoEndianSwapAndPointerFixup(v." << field.name << ", base, endianSwap);\n";
+                    {
+                        if (field.isArray)
+                        {
+                            if (field.fixedArraySize == 0)
+                            {
+                                pointerFixup << indent << "    DoEndianSwapAndPointerFixup(v._" << field.name << "_count, base, endianSwap);\n";
+                                pointerFixup << indent << "    DoEndianSwapAndPointerFixup(v." << field.name << ", base, endianSwap);\n";
+                            }
+
+                            pointerFixup << indent << "    for (uint32_t i = 0; i < v._" << field.name << "_count; ++i)\n";
+                            if (field.fixedArraySize != 0)
+                                pointerFixup << indent << "        DoEndianSwapAndPointerFixup(v." << field.name << "[i], base, endianSwap);\n";
+                            else
+                                pointerFixup << indent << "        DoEndianSwapAndPointerFixup(v." << field.name << ".ptr[i], base, endianSwap);\n";
+                        }
+                        else
+                        {
+                            pointerFixup << indent << "    DoEndianSwapAndPointerFixup(v." << field.name << ", base, endianSwap);\n";
+                        }
+                    }
 
                     pointerFixup << indent << "}\n";
 
@@ -754,4 +774,5 @@ bool Compile(const DBRoot& dbRoot, const DBCompileSettings& compilerSettings, st
 /*
 TODO:
 * need to use it for a bit before announcing. adding array items in the editor is crashing
+* test data should have a struct of array of struct of array of struct or something
 */

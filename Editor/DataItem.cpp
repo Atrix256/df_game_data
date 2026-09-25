@@ -213,7 +213,7 @@ static void AddUIForType(EditorData& editorData, const DefParser& parser, const 
                     // links have a drop down menu
                     const DBTable& table = *editorData.m_dbroot.m_tables[fieldDef.linkName];
 
-                    if (ImGui::BeginCombo("Type", value.c_str()))
+                    if (ImGui::BeginCombo(fieldDef.name.c_str(), value.c_str()))
                     {
                         for (auto& pair : table.m_data)
                         {

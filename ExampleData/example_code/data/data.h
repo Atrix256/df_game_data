@@ -79,8 +79,13 @@ public:
         EyeColor eyeColor;
         Alignment alignment;
         Class playerClass;
+        Ptr64<Character> bestFriend;
         Vec3 location;
         uint16_t max_hp;
+        static const uint32_t _other_numbers_count = 4;
+        uint16_t other_numbers[4];
+        static const uint32_t _other_inventory_count = 2;
+        Ptr64<Item> other_inventory[2];
         uint16_t max_mp;
         Bool playable;
         uint32_t _favorite_numbers_count = 0;
@@ -204,7 +209,7 @@ bool dfgd::LoadFromMemory(void* mem, uint32_t memSize)
     // Verify that the schema hash in the binary data matches the schema hash this file was made for
     {
         uint64_t hash = 0;
-        if (!Read(hash, mem, memIndex, memSize, endianSwap) || hash != 0x4d6fca5bde6206b2ULL)
+        if (!Read(hash, mem, memIndex, memSize, endianSwap) || hash != 0xcd0634345d2ee752ULL)
             return false;
     }
 
@@ -294,28 +299,39 @@ bool dfgd::LoadFromFile(const char* fileName)
 
 // ================================= Pointer Fixup =================================
 
-void dfgd::DoEndianSwapAndPointerFixup(dfgd::Vec3& v, void* base, bool endianSwap)
+void dfgd::DoEndianSwapAndPointerFixup(Vec3& v, void* base, bool endianSwap)
 {
     DoEndianSwapAndPointerFixup(v.x, base, endianSwap);
     DoEndianSwapAndPointerFixup(v.y, base, endianSwap);
     DoEndianSwapAndPointerFixup(v.z, base, endianSwap);
 }
 
-void dfgd::DoEndianSwapAndPointerFixup(dfgd::Item& v, void* base, bool endianSwap)
+void dfgd::DoEndianSwapAndPointerFixup(Item& v, void* base, bool endianSwap)
 {
     DoEndianSwapAndPointerFixup(v.name, base, endianSwap);
 }
 
-void dfgd::DoEndianSwapAndPointerFixup(dfgd::Character& v, void* base, bool endianSwap)
+void dfgd::DoEndianSwapAndPointerFixup(Character& v, void* base, bool endianSwap)
 {
     DoEndianSwapAndPointerFixup(v.name, base, endianSwap);
     DoEndianSwapAndPointerFixup(v.eyeColor, base, endianSwap);
     DoEndianSwapAndPointerFixup(v.alignment, base, endianSwap);
     DoEndianSwapAndPointerFixup(v.playerClass, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v.bestFriend, base, endianSwap);
     DoEndianSwapAndPointerFixup(v.location, base, endianSwap);
     DoEndianSwapAndPointerFixup(v.max_hp, base, endianSwap);
+    for (uint32_t i = 0; i < v._other_numbers_count; ++i)
+        DoEndianSwapAndPointerFixup(v.other_numbers[i], base, endianSwap);
+    for (uint32_t i = 0; i < v._other_inventory_count; ++i)
+        DoEndianSwapAndPointerFixup(v.other_inventory[i], base, endianSwap);
     DoEndianSwapAndPointerFixup(v.max_mp, base, endianSwap);
     DoEndianSwapAndPointerFixup(v.playable, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v._favorite_numbers_count, base, endianSwap);
     DoEndianSwapAndPointerFixup(v.favorite_numbers, base, endianSwap);
+    for (uint32_t i = 0; i < v._favorite_numbers_count; ++i)
+        DoEndianSwapAndPointerFixup(v.favorite_numbers.ptr[i], base, endianSwap);
+    DoEndianSwapAndPointerFixup(v._inventory_count, base, endianSwap);
     DoEndianSwapAndPointerFixup(v.inventory, base, endianSwap);
+    for (uint32_t i = 0; i < v._inventory_count; ++i)
+        DoEndianSwapAndPointerFixup(v.inventory.ptr[i], base, endianSwap);
 }

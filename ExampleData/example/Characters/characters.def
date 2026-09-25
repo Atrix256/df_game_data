@@ -30,8 +30,11 @@ struct Character
     EyeColor eyeColor = Brown;
     Alignment alignment = Good;
     Class playerClass = Warrior;
+    Link<Character> bestFriend;
     Vec3 location;
     uint16 max_hp;
+    uint16 other_numbers[4];
+    Link<Item> other_inventory[2];
     uint16 max_mp;
     bool playable;
     uint16 favorite_numbers[];
