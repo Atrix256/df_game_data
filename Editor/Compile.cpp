@@ -157,6 +157,35 @@ static bool MakeHeader_EnumAndStructDefs(const DBRoot& dbRoot)
                 // Write the fields
                 for (const DefParser::StructField& field : s.fields)
                 {
+                    // Get the C++ name of the type
+                    std::string typeName;
+                    {
+                        switch (field.fieldType)
+                        {
+                            case DefParser::FieldType::_bool: typeName = "Bool"; break;
+                            case DefParser::FieldType::_uint8: typeName = "uint8_t"; break;
+                            case DefParser::FieldType::_sint8: typeName = "int8_t"; break;
+                            case DefParser::FieldType::_uint16: typeName = "uint16_t"; break;
+                            case DefParser::FieldType::_sint16: typeName = "int16_t"; break;
+                            case DefParser::FieldType::_uint32: typeName = "uint32_t"; break;
+                            case DefParser::FieldType::_sint32: typeName = "int32_t"; break;
+                            case DefParser::FieldType::_uint64: typeName = "uint64_t"; break;
+                            case DefParser::FieldType::_sint64: typeName = "int64_t"; break;
+                            case DefParser::FieldType::_float: typeName = "float"; break;
+                            case DefParser::FieldType::_double: typeName = "double"; break;
+                            case DefParser::FieldType::_string: typeName = "Ptr64<char>"; break;
+                            case DefParser::FieldType::_enum: typeName = field.enumName; break;
+                            case DefParser::FieldType::_struct: typeName = field.structName; break;
+                            case DefParser::FieldType::_link: typeName = "Ptr64<" + field.linkName + ">"; break;
+                            default:
+                            {
+                                s_data.error << "Unhandled field type for " << s.name << "." << field.name;
+                                return false;
+                                break;
+                            }
+                        }
+                    }
+
                     // Arrays are a count and a pointer to the data.
                     // Dynamic arrays get their count from the bin file. Static arrays know their count at compile time.
                     if (field.isArray)
@@ -165,7 +194,7 @@ static bool MakeHeader_EnumAndStructDefs(const DBRoot& dbRoot)
                             os << indent << "    static const uint32_t _" << field.name << "_count = " << field.fixedArraySize << ";\n";
                         else
                             os << indent << "    uint32_t _" << field.name << "_count = 0;\n";
-                        os << indent << "    uint64_t " << field.name << ";\n"; // TODO: use Ptr64? need to know the type though. maybe reuse switch below in a "type to string" function?
+                        os << indent << "    Ptr64<" << typeName << "> " << field.name << ";\n";
                         // TODO: what to do when ptr64 is inside ptr64?
                         // TODO: make arrays point into data table instead of being written inline
                         // TODO: fixed sized arrays don't need to write the count
@@ -174,36 +203,10 @@ static bool MakeHeader_EnumAndStructDefs(const DBRoot& dbRoot)
                     }
 
                     // TODO: on pointer fixup, dynamic arrays with count of 0 should have their pointer set to null
+                    // TODO: maybe rename _64 to _doNotTouch and never use it, always use ptr?
 
-                    // the field type
-                    os << indent << "    ";
-                    switch (field.fieldType)
-                    {
-                        case DefParser::FieldType::_bool: os << "Bool"; break;
-                        case DefParser::FieldType::_uint8: os << "uint8_t"; break;
-                        case DefParser::FieldType::_sint8: os << "int8_t"; break;
-                        case DefParser::FieldType::_uint16: os << "uint16_t"; break;
-                        case DefParser::FieldType::_sint16: os << "int16_t"; break;
-                        case DefParser::FieldType::_uint32: os << "uint32_t"; break;
-                        case DefParser::FieldType::_sint32: os << "int32_t"; break;
-                        case DefParser::FieldType::_uint64: os << "uint64_t"; break;
-                        case DefParser::FieldType::_sint64: os << "int64_t"; break;
-                        case DefParser::FieldType::_float: os << "float"; break;
-                        case DefParser::FieldType::_double: os << "double"; break;
-                        case DefParser::FieldType::_string: os << "Ptr64<char>"; break;
-                        case DefParser::FieldType::_enum: os << field.enumName; break;
-                        case DefParser::FieldType::_struct: os << field.structName; break;
-                        case DefParser::FieldType::_link: os << "Ptr64<" << field.linkName << ">"; break;
-                        default:
-                        {
-                            s_data.error << "Unhandled field type for " << s.name << "." << field.name;
-                            return false;
-                            break;
-                        }
-                    }
-
-                    // field name
-                    os << " " << field.name << ";\n";
+                    // the field
+                    os << indent << "    " << typeName << " " << field.name << ";\n";
                 }
 
                 os << indent << "};\n";

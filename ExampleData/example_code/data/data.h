@@ -84,9 +84,9 @@ public:
         uint16_t max_mp;
         Bool playable;
         uint32_t _favorite_numbers_count = 0;
-        uint64_t favorite_numbers;
+        Ptr64<uint16_t> favorite_numbers;
         uint32_t _inventory_count = 0;
-        uint64_t inventory;
+        Ptr64<Ptr64<Item>> inventory;
     };
 
     #pragma pack(pop)
@@ -107,7 +107,7 @@ private:
     template <typename T>
     static bool Read(T& value, void* mem, uint32_t& memIndex, uint32_t memSize, bool endianSwap)
     {
-        if (memSize - memIndex < sizeof(T))
+        if (memSize - memIndex < sizeof(value))
             return false;
 
         memcpy(&value, &((char*)mem)[memIndex], sizeof(value));

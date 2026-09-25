@@ -56,7 +56,7 @@ private:
     template <typename T>
     static bool Read(T& value, void* mem, uint32_t& memIndex, uint32_t memSize, bool endianSwap)
     {
-        if (memSize - memIndex < sizeof(T))
+        if (memSize - memIndex < sizeof(value))
             return false;
 
         memcpy(&value, &((char*)mem)[memIndex], sizeof(value));
