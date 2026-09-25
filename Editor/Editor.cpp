@@ -849,6 +849,11 @@ void HandleSettingsWindow()
                         "casual data editing by users.\n"
                         "Hot reloading requires this to be on.");
 
+            // Hot reloading
+            ImGui::Checkbox("Hot Reloading", &s.hotReloading);
+            ShowToolTip("If true, includes code to support hot reloading. Turning this on will also force\n"
+                        "the Entry Look Up Table to be on as well.");
+
             ImGui::TreePop();
         }
 

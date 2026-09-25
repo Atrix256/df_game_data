@@ -137,18 +137,18 @@ private:
     m_ownedMemory = nullptr;
 }
 
-inline constexpr uint32_t MakeFourCC(char a, char b, char c, char d)
-{
-    return (uint32_t)(uint8_t)a
-        | ((uint32_t)(uint8_t)b << 8)
-        | ((uint32_t)(uint8_t)c << 16)
-        | ((uint32_t)(uint8_t)d << 24);
-}
-
 // ================================= LOADING =================================
 
 bool /*$ClassName$*/::LoadFromMemory(void* mem, uint32_t memSize)
 {
+    auto MakeFourCC = [](char a, char b, char c, char d) -> uint32_t
+    {
+        return (uint32_t)(uint8_t)a
+            | ((uint32_t)(uint8_t)b << 8)
+            | ((uint32_t)(uint8_t)c << 16)
+            | ((uint32_t)(uint8_t)d << 24);
+    };
+
     uint32_t memIndex = 0;
 
     // verify fourcc, and see if we need to do endian swaps

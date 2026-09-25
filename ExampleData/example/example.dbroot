@@ -1,10 +1,18 @@
 {
     "compilersettings": [
         {
-            "compiledHeaderFileName": "../example_code/data/data.h",
-            "compiledBinFileName": "../example_code/data/data.bin",
-            "className": "dfgd",
-            "includeEntryLUT": true
+            "compiledHeaderFileName": "../example_code/data/data_debug.h",
+            "compiledBinFileName": "../example_code/data/data_debug.bin",
+            "className": "DataDebug",
+            "includeEntryLUT": true,
+            "hotReloading": true
+        },
+        {
+            "compiledHeaderFileName": "../example_code/data/data_release.h",
+            "compiledBinFileName": "../example_code/data/data_release.bin",
+            "className": "DataRelease",
+            "includeEntryLUT": false,
+            "hotReloading": false
         }
     ],
     "tables": [

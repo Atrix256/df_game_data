@@ -22,7 +22,8 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="data\data.h" />
+    <ClInclude Include="data\data_debug.h" />
+    <ClInclude Include="data\data_release.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>

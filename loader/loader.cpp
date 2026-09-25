@@ -127,6 +127,9 @@ void DBRoot::LoadSettings(json& data)
 
         if (data.contains(indexPtr / "includeEntryLUT"))
             m_compileSettings[index].includeEntryLUT = data.at(indexPtr / "includeEntryLUT");
+
+        if (data.contains(indexPtr / "hotReloading"))
+            m_compileSettings[index].hotReloading = data.at(indexPtr / "hotReloading");
     }
 }
 
@@ -153,6 +156,7 @@ void DBRoot::SaveDBRoot()
             compilerSettingObject["compiledBinFileName"] = setting.compiledBinFileName;
             compilerSettingObject["className"] = setting.className;
             compilerSettingObject["includeEntryLUT"] = setting.includeEntryLUT;
+            compilerSettingObject["hotReloading"] = setting.hotReloading;
 
             compilerSettingsArray.push_back(compilerSettingObject);
         }

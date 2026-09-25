@@ -10,10 +10,10 @@
 #include <cstring>
 #include <algorithm>
 
-class dfgd
+class DataDebug
 {
 public:
-    ~dfgd();
+    ~DataDebug();
 
     // Note: the memory will be modified, and it must stay around for the life of the object.
     bool LoadFromMemory(void* mem, uint32_t size);
@@ -53,7 +53,7 @@ public:
         }
 
     private:
-        friend class dfgd;
+        friend class DataDebug;
         T* m_record = nullptr;
     };
 
@@ -274,24 +274,24 @@ private:
 
 // ================================= Misc =================================
 
-dfgd::~dfgd()
+DataDebug::~DataDebug()
 {
     delete[] m_ownedMemory;
     m_ownedMemory = nullptr;
 }
 
-inline constexpr uint32_t MakeFourCC(char a, char b, char c, char d)
-{
-    return (uint32_t)(uint8_t)a
-        | ((uint32_t)(uint8_t)b << 8)
-        | ((uint32_t)(uint8_t)c << 16)
-        | ((uint32_t)(uint8_t)d << 24);
-}
-
 // ================================= LOADING =================================
 
-bool dfgd::LoadFromMemory(void* mem, uint32_t memSize)
+bool DataDebug::LoadFromMemory(void* mem, uint32_t memSize)
 {
+    auto MakeFourCC = [](char a, char b, char c, char d) -> uint32_t
+    {
+        return (uint32_t)(uint8_t)a
+            | ((uint32_t)(uint8_t)b << 8)
+            | ((uint32_t)(uint8_t)c << 16)
+            | ((uint32_t)(uint8_t)d << 24);
+    };
+
     uint32_t memIndex = 0;
 
     // verify fourcc, and see if we need to do endian swaps
@@ -378,7 +378,7 @@ bool dfgd::LoadFromMemory(void* mem, uint32_t memSize)
     return true;
 }
 
-bool dfgd::LoadFromFile(const char* fileName)
+bool DataDebug::LoadFromFile(const char* fileName)
 {
     FILE* file = nullptr;
     fopen_s(&file, fileName, "rb");
@@ -403,19 +403,19 @@ bool dfgd::LoadFromFile(const char* fileName)
 
 // ================================= Pointer Fixup =================================
 
-void dfgd::DoEndianSwapAndPointerFixup(Vec3& v, void* base, bool endianSwap)
+void DataDebug::DoEndianSwapAndPointerFixup(Vec3& v, void* base, bool endianSwap)
 {
     DoEndianSwapAndPointerFixup(v.x, base, endianSwap);
     DoEndianSwapAndPointerFixup(v.y, base, endianSwap);
     DoEndianSwapAndPointerFixup(v.z, base, endianSwap);
 }
 
-void dfgd::DoEndianSwapAndPointerFixup(Item& v, void* base, bool endianSwap)
+void DataDebug::DoEndianSwapAndPointerFixup(Item& v, void* base, bool endianSwap)
 {
     DoEndianSwapAndPointerFixup(v.name, base, endianSwap);
 }
 
-void dfgd::DoEndianSwapAndPointerFixup(Character& v, void* base, bool endianSwap)
+void DataDebug::DoEndianSwapAndPointerFixup(Character& v, void* base, bool endianSwap)
 {
     DoEndianSwapAndPointerFixup(v.name, base, endianSwap);
     DoEndianSwapAndPointerFixup(v.eyeColor, base, endianSwap);

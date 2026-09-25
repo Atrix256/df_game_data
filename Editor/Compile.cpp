@@ -203,9 +203,6 @@ static bool MakeHeader_EnumAndStructDefs(const DBRoot& dbRoot)
                         continue;
                     }
 
-                    // TODO: on pointer fixup, dynamic arrays with count of 0 should have their pointer set to null
-                    // TODO: maybe rename _64 to _doNotTouch and never use it, always use ptr?
-
                     // the field
                     os << indent << "    " << typeName << " " << field.name << ";\n";
                 }
@@ -399,8 +396,6 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
                     }
 
                     pointerFixup << indent << "}\n";
-
-                    // TODO: handle arrays (dynamic and static)
 
                     return true;
                 }
@@ -802,8 +797,13 @@ static bool MakeBin(const DBCompileSettings& compilerSettings, const DBRoot& dbR
     return true;
 }
 
-bool Compile(const DBRoot& dbRoot, const DBCompileSettings& compilerSettings, std::string& error)
+bool Compile(const DBRoot& dbRoot, const DBCompileSettings& compilerSettings_, std::string& error)
 {
+    // Hot reloading requires the entry LUT
+    DBCompileSettings compilerSettings = compilerSettings_;
+    if (compilerSettings.hotReloading)
+        compilerSettings.includeEntryLUT = true;
+
     s_data = StaticData();
 
     if (dbRoot.m_tables.size() == 0)
@@ -832,10 +832,11 @@ bool Compile(const DBRoot& dbRoot, const DBCompileSettings& compilerSettings, st
 
 /*
 TODO:
-* if entry names are included, have a get record by name interface
+* do hot reloading
+* put generated header through static analysis
 * need to use it for a bit before announcing. adding array items in the editor is crashing
 * test data should have a struct of array of struct of array of struct or something
-* maybe have single link in test data too. Also static and dynamic array of links.
+* maybe have single link in "test" data too. Also static and dynamic array of links.
 * links can be optional - make them be null pointers if not set
 * unions may be worth while ):
 */

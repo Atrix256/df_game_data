@@ -15,6 +15,7 @@ struct DBCompileSettings
     std::string compiledBinFileName = "out.bin";
     std::string className = "dfgd";
     bool includeEntryLUT = true;
+    bool hotReloading = true;
 };
 
 class DBTable
