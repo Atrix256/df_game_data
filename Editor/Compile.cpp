@@ -518,7 +518,9 @@ static bool MakeBin_WriteField(DBTable& table, const DefParser::StructField& fie
     {
         fieldStackIndex = stackIndex + 1;
         dynamicArrayPtr = MakeBin_Write(stackIndex, (uint64_t)0);
-        s_data.dataOffsets.push_back({ MakeBin_GetOffset(fieldStackIndex), dynamicArrayPtr });
+        // if no items, leave it as a null ptr
+        if (arrayItemCount != 0)
+            s_data.dataOffsets.push_back({ MakeBin_GetOffset(fieldStackIndex), dynamicArrayPtr });
     }
 
     for (uint64_t arrayIndex = 0; arrayIndex < arrayItemCount; ++arrayIndex)
@@ -804,4 +806,5 @@ TODO:
 * need to use it for a bit before announcing. adding array items in the editor is crashing
 * test data should have a struct of array of struct of array of struct or something
 * maybe have single link in test data too. Also static and dynamic array of links.
+* links can be optional - make them be null pointers if not set
 */

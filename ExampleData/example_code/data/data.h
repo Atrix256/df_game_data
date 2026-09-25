@@ -160,6 +160,9 @@ private:
     template <typename T>
     inline static void DoPointerFixup(Ptr64<T>& v, void* base)
     {
+        // null ptrs are preserved.
+        if (v._64 == 0)
+            return;
         v._64 += reinterpret_cast<uintptr_t>(base);
     }
 

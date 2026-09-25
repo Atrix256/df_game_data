@@ -42,8 +42,8 @@ public:
     public:
         const T& Get() const
         {
-            static const T s_dummy;
-            return m_record ? m_record : s_dummy;
+            static const T s_dummy = T();
+            return m_record ? *m_record : s_dummy;
         }
 
         bool Valid() const
@@ -104,6 +104,9 @@ private:
     template <typename T>
     inline static void DoPointerFixup(Ptr64<T>& v, void* base)
     {
+        // null ptrs are preserved.
+        if (v._64 == 0)
+            return;
         v._64 += reinterpret_cast<uintptr_t>(base);
     }
 
