@@ -750,12 +750,5 @@ bool Compile(const DBRoot& dbRoot, const DBCompileSettings& compilerSettings, st
 
 /*
 TODO:
-* do pointer fixup on the things you load at the root, then have some functions for each type to do pointer fixup
-* dynamic arrays should go in dynamic data. static arrays should go inline. every function that writes needs to get a bool for if it's writing to static or not.
 * need to use it for a bit before announcing. adding array items in the editor is crashing
-*/
-
-/*
-TODO:
-* in loader, fixing up endianness is a conditional pass on the data.
 */
