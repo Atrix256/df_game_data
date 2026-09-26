@@ -1,5 +1,5 @@
 # df_game_data
-Minimalist game data middleware by Alan Wolfe.
+Minimalist C++ game data middleware by Alan Wolfe.
 
 Describe schemas, edit data, binary pack data, load data with a generated header. Hot reloading support.
 
@@ -34,7 +34,7 @@ The process for using df_game_data is:
 
 [Full .def Spec](def.md)
 
-Make a .def file for the schema to define a table.  This is a C/C++ style definition of types.
+Make a .def file to define a table schema.  This is a C/C++ style definition of types.
 
 ```cpp
 // Monster.def
@@ -65,11 +65,11 @@ struct Monster
 
 If you open your .def file in the editor, it will create a .dbroot file automatically.
 
-You can add entries to your table, and if you have other tables defined, you can add other tables to your database.
+You can add entries to your table, and you can add other tables to your database.
 
-Each data entry is a .json file on disk, in the same folder as the .def file, so in general, you would want one folder per .def file.
+Each data entry is a .json file on disk, in the same folder as the .def file. In general, you want one folder per .def file.
 
-The data entries are separate files to help avoid the usual branch merging problems.
+The data entries are separate files to minimize merge conflicts when merging development branches.
 
 ![The editor](editor.png)
 
@@ -116,7 +116,7 @@ int main(int argc, char** argv)
 
 ## Building
 
-This was developed on windows using microsoft visual studio.  Clone the repo and build the solution.
+This was developed on windows using microsoft visual studio.  Cloning the repo and building the solution should be all that is needed.
 
 ## Contributors
 
@@ -133,9 +133,9 @@ Please try to follow the style of code near where you are editing, and test your
 You can add your name to the contributor list in the section above (sorted alphabetically by first name). Any change large
 or small earns a spot in the contributor list.
 
-If you are looking for ideas to contribute, the issues list has several todo items in it.
+If you are looking for ideas to contribute, the issues list has several todo items.
 
-Regarding AI use - If you have a well formed contribution, I have know way of knowing if you used AI or not unless you tell me you are. Low quality submissions will be met with guidance. Large volumes of low quality submissions will be met with silence.
+Regarding AI use - If you have a well formed contribution, I have know way of knowing if you used AI or not unless you tell me. Low quality submissions will be met with guidance. Large volumes of low quality submissions will be met with silence.
 
 ## Open Sourced Software Used
 
