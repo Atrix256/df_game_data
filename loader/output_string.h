@@ -9,7 +9,7 @@ static constexpr const char* c_output_h = R"EMBED(/*
 #include <stdio.h>
 #include <cstring>
 #include <algorithm>
-
+/*$Includes$*/
 class /*$ClassName$*/
 {
 public:
@@ -37,26 +37,7 @@ public:
         }
     };
 
-    template <typename T>
-    struct Record
-    {
-    public:
-        const T& Get() const
-        {
-            static const T s_dummy = T();
-            return m_record ? *m_record : s_dummy;
-        }
-
-        bool Valid() const
-        {
-            return m_record != nullptr;
-        }
-
-    private:
-        friend class /*$ClassName$*/;
-        T* m_record = nullptr;
-    };
-
+/*$RecordDef$*/
 public:
     #pragma pack(push, 1)
 /*$EnumAndStructDefs$*/
@@ -125,7 +106,21 @@ private:
     uint8_t* m_ownedMemory = nullptr;
 
 public:
-/*$PublicInterface$*/
+    // Returns whether the data was updated or not (hot reloading).
+    bool Tick()
+    {/*$Tick$*/
+        return false;
+    }
+
+    template <typename T>
+    uint32_t GetCount() const;
+
+    template <typename T>
+    Record<T> Get(uint32_t index) const;
+
+    template <typename T>
+    Record<T> Get(const char* name) const;
+
 private:
 /*$PrivateStorage$*/};
 
@@ -135,7 +130,7 @@ private:
 {
     delete[] m_ownedMemory;
     m_ownedMemory = nullptr;
-}
+/*$Dtor$*/}
 
 // ================================= LOADING =================================
 
@@ -173,7 +168,7 @@ bool /*$ClassName$*/::LoadFromMemory(void* mem, uint32_t memSize)
         if (!Read(hash, mem, memIndex, memSize, endianSwap) || hash != /*$SchemaHash*/)
             return false;
     }
-/*$LoadTables$*/
+/*$LoadTables$*//*$LoadMemoryEnd$*/
     return true;
 }
 
@@ -196,9 +191,11 @@ bool /*$ClassName$*/::LoadFromFile(const char* fileName)
     fclose(file);
 
     bool ret = LoadFromMemory(m_ownedMemory, fileSize);
-
+/*$LoadFileEnd$*/
     return ret;
 }
 
 // ================================= Pointer Fixup =================================
-/*$PointerFixup$*/)EMBED";
+/*$PointerFixup$*/
+// ================================= Public Interface =================================
+/*$PublicInterface$*/)EMBED";

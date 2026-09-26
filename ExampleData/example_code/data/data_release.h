@@ -190,31 +190,20 @@ private:
     uint8_t* m_ownedMemory = nullptr;
 
 public:
-    uint32_t GetCharacterCount() const
+    // Returns whether the data was updated or not (hot reloading).
+    bool Tick()
     {
-        return m_table_Character_count;
+        return false;
     }
 
-    CharacterRecord GetCharacter(uint32_t index) const
-    {
-        CharacterRecord ret;
-        if (index < m_table_Character_count)
-            ret.m_record = &m_table_Character.ptr[index];
-        return ret;
-    }
+    template <typename T>
+    uint32_t GetCount() const;
 
-    uint32_t GetItemCount() const
-    {
-        return m_table_Item_count;
-    }
+    template <typename T>
+    Record<T> Get(uint32_t index) const;
 
-    ItemRecord GetItem(uint32_t index) const
-    {
-        ItemRecord ret;
-        if (index < m_table_Item_count)
-            ret.m_record = &m_table_Item.ptr[index];
-        return ret;
-    }
+    template <typename T>
+    Record<T> Get(const char* name) const;
 
 private:
     uint32_t m_table_Character_count = 0;
@@ -372,4 +361,39 @@ void DataRelease::DoEndianSwapAndPointerFixup(Character& v, void* base, bool end
     DoEndianSwapAndPointerFixup(v.inventory, base, endianSwap);
     for (uint32_t i = 0; i < v._inventory_count; ++i)
         DoEndianSwapAndPointerFixup(v.inventory.ptr[i], base, endianSwap);
+}
+
+// ================================= Public Interface =================================
+template <>
+uint32_t DataRelease::GetCount<DataRelease::Character>() const
+{
+    return m_table_Character_count;
+}
+
+template <>
+DataRelease::CharacterRecord DataRelease::Get<DataRelease::Character>(uint32_t index) const
+{
+    CharacterRecord ret;
+    if (index < m_table_Character_count)
+    {
+        ret.m_record = &m_table_Character.ptr[index];
+    }
+    return ret;
+}
+
+template <>
+uint32_t DataRelease::GetCount<DataRelease::Item>() const
+{
+    return m_table_Item_count;
+}
+
+template <>
+DataRelease::ItemRecord DataRelease::Get<DataRelease::Item>(uint32_t index) const
+{
+    ItemRecord ret;
+    if (index < m_table_Item_count)
+    {
+        ret.m_record = &m_table_Item.ptr[index];
+    }
+    return ret;
 }

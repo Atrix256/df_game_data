@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <cstring>
 #include <algorithm>
+#include <filesystem>
 
 class DataDebug
 {
@@ -41,20 +42,67 @@ public:
     struct Record
     {
     public:
-        const T& Get() const
+        Record()
         {
+        }
+
+        Record(const Record& other)
+        {
+            m_record = other.m_record;
+            m_parent = other.m_parent;
+            m_generation = other.m_generation;
+            size_t nameLen = strlen(other.m_recordName);
+            m_recordName = new char[nameLen + 1];
+            memcpy(m_recordName, other.m_recordName, nameLen+1);
+        }
+
+        Record(Record&& other) noexcept
+        {
+            std::swap(m_record, other.m_record);
+            std::swap(m_parent, other.m_parent);
+            std::swap(m_generation, other.m_generation);
+            std::swap(m_recordName, other.m_recordName);
+        }
+
+        ~Record()
+        {
+            if (m_recordName)
+            {
+                delete[] m_recordName;
+                m_recordName = nullptr;
+            }
+        }
+
+        Record& operator=(Record other)
+        {
+            std::swap(m_record, other.m_record);
+            std::swap(m_parent, other.m_parent);
+            std::swap(m_generation, other.m_generation);
+            std::swap(m_recordName, other.m_recordName);
+            return *this;
+        }
+
+        const T& Get()
+        {
+            if (m_parent && m_parent->m_generation != m_generation)
+                *this = m_parent->Get<T>(m_recordName);
             static const T s_dummy = T();
             return m_record ? *m_record : s_dummy;
         }
 
         bool Valid() const
         {
+            Get();
             return m_record != nullptr;
         }
 
     private:
         friend class DataDebug;
         T* m_record = nullptr;
+
+        const DataDebug* m_parent = nullptr;
+        uint32_t m_generation = ~0;
+        char* m_recordName = nullptr;
     };
 
 public:
@@ -190,79 +238,38 @@ private:
     uint8_t* m_ownedMemory = nullptr;
 
 public:
-    uint32_t GetCharacterCount() const
+    // Returns whether the data was updated or not (hot reloading).
+    bool Tick()
     {
-        return m_table_Character_count;
+        std::filesystem::file_time_type fileTime = std::filesystem::last_write_time(m_fileName);
+        if (fileTime > m_fileTime)
+        {
+            LoadFromFile(m_fileName);
+            return true;
+        }
+
+        return false;
     }
 
-    CharacterRecord GetCharacter(uint32_t index) const
-    {
-        CharacterRecord ret;
-        if (index < m_table_Character_count)
-            ret.m_record = &m_table_Character.ptr[index];
-        return ret;
-    }
+    template <typename T>
+    uint32_t GetCount() const;
 
-    CharacterRecord GetCharacter(const char* name) const
-    {
-        CharacterRecord ret;
+    template <typename T>
+    Record<T> Get(uint32_t index) const;
 
-        char** array = m_table_Character_names.ptr;
-        const uint32_t count = m_table_Character_count;
-
-        auto it = std::lower_bound(
-            array,
-            array + count,
-            name,
-            [](const char* item, const char* val)
-            {
-                return strcmp(item, val) < 0;
-            }
-        );
-        uint32_t index = uint32_t(it - array);
-        if (index < count && !strcmp(*it, name))
-            ret.m_record = &m_table_Character.ptr[index];
-
-        return ret;
-    }
-
-    uint32_t GetItemCount() const
-    {
-        return m_table_Item_count;
-    }
-
-    ItemRecord GetItem(uint32_t index) const
-    {
-        ItemRecord ret;
-        if (index < m_table_Item_count)
-            ret.m_record = &m_table_Item.ptr[index];
-        return ret;
-    }
-
-    ItemRecord GetItem(const char* name) const
-    {
-        ItemRecord ret;
-
-        char** array = m_table_Item_names.ptr;
-        const uint32_t count = m_table_Item_count;
-
-        auto it = std::lower_bound(
-            array,
-            array + count,
-            name,
-            [](const char* item, const char* val)
-            {
-                return strcmp(item, val) < 0;
-            }
-        );
-        uint32_t index = uint32_t(it - array);
-        if (index < count && !strcmp(*it, name))
-            ret.m_record = &m_table_Item.ptr[index];
-
-        return ret;
-    }
+    template <typename T>
+    Record<T> Get(const char* name) const;
 
 private:
+    // Incremented each time the data is reloaded
+    uint32_t m_generation = 0;
+
+    // The last modification time of the file, for hot reloading.
+    std::filesystem::file_time_type m_fileTime;
+
+    // The filename so we can get its file time again later.
+    char* m_fileName = nullptr;
+
     uint32_t m_table_Character_count = 0;
     Ptr64<char*> m_table_Character_names;
     Ptr64<Character> m_table_Character;
@@ -278,6 +285,11 @@ DataDebug::~DataDebug()
 {
     delete[] m_ownedMemory;
     m_ownedMemory = nullptr;
+    if (m_fileName != nullptr)
+    {
+        delete[] m_fileName;
+        m_fileName = nullptr;
+    }
 }
 
 // ================================= LOADING =================================
@@ -375,6 +387,9 @@ bool DataDebug::LoadFromMemory(void* mem, uint32_t memSize)
         }
     }
 
+    // Track that the data was (re)loaded to invalidate stale records
+    m_generation++;
+
     return true;
 }
 
@@ -397,6 +412,17 @@ bool DataDebug::LoadFromFile(const char* fileName)
     fclose(file);
 
     bool ret = LoadFromMemory(m_ownedMemory, fileSize);
+
+    // Save off the file name and get the file time, for hot reloading
+    if (!m_fileName || strcmp(m_fileName, fileName))
+    {
+        if (m_fileName)
+            delete[] m_fileName;
+        size_t fileNameLen = strlen(fileName);
+        m_fileName = new char[fileNameLen + 1];
+        memcpy(m_fileName, fileName, fileNameLen + 1);
+    }
+    m_fileTime = std::filesystem::last_write_time(m_fileName);
 
     return ret;
 }
@@ -438,4 +464,121 @@ void DataDebug::DoEndianSwapAndPointerFixup(Character& v, void* base, bool endia
     DoEndianSwapAndPointerFixup(v.inventory, base, endianSwap);
     for (uint32_t i = 0; i < v._inventory_count; ++i)
         DoEndianSwapAndPointerFixup(v.inventory.ptr[i], base, endianSwap);
+}
+
+// ================================= Public Interface =================================
+template <>
+uint32_t DataDebug::GetCount<DataDebug::Character>() const
+{
+    return m_table_Character_count;
+}
+
+template <>
+DataDebug::CharacterRecord DataDebug::Get<DataDebug::Character>(uint32_t index) const
+{
+    CharacterRecord ret;
+    if (index < m_table_Character_count)
+    {
+        ret.m_record = &m_table_Character.ptr[index];
+        size_t nameLen = strlen(m_table_Character_names.ptr[index]);
+        ret.m_recordName = new char[nameLen + 1];
+        memcpy(ret.m_recordName, m_table_Character_names.ptr[index], nameLen + 1);
+    }
+
+    ret.m_parent = this;
+    ret.m_generation = m_generation;
+
+    return ret;
+}
+
+template <>
+DataDebug::CharacterRecord DataDebug::Get<DataDebug::Character>(const char* name) const
+{
+    CharacterRecord ret;
+
+    char** array = m_table_Character_names.ptr;
+    const uint32_t count = m_table_Character_count;
+
+    auto it = std::lower_bound(
+        array,
+        array + count,
+        name,
+        [](const char* item, const char* val)
+        {
+            return strcmp(item, val) < 0;
+        }
+    );
+
+    uint32_t index = uint32_t(it - array);
+
+    if (index < count && !strcmp(*it, name))
+    {
+        ret.m_record = &m_table_Character.ptr[index];
+        size_t nameLen = strlen(m_table_Character_names.ptr[index]);
+        ret.m_recordName = new char[nameLen + 1];
+        memcpy(ret.m_recordName, m_table_Character_names.ptr[index], nameLen + 1);
+    }
+
+    ret.m_parent = this;
+    ret.m_generation = m_generation;
+
+    return ret;
+}
+
+template <>
+uint32_t DataDebug::GetCount<DataDebug::Item>() const
+{
+    return m_table_Item_count;
+}
+
+template <>
+DataDebug::ItemRecord DataDebug::Get<DataDebug::Item>(uint32_t index) const
+{
+    ItemRecord ret;
+    if (index < m_table_Item_count)
+    {
+        ret.m_record = &m_table_Item.ptr[index];
+        size_t nameLen = strlen(m_table_Item_names.ptr[index]);
+        ret.m_recordName = new char[nameLen + 1];
+        memcpy(ret.m_recordName, m_table_Item_names.ptr[index], nameLen + 1);
+    }
+
+    ret.m_parent = this;
+    ret.m_generation = m_generation;
+
+    return ret;
+}
+
+template <>
+DataDebug::ItemRecord DataDebug::Get<DataDebug::Item>(const char* name) const
+{
+    ItemRecord ret;
+
+    char** array = m_table_Item_names.ptr;
+    const uint32_t count = m_table_Item_count;
+
+    auto it = std::lower_bound(
+        array,
+        array + count,
+        name,
+        [](const char* item, const char* val)
+        {
+            return strcmp(item, val) < 0;
+        }
+    );
+
+    uint32_t index = uint32_t(it - array);
+
+    if (index < count && !strcmp(*it, name))
+    {
+        ret.m_record = &m_table_Item.ptr[index];
+        size_t nameLen = strlen(m_table_Item_names.ptr[index]);
+        ret.m_recordName = new char[nameLen + 1];
+        memcpy(ret.m_recordName, m_table_Item_names.ptr[index], nameLen + 1);
+    }
+
+    ret.m_parent = this;
+    ret.m_generation = m_generation;
+
+    return ret;
 }

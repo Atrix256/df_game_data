@@ -254,53 +254,101 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
     std::ostringstream& publicInterface = s_data.tokenReplacement["/*$PublicInterface$*/"];
     for (const auto& pair : dbRoot.m_tables)
     {
-        std::string indent = "    ";
-
         const DefParser& parser = pair.second->GetParser();
 
         // Make an extra newline to separate them
         if (!publicInterface.view().empty())
             publicInterface << "\n";
 
-        publicInterface << indent << "uint32_t Get" << pair.first << "Count() const\n";
-        publicInterface << indent << "{\n";
-        publicInterface << indent << "    return m_table_" << pair.first << "_count;\n";
-        publicInterface << indent << "}\n";
+        publicInterface << "template <>\n";
+        publicInterface << "uint32_t " << compilerSettings.className << "::GetCount<" << compilerSettings.className << "::" << pair.first << ">() const\n";
+        publicInterface << "{\n";
+        publicInterface << "    return m_table_" << pair.first << "_count;\n";
+        publicInterface << "}\n";
         publicInterface << "\n";
-        publicInterface << indent << pair.first << "Record Get" << pair.first << "(uint32_t index) const\n";
-        publicInterface << indent << "{\n";
-        publicInterface << indent << "    " << pair.first << "Record ret;\n";
-        publicInterface << indent << "    if (index < m_table_" << pair.first << "_count)\n";
-        publicInterface << indent << "        ret.m_record = &m_table_" << pair.first << ".ptr[index];\n";
-        publicInterface << indent << "    return ret;\n";
-        publicInterface << indent << "}\n";
+        publicInterface << "template <>\n";
+        publicInterface << compilerSettings.className << "::" << pair.first << "Record " << compilerSettings.className << "::Get<" << compilerSettings.className << "::" << pair.first << ">(uint32_t index) const\n";
+        publicInterface << "{\n";
+        publicInterface << "    " << pair.first << "Record ret;\n";
+        publicInterface << "    if (index < m_table_" << pair.first << "_count)\n";
+        publicInterface << "    {\n";
+        publicInterface << "        ret.m_record = &m_table_" << pair.first << ".ptr[index];\n";
+
+        if (compilerSettings.hotReloading)
+        {
+            publicInterface <<
+                "        size_t nameLen = strlen(m_table_" << pair.first << "_names.ptr[index]);\n" <<
+                "        ret.m_recordName = new char[nameLen + 1];\n" <<
+                "        memcpy(ret.m_recordName, m_table_" << pair.first << "_names.ptr[index], nameLen + 1);\n"
+                ;
+        }
+
+        publicInterface << "    }\n";
+
+        if (compilerSettings.hotReloading)
+        {
+            publicInterface <<
+                "\n" <<
+                "    ret.m_parent = this;\n" <<
+                "    ret.m_generation = m_generation;\n" <<
+                "\n"
+                ;
+        }
+
+        publicInterface << "    return ret;\n";
+        publicInterface << "}\n";
 
         // If we have the name entries, have an interface to look up by name
         if (compilerSettings.includeEntryLUT)
         {
             publicInterface << "\n";
-            publicInterface << indent << pair.first << "Record Get" << pair.first << "(const char* name) const\n";
-            publicInterface << indent << "{\n";
-            publicInterface << indent << "    " << pair.first << "Record ret;\n";
+            publicInterface << "template <>\n";
+            publicInterface << compilerSettings.className << "::" << pair.first << "Record " << compilerSettings.className << "::Get<" << compilerSettings.className << "::" << pair.first << ">(const char* name) const\n";
+            publicInterface << "{\n";
+            publicInterface << "    " << pair.first << "Record ret;\n";
             publicInterface << "\n";
-            publicInterface << indent << "    char** array = m_table_" << pair.first << "_names.ptr;\n";
-            publicInterface << indent << "    const uint32_t count = m_table_" << pair.first << "_count;\n";
+            publicInterface << "    char** array = m_table_" << pair.first << "_names.ptr;\n";
+            publicInterface << "    const uint32_t count = m_table_" << pair.first << "_count;\n";
             publicInterface << "\n";
-            publicInterface << indent << "    auto it = std::lower_bound(\n";
-            publicInterface << indent << "        array,\n";
-            publicInterface << indent << "        array + count,\n";
-            publicInterface << indent << "        name,\n";
-            publicInterface << indent << "        [](const char* item, const char* val)\n";
-            publicInterface << indent << "        {\n";
-            publicInterface << indent << "            return strcmp(item, val) < 0;\n";
-            publicInterface << indent << "        }\n";
-            publicInterface << indent << "    );\n";
-            publicInterface << indent << "    uint32_t index = uint32_t(it - array);\n";
-            publicInterface << indent << "    if (index < count && !strcmp(*it, name))\n";
-            publicInterface << indent << "        ret.m_record = &m_table_" << pair.first << ".ptr[index];\n";
+            publicInterface << "    auto it = std::lower_bound(\n";
+            publicInterface << "        array,\n";
+            publicInterface << "        array + count,\n";
+            publicInterface << "        name,\n";
+            publicInterface << "        [](const char* item, const char* val)\n";
+            publicInterface << "        {\n";
+            publicInterface << "            return strcmp(item, val) < 0;\n";
+            publicInterface << "        }\n";
+            publicInterface << "    );\n";
             publicInterface << "\n";
-            publicInterface << indent << "    return ret;\n";
-            publicInterface << indent << "}\n";
+            publicInterface << "    uint32_t index = uint32_t(it - array);\n";
+            publicInterface << "\n";
+            publicInterface << "    if (index < count && !strcmp(*it, name))\n";
+            publicInterface << "    {\n";
+            publicInterface << "        ret.m_record = &m_table_" << pair.first << ".ptr[index];\n";
+
+            if (compilerSettings.hotReloading)
+            {
+                publicInterface <<
+                    "        size_t nameLen = strlen(m_table_" << pair.first << "_names.ptr[index]);\n" <<
+                    "        ret.m_recordName = new char[nameLen + 1];\n" <<
+                    "        memcpy(ret.m_recordName, m_table_" << pair.first << "_names.ptr[index], nameLen + 1);\n"
+                    ;
+            }
+
+            publicInterface << "    }\n";
+
+            if (compilerSettings.hotReloading)
+            {
+                publicInterface <<
+                    "\n" <<
+                    "    ret.m_parent = this;\n" <<
+                    "    ret.m_generation = m_generation;\n"
+                    ;
+            }
+
+            publicInterface << "\n";
+            publicInterface << "    return ret;\n";
+            publicInterface << "}\n";
         }
     }
 
@@ -351,15 +399,13 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
 
     // make pointer fixup code for each table
     {
-        std::string className = s_data.tokenReplacement["/*$ClassName$*/"].str();
-
         std::unordered_set<std::string> structsHandled;
         std::ostringstream& pointerFixup = s_data.tokenReplacement["/*$PointerFixup$*/"];
         std::ostringstream& pointerFixupFwd = s_data.tokenReplacement["/*$PointerFixupForwardDeclare$*/"];
         for (const auto& pair : dbRoot.m_tables)
         {
             bool ret = pair.second->GetParser().ForEachStruct(
-                [&structsHandled, &pointerFixup, &pointerFixupFwd, &className](const DefParser::Struct& structDef)
+                [&structsHandled, &pointerFixup, &pointerFixupFwd, &compilerSettings](const DefParser::Struct& structDef)
                 {
                     // Only need to write each DoEndianSwapAndPointerFixup() function once
                     if (structsHandled.contains(structDef.name))
@@ -370,7 +416,7 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
 
                     std::string indent = "";
                     pointerFixup << "\n";
-                    pointerFixup << indent << "void " << className << "::DoEndianSwapAndPointerFixup(" << structDef.name << "& v, void* base, bool endianSwap)\n";
+                    pointerFixup << indent << "void " << compilerSettings.className << "::DoEndianSwapAndPointerFixup(" << structDef.name << "& v, void* base, bool endianSwap)\n";
                     pointerFixup << indent << "{\n";
 
                     for (const DefParser::StructField& field : structDef.fields)
@@ -408,14 +454,186 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
     return true;
 }
 
-static bool MakeHeader(const DBCompileSettings& compilerSettings, const DBRoot& dbRoot, const char* fileName, uint64_t hash)
+static bool MakeHeader_Global(const DBCompileSettings& compilerSettings, const DBRoot& dbRoot, uint64_t hash)
 {
-    if (!compilerSettings.className.empty())
-        s_data.tokenReplacement["/*$ClassName$*/"] << compilerSettings.className;
-    else
-        s_data.tokenReplacement["/*$ClassName$*/"] << "dfgd";
+    // Write an empty string to conditionally written to tokens, so that they always disappear in the output file.
+    s_data.tokenReplacement["/*$LoadFileEnd$*/"] << "";
+    s_data.tokenReplacement["/*$LoadMemoryEnd$*/"] << "";
+    s_data.tokenReplacement["/*$Includes$*/"] << "";
+    s_data.tokenReplacement["/*$Tick$*/"] << "";
+    s_data.tokenReplacement["/*$Dtor$*/"] << "";
+
+    s_data.tokenReplacement["/*$ClassName$*/"] << compilerSettings.className;
 
     s_data.tokenReplacement["/*$SchemaHash*/"] << "0x" << std::hex << std::setfill('0') << std::setw(16) << hash << "ULL";
+
+    // Hot reloading support
+    if (compilerSettings.hotReloading)
+    {
+        s_data.tokenReplacement["/*$PrivateStorage$*/"] <<
+            "    // Incremented each time the data is reloaded\n"
+            "    uint32_t m_generation = 0;\n"
+            "\n"
+            "    // The last modification time of the file, for hot reloading.\n"
+            "    std::filesystem::file_time_type m_fileTime;\n"
+            "\n"
+            "    // The filename so we can get its file time again later.\n"
+            "    char* m_fileName = nullptr;\n"
+            ;
+
+        s_data.tokenReplacement["/*$LoadMemoryEnd$*/"] <<
+            "\n"
+            "    // Track that the data was (re)loaded to invalidate stale records\n"
+            "    m_generation++;\n"
+            ;
+
+        s_data.tokenReplacement["/*$LoadFileEnd$*/"] <<
+            "\n"
+            "    // Save off the file name and get the file time, for hot reloading\n"
+            "    if (!m_fileName || strcmp(m_fileName, fileName))\n"
+            "    {\n"
+            "        if (m_fileName)\n"
+            "            delete[] m_fileName;\n"
+            "        size_t fileNameLen = strlen(fileName);\n"
+            "        m_fileName = new char[fileNameLen + 1];\n"
+            "        memcpy(m_fileName, fileName, fileNameLen + 1);\n"
+            "    }\n"
+            "    m_fileTime = std::filesystem::last_write_time(m_fileName);\n"
+            ;
+
+        s_data.tokenReplacement["/*$Dtor$*/"] <<
+            "    if (m_fileName != nullptr)\n"
+            "    {\n"
+            "        delete[] m_fileName;\n"
+            "        m_fileName = nullptr;\n"
+            "    }\n"
+            ;
+
+        s_data.tokenReplacement["/*$Tick$*/"] <<
+            "\n"
+            "        std::filesystem::file_time_type fileTime = std::filesystem::last_write_time(m_fileName);\n"
+            "        if (fileTime > m_fileTime)\n"
+            "        {\n"
+            "            LoadFromFile(m_fileName);\n"
+            "            return true;\n"
+            "        }\n"
+            ;
+
+        s_data.tokenReplacement["/*$Includes$*/"] <<
+            "#include <filesystem>\n";
+    }
+
+    // Make the templated Record struct
+    {
+        std::string indent = "    ";
+
+        std::ostringstream& os = s_data.tokenReplacement["/*$RecordDef$*/"];
+
+        os <<
+            indent << "template <typename T>\n" <<
+            indent << "struct Record\n" <<
+            indent << "{\n" <<
+            indent << "public:\n";
+
+        if (compilerSettings.hotReloading)
+        {
+            // All this to properly handle m_fileName not leaking or getting double freed.
+            // Avoiding std::string.
+            os <<
+                indent << "    Record()\n" <<
+                indent << "    {\n" <<
+                indent << "    }\n" <<
+                "\n" <<
+                indent << "    Record(const Record& other)\n" <<
+                indent << "    {\n" <<
+                indent << "        m_record = other.m_record;\n" <<
+                indent << "        m_parent = other.m_parent;\n" <<
+                indent << "        m_generation = other.m_generation;\n" <<
+                indent << "        size_t nameLen = strlen(other.m_recordName);\n" <<
+                indent << "        m_recordName = new char[nameLen + 1];\n" <<
+                indent << "        memcpy(m_recordName, other.m_recordName, nameLen+1);\n" <<
+                indent << "    }\n" <<
+                "\n" <<
+                indent << "    Record(Record&& other) noexcept\n" <<
+                indent << "    {\n" <<
+                indent << "        std::swap(m_record, other.m_record);\n" <<
+                indent << "        std::swap(m_parent, other.m_parent);\n" <<
+                indent << "        std::swap(m_generation, other.m_generation);\n" <<
+                indent << "        std::swap(m_recordName, other.m_recordName);\n" <<
+                indent << "    }\n" <<
+                "\n" <<
+                indent << "    ~Record()\n" <<
+                indent << "    {\n" <<
+                indent << "        if (m_recordName)\n" <<
+                indent << "        {\n" <<
+                indent << "            delete[] m_recordName;\n" <<
+                indent << "            m_recordName = nullptr;\n" <<
+                indent << "        }\n" <<
+                indent << "    }\n" <<
+                "\n" <<
+                indent << "    Record& operator=(Record other)\n" <<
+                indent << "    {\n" <<
+                indent << "        std::swap(m_record, other.m_record);\n" <<
+                indent << "        std::swap(m_parent, other.m_parent);\n" <<
+                indent << "        std::swap(m_generation, other.m_generation);\n" <<
+                indent << "        std::swap(m_recordName, other.m_recordName);\n" <<
+                indent << "        return *this;\n" <<
+                indent << "    }\n" <<
+                "\n"
+                ;
+        }
+
+        os <<
+            indent << "    const T& Get()" << (compilerSettings.hotReloading ? "" : " const") << "\n" <<
+            indent << "    {\n";
+
+        if (compilerSettings.hotReloading)
+        {
+            os <<
+                indent << "        if (m_parent && m_parent->m_generation != m_generation)\n" <<
+                indent << "            *this = m_parent->Get<T>(m_recordName);\n"
+                ;
+        }
+
+        os <<
+            indent << "        static const T s_dummy = T();\n" <<
+            indent << "        return m_record ? *m_record : s_dummy;\n" <<
+            indent << "    }\n" <<
+            "\n" <<
+            indent << "    bool Valid() const\n" <<
+            indent << "    {\n"
+            ;
+
+        if (compilerSettings.hotReloading)
+            os << indent << "        Get();\n";
+
+        os <<
+            indent << "        return m_record != nullptr;\n" <<
+            indent << "    }\n" <<
+            "\n" <<
+            indent << "private:\n" <<
+            indent << "    friend class " << compilerSettings.className << ";\n" <<
+            indent << "    T* m_record = nullptr;\n";
+
+        if (compilerSettings.hotReloading)
+        {
+            os <<
+                "\n" <<
+                indent << "    const " << compilerSettings.className << "* m_parent = nullptr;\n" <<
+                indent << "    uint32_t m_generation = ~0;\n" <<
+                indent << "    char* m_recordName = nullptr;\n";
+        }
+
+        os << indent << "};\n";
+    }
+
+    return true;
+}
+
+static bool MakeHeader(const DBCompileSettings& compilerSettings, const DBRoot& dbRoot, const char* fileName, uint64_t hash)
+{
+    if (!MakeHeader_Global(compilerSettings, dbRoot, hash))
+        return false;
 
     if (!MakeHeader_EnumAndStructDefs(dbRoot))
         return false;
@@ -804,6 +1022,9 @@ bool Compile(const DBRoot& dbRoot, const DBCompileSettings& compilerSettings_, s
     if (compilerSettings.hotReloading)
         compilerSettings.includeEntryLUT = true;
 
+    if (compilerSettings.className.empty())
+        compilerSettings.className = "dfgd";
+
     s_data = StaticData();
 
     if (dbRoot.m_tables.size() == 0)
@@ -832,11 +1053,13 @@ bool Compile(const DBRoot& dbRoot, const DBCompileSettings& compilerSettings_, s
 
 /*
 TODO:
+* for hot reloading, a record get function should look up the record by name again.
+* also, the is valid check should look up the record by name again if needed. maybe call Get(). only when hot reloading is on.
 * do hot reloading
 * put generated header through static analysis
 * need to use it for a bit before announcing. adding array items in the editor is crashing
 * test data should have a struct of array of struct of array of struct or something
 * maybe have single link in "test" data too. Also static and dynamic array of links.
 * links can be optional - make them be null pointers if not set
-* unions may be worth while ):
+* unions may be worth while ): yes. needed for components for example
 */

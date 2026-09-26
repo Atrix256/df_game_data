@@ -1,5 +1,8 @@
 #include <stdio.h>
 #include <vector>
+#include <conio.h>
+#include <thread>
+#include <chrono>
 
 #include "data/data_debug.h"
 #include "data/data_release.h"
@@ -22,12 +25,12 @@ int main(int argc, char** argv)
     }
 
     std::vector<Data::CharacterRecord> characters;
-    for (uint32_t i = 0; i < data.GetCharacterCount() + 1; ++i)
-        characters.push_back(data.GetCharacter(i));
+    for (uint32_t i = 0; i < data.GetCount<Data::Character>() + 1; ++i)
+        characters.push_back(data.Get<Data::Character>(i));
 
     std::vector<Data::ItemRecord> items;
-    for (uint32_t i = 0; i < data.GetItemCount(); ++i)
-        items.push_back(data.GetItem(i));
+    for (uint32_t i = 0; i < data.GetCount<Data::Item>(); ++i)
+        items.push_back(data.Get<Data::Item>(i));
 
     const Data::Character& a = characters[0].Get();
     const Data::Character& b = characters[1].Get();
@@ -35,9 +38,31 @@ int main(int argc, char** argv)
     const Data::Character& d = characters[3].Get();
 
 #ifdef _DEBUG
-    auto test1 = data.GetCharacter("Larry");
-    auto test2 = data.GetCharacter("larry");
+    auto test1 = data.Get<Data::Character>("Larry");
+    auto test2 = data.Get<Data::Character>("larry");
 #endif
+
+    printf("Program watching input file for updates. Press Q to exit...\n");
+
+    while (true)
+    {
+        if (_kbhit())
+        {
+            int ch = _getch();
+            if (ch == 'q')
+                break;
+        }
+
+        if (data.Tick())
+        {
+            printf("File changed!\n");
+            #ifdef _DEBUG
+            printf("entry[\"larry\"].name = %s\n", test2.Get().name.ptr);
+            #endif
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
 
     // TODO: print out some data?
     // TODO: how are we going to test the "test" data set? maybe a separate project?
