@@ -8,7 +8,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <cstring>
-#include <algorithm>
 
 class DataRelease
 {
@@ -197,13 +196,10 @@ public:
     }
 
     template <typename T>
-    uint32_t GetCount() const;
+    inline uint32_t GetCount() const;
 
     template <typename T>
-    Record<T> Get(uint32_t index) const;
-
-    template <typename T>
-    Record<T> Get(const char* name) const;
+    inline Record<T> Get(uint32_t index) const;
 
 private:
     uint32_t m_table_Character_count = 0;
@@ -215,7 +211,7 @@ private:
 
 // ================================= Misc =================================
 
-DataRelease::~DataRelease()
+inline DataRelease::~DataRelease()
 {
     delete[] m_ownedMemory;
     m_ownedMemory = nullptr;
@@ -223,7 +219,7 @@ DataRelease::~DataRelease()
 
 // ================================= LOADING =================================
 
-bool DataRelease::LoadFromMemory(void* mem, uint32_t memSize)
+inline bool DataRelease::LoadFromMemory(void* mem, uint32_t memSize)
 {
     auto MakeFourCC = [](char a, char b, char c, char d) -> uint32_t
     {
@@ -301,7 +297,7 @@ bool DataRelease::LoadFromMemory(void* mem, uint32_t memSize)
     return true;
 }
 
-bool DataRelease::LoadFromFile(const char* fileName)
+inline bool DataRelease::LoadFromFile(const char* fileName)
 {
     FILE* file = nullptr;
     fopen_s(&file, fileName, "rb");
@@ -326,19 +322,19 @@ bool DataRelease::LoadFromFile(const char* fileName)
 
 // ================================= Pointer Fixup =================================
 
-void DataRelease::DoEndianSwapAndPointerFixup(Vec3& v, void* base, bool endianSwap)
+inline void DataRelease::DoEndianSwapAndPointerFixup(Vec3& v, void* base, bool endianSwap)
 {
     DoEndianSwapAndPointerFixup(v.x, base, endianSwap);
     DoEndianSwapAndPointerFixup(v.y, base, endianSwap);
     DoEndianSwapAndPointerFixup(v.z, base, endianSwap);
 }
 
-void DataRelease::DoEndianSwapAndPointerFixup(Item& v, void* base, bool endianSwap)
+inline void DataRelease::DoEndianSwapAndPointerFixup(Item& v, void* base, bool endianSwap)
 {
     DoEndianSwapAndPointerFixup(v.name, base, endianSwap);
 }
 
-void DataRelease::DoEndianSwapAndPointerFixup(Character& v, void* base, bool endianSwap)
+inline void DataRelease::DoEndianSwapAndPointerFixup(Character& v, void* base, bool endianSwap)
 {
     DoEndianSwapAndPointerFixup(v.name, base, endianSwap);
     DoEndianSwapAndPointerFixup(v.eyeColor, base, endianSwap);
@@ -365,13 +361,13 @@ void DataRelease::DoEndianSwapAndPointerFixup(Character& v, void* base, bool end
 
 // ================================= Public Interface =================================
 template <>
-uint32_t DataRelease::GetCount<DataRelease::Character>() const
+inline uint32_t DataRelease::GetCount<DataRelease::Character>() const
 {
     return m_table_Character_count;
 }
 
 template <>
-DataRelease::CharacterRecord DataRelease::Get<DataRelease::Character>(uint32_t index) const
+inline DataRelease::CharacterRecord DataRelease::Get<DataRelease::Character>(uint32_t index) const
 {
     CharacterRecord ret;
     if (index < m_table_Character_count)
@@ -382,13 +378,13 @@ DataRelease::CharacterRecord DataRelease::Get<DataRelease::Character>(uint32_t i
 }
 
 template <>
-uint32_t DataRelease::GetCount<DataRelease::Item>() const
+inline uint32_t DataRelease::GetCount<DataRelease::Item>() const
 {
     return m_table_Item_count;
 }
 
 template <>
-DataRelease::ItemRecord DataRelease::Get<DataRelease::Item>(uint32_t index) const
+inline DataRelease::ItemRecord DataRelease::Get<DataRelease::Item>(uint32_t index) const
 {
     ItemRecord ret;
     if (index < m_table_Item_count)

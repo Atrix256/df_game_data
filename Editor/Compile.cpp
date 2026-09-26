@@ -261,13 +261,13 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
             publicInterface << "\n";
 
         publicInterface << "template <>\n";
-        publicInterface << "uint32_t " << compilerSettings.className << "::GetCount<" << compilerSettings.className << "::" << pair.first << ">() const\n";
+        publicInterface << "inline uint32_t " << compilerSettings.className << "::GetCount<" << compilerSettings.className << "::" << pair.first << ">() const\n";
         publicInterface << "{\n";
         publicInterface << "    return m_table_" << pair.first << "_count;\n";
         publicInterface << "}\n";
         publicInterface << "\n";
         publicInterface << "template <>\n";
-        publicInterface << compilerSettings.className << "::" << pair.first << "Record " << compilerSettings.className << "::Get<" << compilerSettings.className << "::" << pair.first << ">(uint32_t index) const\n";
+        publicInterface << "inline " << compilerSettings.className << "::" << pair.first << "Record " << compilerSettings.className << "::Get<" << compilerSettings.className << "::" << pair.first << ">(uint32_t index) const\n";
         publicInterface << "{\n";
         publicInterface << "    " << pair.first << "Record ret;\n";
         publicInterface << "    if (index < m_table_" << pair.first << "_count)\n";
@@ -303,7 +303,7 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
         {
             publicInterface << "\n";
             publicInterface << "template <>\n";
-            publicInterface << compilerSettings.className << "::" << pair.first << "Record " << compilerSettings.className << "::Get<" << compilerSettings.className << "::" << pair.first << ">(const char* name) const\n";
+            publicInterface << "inline " << compilerSettings.className << "::" << pair.first << "Record " << compilerSettings.className << "::Get<" << compilerSettings.className << "::" << pair.first << ">(const char* name) const\n";
             publicInterface << "{\n";
             publicInterface << "    " << pair.first << "Record ret;\n";
             publicInterface << "\n";
@@ -416,7 +416,7 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
 
                     std::string indent = "";
                     pointerFixup << "\n";
-                    pointerFixup << indent << "void " << compilerSettings.className << "::DoEndianSwapAndPointerFixup(" << structDef.name << "& v, void* base, bool endianSwap)\n";
+                    pointerFixup << indent << "inline void " << compilerSettings.className << "::DoEndianSwapAndPointerFixup(" << structDef.name << "& v, void* base, bool endianSwap)\n";
                     pointerFixup << indent << "{\n";
 
                     for (const DefParser::StructField& field : structDef.fields)
@@ -462,10 +462,21 @@ static bool MakeHeader_Global(const DBCompileSettings& compilerSettings, const D
     s_data.tokenReplacement["/*$Includes$*/"] << "";
     s_data.tokenReplacement["/*$Tick$*/"] << "";
     s_data.tokenReplacement["/*$Dtor$*/"] << "";
+    s_data.tokenReplacement["/*$RecordGetFwd$*/"] << "";
 
     s_data.tokenReplacement["/*$ClassName$*/"] << compilerSettings.className;
 
     s_data.tokenReplacement["/*$SchemaHash*/"] << "0x" << std::hex << std::setfill('0') << std::setw(16) << hash << "ULL";
+
+    // LUT functionality not covered by hot reloading
+    if (compilerSettings.includeEntryLUT)
+    {
+        s_data.tokenReplacement["/*$RecordGetFwd$*/"] <<
+            "\n"
+            "    template <typename T>\n"
+            "    inline Record<T> Get(const char* name) const;\n"
+            ;
+    }
 
     // Hot reloading support
     if (compilerSettings.hotReloading)
@@ -520,7 +531,9 @@ static bool MakeHeader_Global(const DBCompileSettings& compilerSettings, const D
             ;
 
         s_data.tokenReplacement["/*$Includes$*/"] <<
-            "#include <filesystem>\n";
+            "#include <filesystem>\n"
+            "#include <algorithm>\n"
+            ;
     }
 
     // Make the templated Record struct
@@ -1053,13 +1066,11 @@ bool Compile(const DBRoot& dbRoot, const DBCompileSettings& compilerSettings_, s
 
 /*
 TODO:
-* for hot reloading, a record get function should look up the record by name again.
-* also, the is valid check should look up the record by name again if needed. maybe call Get(). only when hot reloading is on.
-* do hot reloading
-* put generated header through static analysis
+* links can be optional - make them be null pointers if not set
+* unions may be worth while ): yes. needed for components for example
 * need to use it for a bit before announcing. adding array items in the editor is crashing
 * test data should have a struct of array of struct of array of struct or something
 * maybe have single link in "test" data too. Also static and dynamic array of links.
-* links can be optional - make them be null pointers if not set
-* unions may be worth while ): yes. needed for components for example
+* fix up the demo to be something sensible.
+* also make some sort of demo for the exhaustive test data.
 */

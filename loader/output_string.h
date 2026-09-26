@@ -8,7 +8,6 @@ static constexpr const char* c_output_h = R"EMBED(/*
 #include <stdint.h>
 #include <stdio.h>
 #include <cstring>
-#include <algorithm>
 /*$Includes$*/
 class /*$ClassName$*/
 {
@@ -113,20 +112,17 @@ public:
     }
 
     template <typename T>
-    uint32_t GetCount() const;
+    inline uint32_t GetCount() const;
 
     template <typename T>
-    Record<T> Get(uint32_t index) const;
-
-    template <typename T>
-    Record<T> Get(const char* name) const;
-
+    inline Record<T> Get(uint32_t index) const;
+/*$RecordGetFwd$*/
 private:
 /*$PrivateStorage$*/};
 
 // ================================= Misc =================================
 
-/*$ClassName$*/::~/*$ClassName$*/()
+inline /*$ClassName$*/::~/*$ClassName$*/()
 {
     delete[] m_ownedMemory;
     m_ownedMemory = nullptr;
@@ -134,7 +130,7 @@ private:
 
 // ================================= LOADING =================================
 
-bool /*$ClassName$*/::LoadFromMemory(void* mem, uint32_t memSize)
+inline bool /*$ClassName$*/::LoadFromMemory(void* mem, uint32_t memSize)
 {
     auto MakeFourCC = [](char a, char b, char c, char d) -> uint32_t
     {
@@ -172,7 +168,7 @@ bool /*$ClassName$*/::LoadFromMemory(void* mem, uint32_t memSize)
     return true;
 }
 
-bool /*$ClassName$*/::LoadFromFile(const char* fileName)
+inline bool /*$ClassName$*/::LoadFromFile(const char* fileName)
 {
     FILE* file = nullptr;
     fopen_s(&file, fileName, "rb");
