@@ -252,7 +252,59 @@ static void AddUIForType(EditorData& editorData, const DefParser& parser, const 
                 case DefParser::FieldType::_struct:
                 {
                     const DefParser::Struct* structDef = parser.GetStructByName(fieldDef.structName.c_str());
-                    AddUIForType(editorData, parser, *structDef, fieldName.c_str(), jsonData, jsonPathItem, true);
+
+                    // If this is a union, we want to show a type drop down, and a singular field
+                    if (structDef->isUnion)
+                    {
+                        json_pointer pathType = jsonPathItem / "_type";
+                        std::string value = "";
+                        value = GetOrDefault(jsonData.m_data, pathType, value);
+
+                        if (ImGui::BeginCombo((fieldName + " Type").c_str(), value.c_str()))
+                        {
+                            bool selected = (value.empty());
+
+                            if (ImGui::Selectable(" ", selected))
+                            {
+                                jsonData.m_data[pathType] = "";
+                                MarkDirty(editorData, jsonData);
+                            }
+
+                            if (selected)
+                                ImGui::SetItemDefaultFocus();
+
+                            for (const DefParser::StructField& field : structDef->fields)
+                            {
+                                selected = (value == field.name);
+
+                                if (ImGui::Selectable(field.name.c_str(), selected))
+                                {
+                                    jsonData.m_data[pathType] = field.name;
+                                    MarkDirty(editorData, jsonData);
+                                }
+
+                                if (selected)
+                                    ImGui::SetItemDefaultFocus();
+                            }
+
+                            ImGui::EndCombo();
+                        }
+
+                        // Show the chosen field
+                        for (const DefParser::StructField& field : structDef->fields)
+                        {
+                            if (value == field.name)
+                            {
+                                json_pointer pathValue = jsonPathItem / field.name;
+                                AddUIForType(editorData, parser, field, jsonData, pathValue);
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        AddUIForType(editorData, parser, *structDef, fieldName.c_str(), jsonData, jsonPathItem, true);
+                    }
                     break;
                 }
             }

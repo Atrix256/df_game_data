@@ -1,3 +1,16 @@
 {
-    "name": "dagger"
+    "name": "dagger",
+    "item": {
+        "weapon": {
+            "damage": 1.2000000476837158
+        },
+        "armor": {
+            "armor": 1.5
+        },
+        "consumable": {
+            "hpGain": 1.2999999523162842,
+            "mpGain": 2.5
+        },
+        "_type": "weapon"
+    }
 }

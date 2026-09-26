@@ -506,7 +506,7 @@ static void OnDataListReload()
 
     table.m_data.erase(s_editorData.m_selectedDataItemName);
 
-    table.Load(src.generic_string().c_str());
+    table.LoadFile(src.generic_string().c_str());
 }
 
 static void OnDataListRename(const char* newName)
@@ -566,8 +566,8 @@ static void OnDataListDuplicate()
     std::error_code ec;
     std::filesystem::copy_file(src, dst, std::filesystem::copy_options::overwrite_existing, ec);
 
-    // Load the file
-    table.Load(src.generic_string().c_str());
+    // Load the new file
+    table.LoadFile(dst.generic_string().c_str());
 
     // select the new item
     s_editorData.m_selectedDataItemName = newItemName;
@@ -1055,8 +1055,16 @@ bool EditorOnAppLaunch(int argc, char** argv, int &returnCode)
 
 /*
 TODO:
+* Records could have a Tick() function on them (empty when hot reloading is off), which returns true when it updates.
+ * the demo could use that to print out the data for whatever character changed.
 
- * unions may be worth while ): yes. needed for components for example
+* floating point defaults in def files can't have f suffix on them. fix that!
+
+* Can you test 32 bit by building x86 instead of x64
+
+* test data needs to have union, static array of unions, dynamic array of unions
+* and a pod in a union
+* have the tests assert that every value is correct. a lot of typing, but worth while.
 
 * the example data needs a small c++ main.cpp that loads the data and prints something from it.
  * ExampleData\example_code\main.cpp when it's time to do this again.
@@ -1066,6 +1074,7 @@ TODO:
 * also make some sort of demo for the exhaustive test data.
 
 * use it a bit before announcing it and making builds available
+ * could see if anyone wants to test it first? idk.
 ! make a blog post about the binary serialization stack. static size go in stack N, dynamic is written into N+1 and a pointer is written into N.
  * could also talk about the multi pass approach, for final pointer fixup
  * also talk about pointer fixup on load
@@ -1092,6 +1101,7 @@ Schema documentation:
 * #include
 * #root
 * struct {};
+* union {};
 * enum {};
 * types
 * dynamic / fixed arrays

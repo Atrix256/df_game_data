@@ -1,0 +1,10 @@
+{
+    "name": "potion",
+    "item": {
+        "consumable": {
+            "hpGain": 2.0,
+            "mpGain": 4.0
+        },
+        "_type": "consumable"
+    }
+}

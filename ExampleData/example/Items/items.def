@@ -1,6 +1,30 @@
+struct Weapon
+{
+    float damage = 0.1;
+};
+
+struct Armor
+{
+    float armor = 0.5;
+};
+
+struct Consumable
+{
+    float hpGain = 0.0;
+    float mpGain = 0.0;
+};
+
+union ItemBase
+{
+    Weapon weapon;
+    Armor armor;
+    Consumable consumable;
+};
+
 struct Item
 {
     string name;
+    ItemBase item;
 };
 
 #root Item

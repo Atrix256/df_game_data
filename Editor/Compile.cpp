@@ -80,6 +80,47 @@ inline void StringReplaceAll(std::string& str, const std::string& from, const st
     }
 }
 
+// Helper function to say if a struct is any table's root struct
+bool IsARootStruct(const DBRoot& dbRoot, const char* name)
+{
+    for (const auto& pair : dbRoot.m_tables)
+    {
+        if (pair.second->GetParser().GetRootStructName() == name)
+            return true;
+    }
+
+    return false;
+}
+
+static const bool FieldToCPPType(const DefParser::Struct& s, const DefParser::StructField& field, std::string& typeName)
+{
+    switch (field.fieldType)
+    {
+        case DefParser::FieldType::_bool: typeName = "Bool"; break;
+        case DefParser::FieldType::_uint8: typeName = "uint8_t"; break;
+        case DefParser::FieldType::_sint8: typeName = "int8_t"; break;
+        case DefParser::FieldType::_uint16: typeName = "uint16_t"; break;
+        case DefParser::FieldType::_sint16: typeName = "int16_t"; break;
+        case DefParser::FieldType::_uint32: typeName = "uint32_t"; break;
+        case DefParser::FieldType::_sint32: typeName = "int32_t"; break;
+        case DefParser::FieldType::_uint64: typeName = "uint64_t"; break;
+        case DefParser::FieldType::_sint64: typeName = "int64_t"; break;
+        case DefParser::FieldType::_float: typeName = "float"; break;
+        case DefParser::FieldType::_double: typeName = "double"; break;
+        case DefParser::FieldType::_string: typeName = "Ptr64<char>"; break;
+        case DefParser::FieldType::_enum: typeName = field.enumName; break;
+        case DefParser::FieldType::_struct: typeName = field.structName; break;
+        case DefParser::FieldType::_link: typeName = "Ptr64<" + field.linkName + ">"; break;
+        default:
+        {
+            s_data.error << "Unhandled field type for " << s.name << "." << field.name;
+            return false;
+            break;
+        }
+    }
+    return true;
+}
+
 static bool MakeHeader_EnumAndStructDefs(const DBRoot& dbRoot)
 {
     std::ostringstream& os = s_data.tokenReplacement["/*$EnumAndStructDefs$*/"];
@@ -133,7 +174,7 @@ static bool MakeHeader_EnumAndStructDefs(const DBRoot& dbRoot)
         const DefParser& parser = pair.second->GetParser();
 
         bool ret = parser.ForEachStruct(
-            [&os, &structsWritten](const DefParser::Struct& s)
+            [&os, &structsWritten, &parser, &dbRoot](const DefParser::Struct& s)
             {
                 // only write the same type once
                 if (structsWritten.contains(s.FullName()))
@@ -152,65 +193,92 @@ static bool MakeHeader_EnumAndStructDefs(const DBRoot& dbRoot)
                     indent = "        ";
                 }
 
-                os << indent << "struct " << s.name << "\n" << indent << "{\n";
-
-                // Write the fields
-                for (const DefParser::StructField& field : s.fields)
+                if (s.isUnion)
                 {
-                    // Get the C++ name of the type
-                    std::string typeName;
+                    os << indent << "enum class " << s.name << "_type : uint16_t\n" << indent << "{\n";
+                    os << indent << "    None,\n";
+                    for (const DefParser::StructField& field : s.fields)
+                        os << indent << "    " << field.name << ",\n";
+                    os << indent << "};\n\n";
+
+                    os <<
+                        indent << "union " << s.name << "\n" <<
+                        indent << "{\n" <<
+                        indent << "    " << s.name << "_type type;\n" <<
+                        indent << "    Ptr64<void> ptr;\n"
+                        "\n"
+                        ;
+
+                    // make type aliases
+                    for (const DefParser::StructField& field : s.fields)
                     {
-                        switch (field.fieldType)
+                        std::string typeName;
+                        if (!FieldToCPPType(s, field, typeName))
+                            return false;
+                        os << indent << "    using " << field.name << "_type = " << typeName << ";\n";
+                    }
+
+                    // accessor functions
+                    for (const DefParser::StructField& field : s.fields)
+                    {
+                        os << "\n";
+                        os << indent << "    " << field.name << "_type* " << field.name << "() { return type == " << s.name << "_type::" << field.name << " ? reinterpret_cast<" << field.name << "_type*>(ptr.ptr) : nullptr; }\n";
+                        os << indent << "    const " << field.name << "_type* " << field.name << "() const { return type == " << s.name << "_type::" << field.name << " ? reinterpret_cast<const " << field.name << "_type*>(ptr.ptr) : nullptr; }\n";
+                    }
+
+                    os <<
+                        indent << "};\n"
+                        ;
+                }
+                else
+                {
+                    os << indent << "struct " << s.name << "\n" << indent << "{\n";
+
+                    // Write the fields
+                    for (const DefParser::StructField& field : s.fields)
+                    {
+                        // Get the C++ name of the type
+                        std::string typeName;
+                        if (!FieldToCPPType(s, field, typeName))
+                            return false;
+
+                        bool isUnion = false;
+                        if (field.fieldType == DefParser::FieldType::_struct)
                         {
-                            case DefParser::FieldType::_bool: typeName = "Bool"; break;
-                            case DefParser::FieldType::_uint8: typeName = "uint8_t"; break;
-                            case DefParser::FieldType::_sint8: typeName = "int8_t"; break;
-                            case DefParser::FieldType::_uint16: typeName = "uint16_t"; break;
-                            case DefParser::FieldType::_sint16: typeName = "int16_t"; break;
-                            case DefParser::FieldType::_uint32: typeName = "uint32_t"; break;
-                            case DefParser::FieldType::_sint32: typeName = "int32_t"; break;
-                            case DefParser::FieldType::_uint64: typeName = "uint64_t"; break;
-                            case DefParser::FieldType::_sint64: typeName = "int64_t"; break;
-                            case DefParser::FieldType::_float: typeName = "float"; break;
-                            case DefParser::FieldType::_double: typeName = "double"; break;
-                            case DefParser::FieldType::_string: typeName = "Ptr64<char>"; break;
-                            case DefParser::FieldType::_enum: typeName = field.enumName; break;
-                            case DefParser::FieldType::_struct: typeName = field.structName; break;
-                            case DefParser::FieldType::_link: typeName = "Ptr64<" + field.linkName + ">"; break;
-                            default:
+                            const DefParser::Struct* fieldStruct = parser.GetStructByName(field.structName.c_str());
+                            if (!fieldStruct)
                             {
-                                s_data.error << "Unhandled field type for " << s.name << "." << field.name;
+                                s_data.error << "Could not find struct " << field.structName << " for " << s.name << "." << field.name;
                                 return false;
-                                break;
                             }
+                            isUnion = fieldStruct->isUnion;
                         }
+
+                        // Arrays are a count and a pointer to the data.
+                        // Dynamic arrays get their count from the bin file. Static arrays know their count at compile time.
+                        if (field.isArray)
+                        {
+                            if (field.fixedArraySize > 0)
+                            {
+                                os << indent << "    static const uint32_t _" << field.name << "_count = " << field.fixedArraySize << ";\n";
+                                os << indent << "    " << typeName << " " << field.name << "[" << field.fixedArraySize << "];\n";
+                            }
+                            else
+                            {
+                                os << indent << "    uint32_t _" << field.name << "_count = 0;\n";
+                                os << indent << "    Ptr64<" << typeName << "> " << field.name << ";\n";
+                            }
+                            continue;
+                        }
+
+                        os << indent << "    " << typeName << " " << field.name << ";\n";
                     }
 
-                    // Arrays are a count and a pointer to the data.
-                    // Dynamic arrays get their count from the bin file. Static arrays know their count at compile time.
-                    if (field.isArray)
-                    {
-                        if (field.fixedArraySize > 0)
-                        {
-                            os << indent << "    static const uint32_t _" << field.name << "_count = " << field.fixedArraySize << ";\n";
-                            os << indent << "    " << typeName << " " << field.name << "[" << field.fixedArraySize << "];\n";
-                        }
-                        else
-                        {
-                            os << indent << "    uint32_t _" << field.name << "_count = 0;\n";
-                            os << indent << "    Ptr64<" << typeName << "> " << field.name << ";\n";
-                        }
-                        continue;
-                    }
-
-                    // the field
-                    os << indent << "    " << typeName << " " << field.name << ";\n";
+                    os << indent << "};\n";
                 }
 
-                os << indent << "};\n";
-
-                os << "\n";
-                os << indent << "using " << s.name << "Record = Record<" << s.name << ">;\n";
+                if (IsARootStruct(dbRoot, s.name.c_str()))
+                    os << "\n" << indent << "using " << s.name << "Record = Record<" << s.name << ">;\n";
 
                 if (!s.nameSpace.empty())
                 {
@@ -350,6 +418,31 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
             publicInterface << "    return ret;\n";
             publicInterface << "}\n";
         }
+
+        // make the friendly, named interface
+        publicInterface <<
+            "\n" <<
+            "inline uint32_t " << compilerSettings.className << "::Get" << pair.first << "Count() const\n" <<
+            "{\n" <<
+            "    return GetCount<" << pair.first << ">();\n" <<
+            "}\n" <<
+            "\n" <<
+            "inline " << compilerSettings.className << "::" << pair.first << "Record " << compilerSettings.className << "::Get" << pair.first << "(uint32_t index) const\n" <<
+            "{\n" <<
+            "    return Get<" << pair.first << ">(index);\n" <<
+            "}\n"
+            ;
+
+        if (compilerSettings.includeEntryLUT)
+        {
+            publicInterface <<
+                "\n" <<
+                "inline " << compilerSettings.className << "::" << pair.first << "Record " << compilerSettings.className << "::Get" << pair.first << "(const char* name) const\n" <<
+                "{\n" <<
+                "    return Get<" << pair.first << ">(name);\n" <<
+                "}\n"
+                ;
+        }
     }
 
     // make the code to load each table
@@ -419,25 +512,50 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
                     pointerFixup << indent << "inline void " << compilerSettings.className << "::DoEndianSwapAndPointerFixup(" << structDef.name << "& v, void* base, bool endianSwap)\n";
                     pointerFixup << indent << "{\n";
 
-                    for (const DefParser::StructField& field : structDef.fields)
+                    if (structDef.isUnion)
                     {
-                        if (field.isArray)
+                        pointerFixup <<
+                            indent << "    DoEndianSwapAndPointerFixup(v.type, base, endianSwap);\n" <<
+                            indent << "    DoEndianSwapAndPointerFixup(v.ptr, base, endianSwap);\n" <<
+                            indent << "    switch(v.type)\n" <<
+                            indent << "    {\n"
+                            ;
+
+                        for (const DefParser::StructField& field : structDef.fields)
                         {
-                            if (field.fixedArraySize == 0)
+                            pointerFixup <<
+                                indent << "        case " << structDef.name << "_type::" << field.name << ":" <<
+                                "DoEndianSwapAndPointerFixup(*v." << field.name << "()" <<
+                                ", base, endianSwap); break;\n"
+                                ;
+                        }
+
+                        pointerFixup <<
+                            indent << "    }\n"
+                            ;
+                    }
+                    else
+                    {
+                        for (const DefParser::StructField& field : structDef.fields)
+                        {
+                            if (field.isArray)
                             {
-                                pointerFixup << indent << "    DoEndianSwapAndPointerFixup(v._" << field.name << "_count, base, endianSwap);\n";
+                                if (field.fixedArraySize == 0)
+                                {
+                                    pointerFixup << indent << "    DoEndianSwapAndPointerFixup(v._" << field.name << "_count, base, endianSwap);\n";
+                                    pointerFixup << indent << "    DoEndianSwapAndPointerFixup(v." << field.name << ", base, endianSwap);\n";
+                                }
+
+                                pointerFixup << indent << "    for (uint32_t i = 0; i < v._" << field.name << "_count; ++i)\n";
+                                if (field.fixedArraySize != 0)
+                                    pointerFixup << indent << "        DoEndianSwapAndPointerFixup(v." << field.name << "[i], base, endianSwap);\n";
+                                else
+                                    pointerFixup << indent << "        DoEndianSwapAndPointerFixup(v." << field.name << ".ptr[i], base, endianSwap);\n";
+                            }
+                            else
+                            {
                                 pointerFixup << indent << "    DoEndianSwapAndPointerFixup(v." << field.name << ", base, endianSwap);\n";
                             }
-
-                            pointerFixup << indent << "    for (uint32_t i = 0; i < v._" << field.name << "_count; ++i)\n";
-                            if (field.fixedArraySize != 0)
-                                pointerFixup << indent << "        DoEndianSwapAndPointerFixup(v." << field.name << "[i], base, endianSwap);\n";
-                            else
-                                pointerFixup << indent << "        DoEndianSwapAndPointerFixup(v." << field.name << ".ptr[i], base, endianSwap);\n";
-                        }
-                        else
-                        {
-                            pointerFixup << indent << "    DoEndianSwapAndPointerFixup(v." << field.name << ", base, endianSwap);\n";
                         }
                     }
 
@@ -476,6 +594,43 @@ static bool MakeHeader_Global(const DBCompileSettings& compilerSettings, const D
             "    template <typename T>\n"
             "    inline Record<T> Get(const char* name) const;\n"
             ;
+    }
+
+    // make the nicer human interfaces
+    {
+        std::unordered_set<std::string> structsWritten;
+        for (const auto& pair : dbRoot.m_tables)
+        {
+            const DefParser& parser = pair.second->GetParser();
+
+            bool ret = parser.ForEachStruct(
+                [&structsWritten, &parser, &dbRoot, &compilerSettings](const DefParser::Struct& s)
+                {
+                    // only write the same type once
+                    if (structsWritten.contains(s.FullName()))
+                        return true;
+                    structsWritten.insert(s.FullName());
+
+                    if (!IsARootStruct(dbRoot, s.name.c_str()))
+                        return true;
+
+                    s_data.tokenReplacement["/*$RecordGetFwd$*/"] <<
+                        "\n" <<
+                        "    inline uint32_t Get" << s.name << "Count() const;\n" <<
+                        "    inline " << s.name << "Record Get" << s.name << "(uint32_t index) const;\n"
+                        ;
+
+                    if (compilerSettings.includeEntryLUT)
+                    {
+                        s_data.tokenReplacement["/*$RecordGetFwd$*/"] <<
+                            "    inline " << s.name << "Record Get" << s.name << "(const char* name) const;\n"
+                            ;
+                    }
+
+                    return true;
+                }
+            );
+        }
     }
 
     // Hot reloading support
@@ -855,7 +1010,53 @@ static bool MakeBin_WriteField(DBTable& table, const DefParser::StructField& fie
                 s_data.error << "Could not find struct \"" << fieldDef.structName << "\"";
                 return false;
             }
-            MakeBin_WriteStruct(table, *structDef, json, path, fieldStackIndex);
+
+            // unions write a uint16 for which they are, then a dynamic pointer to the data for that field.
+            if (structDef->isUnion)
+            {
+                // Write the type, which is a uint16: We write fieldIndex + 1, so that 0 is "none"
+                // Then write a pointer to the data in the next data stack down, since the size is variable.
+                json_pointer pathType = path / "_type";
+
+                std::string value = fieldDef.dflt;
+                value = GetOrDefault(json, pathType, value);
+
+                uint16_t index = 0;
+                bool found = false;
+                for (const DefParser::StructField& field : structDef->fields)
+                {
+                    index++;
+                    if (field.name == value)
+                    {
+                        // Write the type, and a pointer.
+                        // Tell it to do pointer fixup to make this pointer point at where we are going to write the field.
+                        MakeBin_Write(fieldStackIndex, index);
+                        DataOffset dst = MakeBin_Write(fieldStackIndex, (uint64_t)0);
+                        DataOffset src = MakeBin_GetOffset(fieldStackIndex + 1);
+                        s_data.dataOffsets.push_back({ src, dst });
+
+                        json_pointer pathValue = path / field.name;
+
+                        MakeBin_WriteField(table, field, json, pathValue, fieldStackIndex + 1);
+
+                        found = true;
+                        break;
+                    }
+                }
+
+                // If no type chosen:
+                // 1) write the uint16_t type out as none
+                // 2) write a nullptr for the data
+                if (!found)
+                {
+                    MakeBin_Write(fieldStackIndex, (uint16_t)0);
+                    MakeBin_Write(fieldStackIndex, (uint64_t)0);
+                }
+            }
+            else
+            {
+                MakeBin_WriteStruct(table, *structDef, json, path, fieldStackIndex);
+            }
             continue;
         }
 

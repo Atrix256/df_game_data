@@ -1,3 +1,6 @@
 {
-    "name": "sword"
+    "name": "sword",
+    "item": {
+        "_type": "weapon"
+    }
 }

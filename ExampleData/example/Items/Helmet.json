@@ -1,0 +1,9 @@
+{
+    "name": "helmet",
+    "item": {
+        "armor": {
+            "armor": 2.0
+        },
+        "_type": "armor"
+    }
+}

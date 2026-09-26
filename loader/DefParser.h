@@ -64,6 +64,7 @@ public:
         std::string name;
         std::string nameSpace;
         std::vector<StructField> fields;
+        bool isUnion = false;
     };
 
     struct Enum
@@ -140,7 +141,7 @@ public:
     }
 
 private:
-    bool ParseStructDef(const char*& cursor);
+    bool ParseStructDef(const char*& cursor, bool isUnion);
     bool ParseEnumDef(const char*& cursor);
     bool ParseDirectiveRoot(const char*& cursor);
     bool ParseDirectiveInclude(const char*& cursor);

@@ -12,6 +12,7 @@ enum class TokenType : uint8_t
     Identifier,
 
     StructDef,
+    UnionDef,
     EnumDef,
     Namespace,
 
@@ -159,6 +160,7 @@ static void ConvertIdentifierToken(Token& token)
     static const IdentifierToTokenType map[] =
     {
         {"struct", TokenType::StructDef},
+        {"union", TokenType::UnionDef},
         {"enum", TokenType::EnumDef},
         {"namespace", TokenType::Namespace},
         {"false", TokenType::LiteralBool},
@@ -372,7 +374,7 @@ bool DefParser::ParseNamespacedIdentifier(const char*& cursor, Token& token)
     return true;
 }
 
-bool DefParser::ParseStructDef(const char*& cursor)
+bool DefParser::ParseStructDef(const char*& cursor, bool isUnion)
 {
     Token token;
     GetToken(cursor, token);
@@ -382,6 +384,7 @@ bool DefParser::ParseStructDef(const char*& cursor)
     Struct& newStruct = m_structs.emplace_back();
     newStruct.name = std::string(token.token);
     newStruct.nameSpace = m_currentNamespace;
+    newStruct.isUnion = isUnion;
 
     GetToken(cursor, token);
     if (!TokenTypeExpected(token, TokenType::BraceBegin))
@@ -743,7 +746,13 @@ bool DefParser::Parse(const char* fileName)
             }
             case TokenType::StructDef:
             {
-                if (!ParseStructDef(cursor))
+                if (!ParseStructDef(cursor, false))
+                    return false;
+                break;
+            }
+            case TokenType::UnionDef:
+            {
+                if (!ParseStructDef(cursor, true))
                     return false;
                 break;
             }
