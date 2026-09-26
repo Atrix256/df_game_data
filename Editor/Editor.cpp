@@ -1056,10 +1056,14 @@ bool EditorOnAppLaunch(int argc, char** argv, int &returnCode)
 /*
 TODO:
 
+ * unions may be worth while ): yes. needed for components for example
+
 * the example data needs a small c++ main.cpp that loads the data and prints something from it.
  * ExampleData\example_code\main.cpp when it's time to do this again.
-
- ! look for TODOs
+* test data should have a struct of array of struct of array of struct or something
+* maybe have single link in "test" data too. Also static and dynamic array of links.
+* fix up the demo to be something sensible.
+* also make some sort of demo for the exhaustive test data.
 
 * use it a bit before announcing it and making builds available
 ! make a blog post about the binary serialization stack. static size go in stack N, dynamic is written into N+1 and a pointer is written into N.
@@ -1129,5 +1133,6 @@ Notes:
  ! need to call Tick() to have it check if the file changed (once a frame? can limit it by time if you want)
   * it will return true if it reloaded the data.
   * When Records use Get() or Valid(), it will update them to the new data.
+ * can make it generate a version with hot reloading for debug, and a version without it, for release, and use a #define for which header and data file to use
 
 */
