@@ -25,7 +25,6 @@ Struct fields may also be dynamic or static sized arrays of the above types.
 
 ## Use Overview
 
-The process for using df_game_data is:
 1. Define A Table
 2. Edit Data
 3. Compile Database And Use Output
