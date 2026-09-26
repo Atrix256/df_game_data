@@ -44,6 +44,8 @@ public:
     bool LoadFromFile(const char* fileName);
 
 public:
+    #pragma pack(push, 1)
+
     template <typename T>
     union Ptr64
     {
@@ -59,6 +61,8 @@ public:
             return _8 != 0;
         }
     };
+
+    #pragma pack(pop)
 
     template <typename T>
     struct Record
@@ -137,7 +141,7 @@ public:
         consumable,
     };
 
-    union ItemBase
+    struct ItemBase
     {
         ItemBase_type type;
         Ptr64<void> ptr;

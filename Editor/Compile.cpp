@@ -202,7 +202,7 @@ static bool MakeHeader_EnumAndStructDefs(const DBRoot& dbRoot)
                     os << indent << "};\n\n";
 
                     os <<
-                        indent << "union " << s.name << "\n" <<
+                        indent << "struct " << s.name << "\n" <<
                         indent << "{\n" <<
                         indent << "    " << s.name << "_type type;\n" <<
                         indent << "    Ptr64<void> ptr;\n"

@@ -25,12 +25,12 @@ int main(int argc, char** argv)
     }
 
     std::vector<Data::CharacterRecord> characters;
-    for (uint32_t i = 0; i < data.GetCount<Data::Character>() + 1; ++i)
-        characters.push_back(data.Get<Data::Character>(i));
+    for (uint32_t i = 0; i < data.GetCharacterCount() + 1; ++i)
+        characters.push_back(data.GetCharacter(i));
 
     std::vector<Data::ItemRecord> items;
-    for (uint32_t i = 0; i < data.GetCount<Data::Item>(); ++i)
-        items.push_back(data.Get<Data::Item>(i));
+    for (uint32_t i = 0; i < data.GetItemCount(); ++i)
+        items.push_back(data.GetItem(i));
 
     const Data::Character& a = characters[0].Get();
     const Data::Character& b = characters[1].Get();
@@ -38,8 +38,8 @@ int main(int argc, char** argv)
     const Data::Character& d = characters[3].Get();
 
 #ifdef _DEBUG
-    auto test1 = data.Get<Data::Character>("Larry");
-    auto test2 = data.Get<Data::Character>("larry");
+    auto test1 = data.GetCharacter("Larry");
+    auto test2 = data.GetCharacter("larry");
 #endif
 
     printf("Program watching input file for updates. Press Q to exit...\n");
