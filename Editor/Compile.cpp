@@ -313,7 +313,7 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
 
         // The sorted list of table names. Tables are written in sorted order
         if (compilerSettings.includeEntryLUT)
-            privateStorage << indent << "Ptr64<char*> m_table_" << parser.GetRootStructName() << "_names;\n";
+            privateStorage << indent << "Ptr64<Ptr64<char>> m_table_" << parser.GetRootStructName() << "_names;\n";
 
         privateStorage << indent << "Ptr64<" << parser.GetRootStructName() << "> m_table_" << parser.GetRootStructName() << ";\n";
     }
@@ -345,9 +345,9 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
         if (compilerSettings.hotReloading)
         {
             publicInterface <<
-                "        size_t nameLen = strlen(m_table_" << pair.first << "_names.ptr[index]);\n" <<
+                "        size_t nameLen = strlen(m_table_" << pair.first << "_names.ptr[index].ptr);\n" <<
                 "        ret.m_recordName = new char[nameLen + 1];\n" <<
-                "        memcpy(ret.m_recordName, m_table_" << pair.first << "_names.ptr[index], nameLen + 1);\n"
+                "        memcpy(ret.m_recordName, m_table_" << pair.first << "_names.ptr[index].ptr, nameLen + 1);\n"
                 ;
         }
 
@@ -375,31 +375,31 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
             publicInterface << "{\n";
             publicInterface << "    " << pair.first << "Record ret;\n";
             publicInterface << "\n";
-            publicInterface << "    char** array = m_table_" << pair.first << "_names.ptr;\n";
+            publicInterface << "    Ptr64<char>* array = m_table_" << pair.first << "_names.ptr;\n";
             publicInterface << "    const uint32_t count = m_table_" << pair.first << "_count;\n";
             publicInterface << "\n";
             publicInterface << "    auto it = std::lower_bound(\n";
             publicInterface << "        array,\n";
             publicInterface << "        array + count,\n";
             publicInterface << "        name,\n";
-            publicInterface << "        [](const char* item, const char* val)\n";
+            publicInterface << "        [](const Ptr64<char>& item, const char* val)\n";
             publicInterface << "        {\n";
-            publicInterface << "            return strcmp(item, val) < 0;\n";
+            publicInterface << "            return strcmp(item.ptr, val) < 0;\n";
             publicInterface << "        }\n";
             publicInterface << "    );\n";
             publicInterface << "\n";
             publicInterface << "    uint32_t index = uint32_t(it - array);\n";
             publicInterface << "\n";
-            publicInterface << "    if (index < count && !strcmp(*it, name))\n";
+            publicInterface << "    if (index < count && !strcmp(it->ptr, name))\n";
             publicInterface << "    {\n";
             publicInterface << "        ret.m_record = &m_table_" << pair.first << ".ptr[index];\n";
 
             if (compilerSettings.hotReloading)
             {
                 publicInterface <<
-                    "        size_t nameLen = strlen(m_table_" << pair.first << "_names.ptr[index]);\n" <<
+                    "        size_t nameLen = strlen(m_table_" << pair.first << "_names.ptr[index].ptr);\n" <<
                     "        ret.m_recordName = new char[nameLen + 1];\n" <<
-                    "        memcpy(ret.m_recordName, m_table_" << pair.first << "_names.ptr[index], nameLen + 1);\n"
+                    "        memcpy(ret.m_recordName, m_table_" << pair.first << "_names.ptr[index].ptr, nameLen + 1);\n"
                     ;
             }
 

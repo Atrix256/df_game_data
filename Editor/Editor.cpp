@@ -1060,7 +1060,8 @@ TODO:
 
 * floating point defaults in def files can't have f suffix on them. fix that!
 
-* Can you test 32 bit by building x86 instead of x64
+* Can you test 32 bit by building x86 instead of x64?
+ ! yes! and that should be part of the testing procedures i guess. debug / release x 32 / 64
 
 * test data needs to have union, static array of unions, dynamic array of unions
 * and a pod in a union

@@ -358,11 +358,11 @@ private:
     char* m_fileName = nullptr;
 
     uint32_t m_table_Character_count = 0;
-    Ptr64<char*> m_table_Character_names;
+    Ptr64<Ptr64<char>> m_table_Character_names;
     Ptr64<Character> m_table_Character;
 
     uint32_t m_table_Item_count = 0;
-    Ptr64<char*> m_table_Item_names;
+    Ptr64<Ptr64<char>> m_table_Item_names;
     Ptr64<Item> m_table_Item;
 };
 
@@ -597,9 +597,9 @@ inline DataDebug::CharacterRecord DataDebug::Get<DataDebug::Character>(uint32_t 
     if (index < m_table_Character_count)
     {
         ret.m_record = &m_table_Character.ptr[index];
-        size_t nameLen = strlen(m_table_Character_names.ptr[index]);
+        size_t nameLen = strlen(m_table_Character_names.ptr[index].ptr);
         ret.m_recordName = new char[nameLen + 1];
-        memcpy(ret.m_recordName, m_table_Character_names.ptr[index], nameLen + 1);
+        memcpy(ret.m_recordName, m_table_Character_names.ptr[index].ptr, nameLen + 1);
     }
 
     ret.m_parent = this;
@@ -613,27 +613,27 @@ inline DataDebug::CharacterRecord DataDebug::Get<DataDebug::Character>(const cha
 {
     CharacterRecord ret;
 
-    char** array = m_table_Character_names.ptr;
+    Ptr64<char>* array = m_table_Character_names.ptr;
     const uint32_t count = m_table_Character_count;
 
     auto it = std::lower_bound(
         array,
         array + count,
         name,
-        [](const char* item, const char* val)
+        [](const Ptr64<char>& item, const char* val)
         {
-            return strcmp(item, val) < 0;
+            return strcmp(item.ptr, val) < 0;
         }
     );
 
     uint32_t index = uint32_t(it - array);
 
-    if (index < count && !strcmp(*it, name))
+    if (index < count && !strcmp(it->ptr, name))
     {
         ret.m_record = &m_table_Character.ptr[index];
-        size_t nameLen = strlen(m_table_Character_names.ptr[index]);
+        size_t nameLen = strlen(m_table_Character_names.ptr[index].ptr);
         ret.m_recordName = new char[nameLen + 1];
-        memcpy(ret.m_recordName, m_table_Character_names.ptr[index], nameLen + 1);
+        memcpy(ret.m_recordName, m_table_Character_names.ptr[index].ptr, nameLen + 1);
     }
 
     ret.m_parent = this;
@@ -670,9 +670,9 @@ inline DataDebug::ItemRecord DataDebug::Get<DataDebug::Item>(uint32_t index) con
     if (index < m_table_Item_count)
     {
         ret.m_record = &m_table_Item.ptr[index];
-        size_t nameLen = strlen(m_table_Item_names.ptr[index]);
+        size_t nameLen = strlen(m_table_Item_names.ptr[index].ptr);
         ret.m_recordName = new char[nameLen + 1];
-        memcpy(ret.m_recordName, m_table_Item_names.ptr[index], nameLen + 1);
+        memcpy(ret.m_recordName, m_table_Item_names.ptr[index].ptr, nameLen + 1);
     }
 
     ret.m_parent = this;
@@ -686,27 +686,27 @@ inline DataDebug::ItemRecord DataDebug::Get<DataDebug::Item>(const char* name) c
 {
     ItemRecord ret;
 
-    char** array = m_table_Item_names.ptr;
+    Ptr64<char>* array = m_table_Item_names.ptr;
     const uint32_t count = m_table_Item_count;
 
     auto it = std::lower_bound(
         array,
         array + count,
         name,
-        [](const char* item, const char* val)
+        [](const Ptr64<char>& item, const char* val)
         {
-            return strcmp(item, val) < 0;
+            return strcmp(item.ptr, val) < 0;
         }
     );
 
     uint32_t index = uint32_t(it - array);
 
-    if (index < count && !strcmp(*it, name))
+    if (index < count && !strcmp(it->ptr, name))
     {
         ret.m_record = &m_table_Item.ptr[index];
-        size_t nameLen = strlen(m_table_Item_names.ptr[index]);
+        size_t nameLen = strlen(m_table_Item_names.ptr[index].ptr);
         ret.m_recordName = new char[nameLen + 1];
-        memcpy(ret.m_recordName, m_table_Item_names.ptr[index], nameLen + 1);
+        memcpy(ret.m_recordName, m_table_Item_names.ptr[index].ptr, nameLen + 1);
     }
 
     ret.m_parent = this;
