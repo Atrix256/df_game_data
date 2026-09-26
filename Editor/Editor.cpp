@@ -1146,4 +1146,11 @@ Notes:
   * When Records use Get() or Valid(), it will update them to the new data.
  * can make it generate a version with hot reloading for debug, and a version without it, for release, and use a #define for which header and data file to use
 
+Data Examples:
+* Basic - one table, a few different basic types.
+* Game - a couple tables. text based game with hot reload?
+* Exhaustive - all the things.
+! in all tests, make sure the data read in matches. like an assert, but make it work in release too.
+ ? how do we run a data test in debug/release x x86 / x64?
+
 */
