@@ -187,6 +187,7 @@ public:
         None,
         weapon,
         armor,
+        luck,
         consumable,
     };
 
@@ -197,6 +198,7 @@ public:
 
         using weapon_type = Weapon;
         using armor_type = Armor;
+        using luck_type = float;
         using consumable_type = Consumable;
 
         weapon_type* weapon() { return type == ItemBase_type::weapon ? reinterpret_cast<weapon_type*>(ptr.ptr) : nullptr; }
@@ -204,6 +206,9 @@ public:
 
         armor_type* armor() { return type == ItemBase_type::armor ? reinterpret_cast<armor_type*>(ptr.ptr) : nullptr; }
         const armor_type* armor() const { return type == ItemBase_type::armor ? reinterpret_cast<const armor_type*>(ptr.ptr) : nullptr; }
+
+        luck_type* luck() { return type == ItemBase_type::luck ? reinterpret_cast<luck_type*>(ptr.ptr) : nullptr; }
+        const luck_type* luck() const { return type == ItemBase_type::luck ? reinterpret_cast<const luck_type*>(ptr.ptr) : nullptr; }
 
         consumable_type* consumable() { return type == ItemBase_type::consumable ? reinterpret_cast<consumable_type*>(ptr.ptr) : nullptr; }
         const consumable_type* consumable() const { return type == ItemBase_type::consumable ? reinterpret_cast<const consumable_type*>(ptr.ptr) : nullptr; }
@@ -407,7 +412,7 @@ inline bool DataDebug::LoadFromMemory(void* mem, uint32_t memSize)
     // Verify that the schema hash in the binary data matches the schema hash this file was made for
     {
         uint64_t hash = 0;
-        if (!Read(hash, mem, memIndex, memSize, endianSwap) || hash != 0x9e32a71e6c36a123ULL)
+        if (!Read(hash, mem, memIndex, memSize, endianSwap) || hash != 0xd5b9c897bbb908aaULL)
             return false;
     }
 
@@ -542,6 +547,7 @@ inline void DataDebug::DoEndianSwapAndPointerFixup(ItemBase& v, void* base, bool
     {
         case ItemBase_type::weapon:DoEndianSwapAndPointerFixup(*v.weapon(), base, endianSwap); break;
         case ItemBase_type::armor:DoEndianSwapAndPointerFixup(*v.armor(), base, endianSwap); break;
+        case ItemBase_type::luck:DoEndianSwapAndPointerFixup(*v.luck(), base, endianSwap); break;
         case ItemBase_type::consumable:DoEndianSwapAndPointerFixup(*v.consumable(), base, endianSwap); break;
     }
 }

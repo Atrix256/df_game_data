@@ -18,6 +18,7 @@ union ItemBase
 {
     Weapon weapon;
     Armor armor;
+    float luck = 3.2;
     Consumable consumable;
 };
 
