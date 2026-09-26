@@ -243,13 +243,16 @@ static void AddUIForType(EditorData& editorData, const DefParser& parser, const 
                         ImGui::EndCombo();
                     }
 
-                    ImGui::SameLine();
-                    if (ImGui::SmallButton(ICON_FA_CIRCLE_ARROW_RIGHT "##GoToLink"))
                     {
-                        editorData.m_selectedTableName = fieldDef.linkName;
-                        editorData.m_selectedDataItemName = value;
+                        ImGui_Enabled enabled(!value.empty());
+                        ImGui::SameLine();
+                        if (ImGui::SmallButton(ICON_FA_CIRCLE_ARROW_RIGHT "##GoToLink"))
+                        {
+                            editorData.m_selectedTableName = fieldDef.linkName;
+                            editorData.m_selectedDataItemName = value;
+                        }
+                        ShowToolTip("Go To Link", false);
                     }
-                    ShowToolTip("Go To Link", false);
                     break;
                 }
                 case DefParser::FieldType::_string:
