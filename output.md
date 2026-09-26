@@ -1,1 +1,1 @@
-TODO: this!
+TODO: this! compilation settings, generated header, binary file

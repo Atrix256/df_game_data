@@ -97,6 +97,15 @@ int main(int argc, char** argv)
 
     Data::MonsterRecord kobold = data.GetMonster("kobold");
 
+    // Valid() returns false if a record name or index couldn't be found.
+    // Get() returns a const reference to the data object.
+    // Invalid objects return default constructed data objects.
+    float hitpoints = 0.0f;
+    if (kobold.Valid())
+        hitpoints = kobold.Get().hp;
+    else
+        hitpoints = kobold.Get().hp;
+
     uint32_t monsterCount = data.GetMonsterCount();
 
     Data::MonsterRecord otherMonster = data.GetMonster(3);
