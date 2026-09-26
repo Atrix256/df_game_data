@@ -530,14 +530,14 @@ static void OnDataListRename(const char* newName)
     std::error_code ec;
     std::filesystem::copy_file(src, dst, std::filesystem::copy_options::overwrite_existing, ec);
 
-    // Load the file
-    table.Load(src.generic_string().c_str());
-
     // delete old file from disk
     std::filesystem::remove(src);
 
     // delete old from the table
     table.m_data.erase(s_editorData.m_selectedDataItemName);
+
+    // Load the new file
+    table.LoadFile(dst.generic_string().c_str());
 
     // select the new item
     s_editorData.m_selectedDataItemName = newName;
