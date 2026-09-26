@@ -1055,6 +1055,8 @@ bool EditorOnAppLaunch(int argc, char** argv, int &returnCode)
 
 /*
 TODO:
+* Add version number. To hash and editor title bar.
+
 * Records could have a Tick() function on them (empty when hot reloading is off), which returns true when it updates.
  * the demo could use that to print out the data for whatever character changed.
 
@@ -1065,6 +1067,7 @@ TODO:
 
 * test data needs to have union, static array of unions, dynamic array of unions
 * and a pod in a union
+* and nested namespaces. Like namespace blah::moof.
 * have the tests assert that every value is correct. a lot of typing, but worth while.
 
 * the example data needs a small c++ main.cpp that loads the data and prints something from it.
@@ -1152,5 +1155,29 @@ Data Examples:
 * Exhaustive - all the things.
 ! in all tests, make sure the data read in matches. like an assert, but make it work in release too.
  ? how do we run a data test in debug/release x x86 / x64?
+
+
+
+
+
+Serialization blog post:
+Unions -
+They are great. Variants are great.
+They let you express more complex things, like having a list of dissimilar object.
+
+In c++, they are a runtime dynamic feature. You can use whatever field you want based on runtime logic.
+
+Binary data is static however.
+No need to decide at runtime to hold enough memory for all values.
+No need to reserve memory in the bin for the largest value, and waste space.
+But, data needs to be known size in the bin file. Cant write N objects that contain unions and have different sizes.
+
+So, we write the union into dynamic memory and write a fixed size pointer to the static memory.
+
+No wasted space. Fixed sized objects.
+
+Only storing the data we actually need.
+
+But, we also need a field to say what type the union is. A uint16 does that. 0 for none which gives a null ptr.
 
 */
