@@ -105,8 +105,10 @@ int main(int argc, char** argv)
     {
         PlayGame();
 
-        // Call Tick() for hot reloading. records auto update.
-        // Tick returns true if hot reload happened, in case you want to react to it.
+        // Call Tick() for hot reloading.
+        // Records auto update after hot reload, but any data you cached from a record
+        // will need to be updated manually.
+        // Tick returns true when a hot reload happens, so that you can react to it.
         data.Tick();
     }
 
