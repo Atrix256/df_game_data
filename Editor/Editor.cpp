@@ -1126,5 +1126,8 @@ Notes:
  * when you call .get(), it checks if the file on disk changed and reloads if so (gated by time to not happen too fast)
  * when the file reloads, it increments the generation counter.
  * the record checks if the generation counter it has is the one the data object ptr has. if not, it does a look up by name to get the record again.
+ ! need to call Tick() to have it check if the file changed (once a frame? can limit it by time if you want)
+  * it will return true if it reloaded the data.
+  * When Records use Get() or Valid(), it will update them to the new data.
 
 */

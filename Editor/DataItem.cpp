@@ -6,29 +6,6 @@
 #include <vector>
 #include "UIShared.h"
 
-json MakeDefaultArrayItem(const DefParser& parser, const DefParser::StructField& field)
-{
-    switch (field.fieldType)
-    {
-        case DefParser::FieldType::_struct:
-            return json::object();
-
-        case DefParser::FieldType::_bool:
-            return field.dflt == "1" || field.dflt == "true";
-
-        case DefParser::FieldType::_float:
-        case DefParser::FieldType::_double:
-            return std::stof(field.dflt.c_str());
-
-        case DefParser::FieldType::_enum:
-        case DefParser::FieldType::_string:
-            return field.dflt;
-
-        default: // integral types
-            return std::stoll(field.dflt.c_str());
-    }
-}
-
 static void ShowToolTip(const std::vector<std::string>& comments, bool showQ = true)
 {
     std::string text;
@@ -335,7 +312,7 @@ static void AddUIForType(EditorData& editorData, const DefParser& parser, const 
     {
         if (!fixedSizedArray && ImGui::Button("Add Item"))
         {
-            jsonData.m_data[jsonPath].push_back(MakeDefaultArrayItem(parser, fieldDef));
+            jsonData.m_data[jsonPath].push_back(nullptr);
             MarkDirty(editorData, jsonData);
         }
 
