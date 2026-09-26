@@ -215,9 +215,20 @@ static void AddUIForType(EditorData& editorData, const DefParser& parser, const 
 
                     if (ImGui::BeginCombo(fieldDef.name.c_str(), value.c_str()))
                     {
+                        bool selected = value.empty();
+
+                        if (ImGui::Selectable(" ", selected))
+                        {
+                            jsonData.m_data[jsonPathItem] = "";
+                            MarkDirty(editorData, jsonData);
+                        }
+
+                        if (selected)
+                            ImGui::SetItemDefaultFocus();
+
                         for (auto& pair : table.m_data)
                         {
-                            const bool selected = (value == pair.first);
+                            selected = (value == pair.first);
 
                             if (ImGui::Selectable(pair.first.c_str(), selected))
                             {

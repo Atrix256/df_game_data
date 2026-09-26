@@ -1061,16 +1061,6 @@ TODO:
 
  ! look for TODOs
 
-* static analysis of generated code.
-
-* runtime file watching:
- * probably have it opt in since it has to store a string per handle
- * Have a get() function on an entry pointer which returns an object.
- * Internally checks load version # to see if it needs to look entry up again by name.
- * If entry not found by name return default object with a invalid flag thay can be checked.
- * What if schema hash changes? Maybe need a way to detect that incompatibility? Or does flatbuffer handle that with backwards and forwards compatibility?
- * maybe still need to check for massive schema changes that don't follow the rules of what's allowed for flatbuffer loading to continue working
-
 * use it a bit before announcing it and making builds available
 ! make a blog post about the binary serialization stack. static size go in stack N, dynamic is written into N+1 and a pointer is written into N.
  * could also talk about the multi pass approach, for final pointer fixup

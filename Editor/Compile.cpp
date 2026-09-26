@@ -864,9 +864,10 @@ static bool MakeBin_WriteField(DBTable& table, const DefParser::StructField& fie
             // Remember where this link is and what entry it wants, so we can fill it in later
             std::string value = GetOrDefault(json, jsonPathItem, fieldDef.dflt);
 
-            // Write a null for now
+            // Write a null for now. Update later if there is an actual link specified. if not, leave null.
             DataOffset linkOffset = MakeBin_Write(fieldStackIndex, (uint64_t)0);
-            s_data.links.push_back({ fieldDef.linkName, value, linkOffset });
+            if (!value.empty())
+                s_data.links.push_back({ fieldDef.linkName, value, linkOffset });
             continue;
         }
 
@@ -1066,7 +1067,6 @@ bool Compile(const DBRoot& dbRoot, const DBCompileSettings& compilerSettings_, s
 
 /*
 TODO:
-* links can be optional - make them be null pointers if not set
 * unions may be worth while ): yes. needed for components for example
 * need to use it for a bit before announcing. adding array items in the editor is crashing
 * test data should have a struct of array of struct of array of struct or something
