@@ -335,7 +335,7 @@ inline bool DataRelease::LoadFromMemory(void* mem, uint32_t memSize)
     // Verify that the schema hash in the binary data matches the schema hash this file was made for
     {
         uint64_t hash = 0;
-        if (!Read(hash, mem, memIndex, memSize, endianSwap) || hash != 0x5c6cf772eb5f7790ULL)
+        if (!Read(hash, mem, memIndex, memSize, endianSwap) || hash != 0x9fab367d5c2fc062ULL)
             return false;
     }
 

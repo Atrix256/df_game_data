@@ -86,6 +86,7 @@
     <ClCompile Include="loader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Version.h" />
     <ClInclude Include="DefParser.h" />
     <ClInclude Include="FileWatcher.h" />
     <ClInclude Include="hash.h" />

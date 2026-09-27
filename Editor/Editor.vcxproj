@@ -170,6 +170,7 @@ dxgi.lib
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\df_resource.h" />
+    <ClInclude Include="..\Version.h" />
     <ClInclude Include="Compile.h" />
     <ClInclude Include="DataItem.h" />
     <ClInclude Include="Editor.h" />

@@ -9,6 +9,7 @@
 #include "UIShared.h"
 #include "Compile.h"
 #include "Platform.h"
+#include "../Version.h"
 
 static EditorData s_editorData;
 
@@ -897,9 +898,9 @@ bool ShowEditorWindow()
         char buffer[2048];
         const char* path = s_editorData.m_dbroot.GetPath();
         if (path && path[0])
-            sprintf_s(buffer, "df_game_data Editor - %s%s", std::filesystem::path(path).filename().generic_string().c_str(), s_editorData.m_documentDirty ? " *" : "");
+            sprintf_s(buffer, APP_TITLE " - %s%s", std::filesystem::path(path).filename().generic_string().c_str(), s_editorData.m_documentDirty ? " *" : "");
         else
-            strcpy_s(buffer, "df_game_data Editor");
+            strcpy_s(buffer, APP_TITLE);
         SetWindowTitle(buffer);
         s_editorData.m_updateWindowTitle = false;
     }
@@ -1055,8 +1056,6 @@ bool EditorOnAppLaunch(int argc, char** argv, int &returnCode)
 
 /*
 TODO:
-* Add version number. To hash and editor title bar.
-
 * Records could have a Tick() function on them (empty when hot reloading is off), which returns true when it updates.
  * the demo could use that to print out the data for whatever character changed.
 

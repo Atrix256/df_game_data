@@ -34,6 +34,7 @@
     <ClInclude Include="..\df_resource.h" />
     <ClInclude Include="Compile.h" />
     <ClInclude Include="Platform.h" />
+    <ClInclude Include="..\Version.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

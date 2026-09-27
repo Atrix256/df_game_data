@@ -10,6 +10,7 @@
 #include <unordered_set>
 
 #include "../loader/output_string.h"
+#include "../Version.h"
 
 struct DataOffset
 {
@@ -1251,6 +1252,9 @@ bool Compile(const DBRoot& dbRoot, const DBCompileSettings& compilerSettings_, s
 
     // calculate schema hash
     Hasher hash(0xbeefcafe);
+    hash.Add(VERSION_MAJOR);
+    hash.Add(VERSION_MINOR);
+    hash.Add(VERSION_PATCH);
     for (auto& it : dbRoot.m_tables)
         hash.Add(it.second->GetParser().GetHash());
     hash.Add(compilerSettings.includeEntryLUT);
