@@ -1,6 +1,6 @@
 # .def File Format
 
-The .def file format will look familiar to C/C++ programmers, with a couple differences.
+The .def file format will look familiar to C/C++ programmers, with minimal differences.
 
 ### Includes
 
