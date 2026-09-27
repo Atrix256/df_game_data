@@ -153,7 +153,8 @@ or small earns a spot in the contributor list.
 
 If you are looking for ideas to contribute, the issues list has several todo items.
 
-Regarding AI use - If you have a well formed contribution, I have know way of knowing if you used AI or not unless you tell me. Low quality submissions will be met with guidance. Large volumes of low quality submissions will be met with silence.
+Regarding AI use - I'd prefer you not use AI. If coding assistants worked as advertised, I wouldn't be able to tell if you
+were using AI unless you told me though.
 
 ## Open Sourced Software Used
 
