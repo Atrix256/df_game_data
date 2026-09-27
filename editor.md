@@ -47,3 +47,15 @@ There is also a setting for "Hot Reloading". This is on by default, but if it's 
 The settings window is set up this way so that for instance, you could have a data compilation for "debug" mode which included hot reloading, but the "release" mode had hot reloading and the entry LUT turned off.  In release, the binary data file would be a little smaller, not have human readable strings in it saying what the records were, and the runtime would be more efficient.  You would just change which header you included in debug vs release.  That is one possible configuration of many.
 
 ![Data Record UI](editor_settings.png)
+
+## Data Compilation
+
+You can compile the data in the editor under the Compile menu.
+
+You can also compile the data through the editor's command line interface.  Compiling through the command line interface will cause it to compile data without creating a window, and will exit when done, with an exit code of 0 on success.
+
+`Editor.exe <filename>` - Opens the editor and automatically loads the specified filename
+
+`Editor.exe --compile <filename>` - Loads the specified filename and compiles, without creating a window.
+
+`Editor.exe -c <filename>` - same
