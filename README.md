@@ -76,7 +76,7 @@ This is what the editor looks like:
 
 ### 3. Compile Database And Use Output
 
-[Compilation Details](output.md)
+[Compilation Details](compiler.md)
 
 Compilation settings can be found under the **Edit** menu, and allows you to configure multiple build targets with different compilation options.
 

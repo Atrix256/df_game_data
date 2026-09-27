@@ -4,7 +4,7 @@ The .def file format will look familiar to C/C++ programmers, with minimal diffe
 
 ### Includes
 
-define files can include other def files using `#include`:
+.def files can include other .def files using `#include`:
 
 ```cpp
 #include "../path/file.def"
@@ -14,7 +14,8 @@ define files can include other def files using `#include`:
 
 You can set a namespace, which will put all types after it into the namespace. This can help
 naming collisions across different files. The next namespace statement will set the new namespace,
-it doesn't nest them. Include files do not inherit the namespace they are included in.
+it doesn't nest them. Include files do not inherit the namespace they are included in, and namespaces
+do not escape the include files they are set in.
 
 ```cpp
 namespace TestData;

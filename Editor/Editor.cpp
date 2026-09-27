@@ -418,7 +418,7 @@ static void ShowTableList()
 
             nfdu8filteritem_t filters[] =
             {
-                { "Flatbuffer Schema (*.def)", "def" }
+                { "Schema (*.def)", "def" }
             };
 
             nfdresult_t result = NFD_OpenDialogU8(&outPath, filters, IM_COUNTOF(filters), nullptr);
