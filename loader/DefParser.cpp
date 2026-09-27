@@ -282,11 +282,20 @@ void DefParser::GetToken(const char*& cursor, Token& token)
         while (std::isdigit(*cursor))
             cursor++;
 
+        // f suffix for floats is allowed
+        if (*cursor == 'f')
+        {
+            cursor++;
+            token.token = std::string_view(start, cursor);
+            token.type = TokenType::LiteralFloat;
+        }
         // scientific notation for a float
-        if (*cursor == 'e')
+        else if (*cursor == 'e')
         {
             cursor++;
             while (std::isdigit(*cursor))
+                cursor++;
+            if (*cursor == 'f') // an f suffix on a float is allowed
                 cursor++;
             token.token = std::string_view(start, cursor);
             token.type = TokenType::LiteralFloat;
@@ -296,6 +305,8 @@ void DefParser::GetToken(const char*& cursor, Token& token)
         {
             cursor++;
             while (std::isdigit(*cursor))
+                cursor++;
+            if (*cursor == 'f') // an f suffix on a float is allowed
                 cursor++;
             token.token = std::string_view(start, cursor);
             token.type = TokenType::LiteralFloat;

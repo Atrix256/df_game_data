@@ -115,7 +115,7 @@ default values can optionally be specified. If no default given, the field is ze
 struct SomeStruct
 {
     int a = 3;
-    double b = 1.34;
+    float b = 1.34f;
     int c; // zero initialized
     string s = "hello!";
 };

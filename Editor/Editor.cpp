@@ -1056,10 +1056,8 @@ bool EditorOnAppLaunch(int argc, char** argv, int &returnCode)
 
 /*
 TODO:
-* Records could have a Tick() function on them (empty when hot reloading is off), which returns true when it updates.
- * the demo could use that to print out the data for whatever character changed.
-
-* floating point defaults in def files can't have f suffix on them. fix that!
+* finish documentation
+* make examples (3: simple, hot reload, exhaustive)
 
 * Can you test 32 bit by building x86 instead of x64?
  ! yes! and that should be part of the testing procedures i guess. debug / release x 32 / 64
