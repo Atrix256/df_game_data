@@ -70,6 +70,8 @@ Each data entry is a .json file on disk, in the same folder as the .def file. In
 
 The data entries are separate files to minimize merge conflicts when merging development branches.
 
+This is what the editor looks like:
+
 ![The editor](editor.png)
 
 ### 3. Compile Database And Use Output
@@ -83,6 +85,8 @@ You can compile the database using the **Compile** menu, or by pressing CTRL+C.
 Compilation creates a .bin file which is the binary representation of all entries in all tables in your .dbroot file.
 
 It also creates a .h file.  This is a standalone header file which you include in your code to load the .bin file and read data from it.
+
+Here is some code showing how to use the compiled output .bin and .h files:
 
 ```cpp
 // main.cpp
