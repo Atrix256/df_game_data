@@ -74,7 +74,7 @@ The data entries are separate files to minimize merge conflicts when merging dev
 
 ### 3. Compile Database And Use Output
 
-[Compiled Output Details](output.md)
+[Compilation Details](output.md)
 
 Compilation settings can be found under the **Edit** menu, and allows you to configure multiple build targets with different compilation options.
 
