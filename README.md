@@ -124,6 +124,10 @@ int main(int argc, char** argv)
 }
 ```
 
+## Examples
+
+TODO: fill in this section once the examples are made
+
 ## Building
 
 This was developed on windows using microsoft visual studio.  Cloning the repo and building the solution should be all that is needed.
