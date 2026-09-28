@@ -231,15 +231,15 @@ public:
         Ptr64<Character> bestFriend;
         Vec3 location;
         uint16_t max_hp;
-        static const uint32_t _other_numbers_count = 4;
+        static const uint32_t other_numbers_count = 4;
         uint16_t other_numbers[4];
-        static const uint32_t _other_inventory_count = 2;
+        static const uint32_t other_inventory_count = 2;
         Ptr64<Item> other_inventory[2];
         uint16_t max_mp;
         Bool playable;
-        uint32_t _favorite_numbers_count = 0;
+        uint32_t favorite_numbers_count = 0;
         Ptr64<uint16_t> favorite_numbers;
-        uint32_t _inventory_count = 0;
+        uint32_t inventory_count = 0;
         Ptr64<Ptr64<Item>> inventory;
     };
 
@@ -567,19 +567,19 @@ inline void DataDebug::DoEndianSwapAndPointerFixup(Character& v, void* base, boo
     DoEndianSwapAndPointerFixup(v.bestFriend, base, endianSwap);
     DoEndianSwapAndPointerFixup(v.location, base, endianSwap);
     DoEndianSwapAndPointerFixup(v.max_hp, base, endianSwap);
-    for (uint32_t i = 0; i < v._other_numbers_count; ++i)
+    for (uint32_t i = 0; i < v.other_numbers_count; ++i)
         DoEndianSwapAndPointerFixup(v.other_numbers[i], base, endianSwap);
-    for (uint32_t i = 0; i < v._other_inventory_count; ++i)
+    for (uint32_t i = 0; i < v.other_inventory_count; ++i)
         DoEndianSwapAndPointerFixup(v.other_inventory[i], base, endianSwap);
     DoEndianSwapAndPointerFixup(v.max_mp, base, endianSwap);
     DoEndianSwapAndPointerFixup(v.playable, base, endianSwap);
-    DoEndianSwapAndPointerFixup(v._favorite_numbers_count, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v.favorite_numbers_count, base, endianSwap);
     DoEndianSwapAndPointerFixup(v.favorite_numbers, base, endianSwap);
-    for (uint32_t i = 0; i < v._favorite_numbers_count; ++i)
+    for (uint32_t i = 0; i < v.favorite_numbers_count; ++i)
         DoEndianSwapAndPointerFixup(v.favorite_numbers.ptr[i], base, endianSwap);
-    DoEndianSwapAndPointerFixup(v._inventory_count, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v.inventory_count, base, endianSwap);
     DoEndianSwapAndPointerFixup(v.inventory, base, endianSwap);
-    for (uint32_t i = 0; i < v._inventory_count; ++i)
+    for (uint32_t i = 0; i < v.inventory_count; ++i)
         DoEndianSwapAndPointerFixup(v.inventory.ptr[i], base, endianSwap);
 }
 

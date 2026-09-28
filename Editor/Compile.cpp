@@ -261,12 +261,12 @@ static bool MakeHeader_EnumAndStructDefs(const DBRoot& dbRoot)
                         {
                             if (field.fixedArraySize > 0)
                             {
-                                os << indent << "    static const uint32_t _" << field.name << "_count = " << field.fixedArraySize << ";\n";
+                                os << indent << "    static const uint32_t " << field.name << "_count = " << field.fixedArraySize << ";\n";
                                 os << indent << "    " << typeName << " " << field.name << "[" << field.fixedArraySize << "];\n";
                             }
                             else
                             {
-                                os << indent << "    uint32_t _" << field.name << "_count = 0;\n";
+                                os << indent << "    uint32_t " << field.name << "_count = 0;\n";
                                 os << indent << "    Ptr64<" << typeName << "> " << field.name << ";\n";
                             }
                             continue;
@@ -543,11 +543,11 @@ static bool MakeHeader_StructLoading(const DBCompileSettings& compilerSettings, 
                             {
                                 if (field.fixedArraySize == 0)
                                 {
-                                    pointerFixup << indent << "    DoEndianSwapAndPointerFixup(v._" << field.name << "_count, base, endianSwap);\n";
+                                    pointerFixup << indent << "    DoEndianSwapAndPointerFixup(v." << field.name << "_count, base, endianSwap);\n";
                                     pointerFixup << indent << "    DoEndianSwapAndPointerFixup(v." << field.name << ", base, endianSwap);\n";
                                 }
 
-                                pointerFixup << indent << "    for (uint32_t i = 0; i < v._" << field.name << "_count; ++i)\n";
+                                pointerFixup << indent << "    for (uint32_t i = 0; i < v." << field.name << "_count; ++i)\n";
                                 if (field.fixedArraySize != 0)
                                     pointerFixup << indent << "        DoEndianSwapAndPointerFixup(v." << field.name << "[i], base, endianSwap);\n";
                                 else
