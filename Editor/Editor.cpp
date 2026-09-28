@@ -1058,6 +1058,7 @@ bool EditorOnAppLaunch(int argc, char** argv, int &returnCode)
 TODO:
 * finish documentation
 * make examples (3: simple, hot reload, exhaustive)
+* make blog post on binary serialization, after release. could include the kofi link and also the github support.
 
 * Can you test 32 bit by building x86 instead of x64?
  ! yes! and that should be part of the testing procedures i guess. debug / release x 32 / 64
@@ -1075,7 +1076,7 @@ TODO:
 * also make some sort of demo for the exhaustive test data.
 
 * use it a bit before announcing it and making builds available
- * could see if anyone wants to test it first? idk.
+ * could see if anyone wants to test it first? idk. asking for feedback could be useful for the software and for getting more people to try it.
 ! make a blog post about the binary serialization stack. static size go in stack N, dynamic is written into N+1 and a pointer is written into N.
  * could also talk about the multi pass approach, for final pointer fixup
  * also talk about pointer fixup on load
@@ -1091,60 +1092,6 @@ TODO:
 * Add a help about with version and contributor list.
  * could also put the larger df.png on there
 * make flatc.exe get copied to where the editor exe is, on compile and make it .gitignored. call it from there. needed for binaries / installer?
-
-Contributing:
-* I can't tell whether you made a contribution with AI or not, other than by the quality of the work.
-* poor quality changes will be met with guidance. If the guidance isn't fruitful, the changes will be rejected.
-* There are tasks up for grab in the issues list
-
-Schema documentation:
-* Tries to be familiar to C++ programmers, the target user
-* #include
-* #root
-* struct {};
-* union {};
-* enum {};
-* types
-* dynamic / fixed arrays
-* how namespaces work (including types using :: syntax)
- * if no namespace on a type, first searches current namespace, then global namespace
- * if there is a namespace on a type, only searches that namespace.
-
-Notes:
-* This works as a flatbuffer data editor too (can open def or dbroot files)
- * not quite. a json editor where the schema is defined as flatbuffers.
-* explain the design decisions (each data item as a json data file for easier merging. flat tables for speed. multiple tables because that's whats needed. table links)
-* Explain how to use it
-* mention drag and drop working
-* if you use table links, the table you reference must come before the current table in the dbroot list
-* don't use namespace in your files, but you can put a namespace in the settings.
-* C++ is the main target language - that's what i use it for! - but other languages are supported
-* explain how to use enums to look up items by name (and string to enum to do a lookup by string name in some languages?)
- * string lookup doesnt work in c++ though. maybe need to add it.
- * explain that it makes an enum for the entry_names
-* explain the simple interface (only use generated headers), and the one that does file watching.
-* explain how order of tables in the db can affect things. table must come before things use types from that table (like, table links)
-* explain you can move up and down the tables in the dbroot.
- * useful if one table schema defines types used by another table schema
- * better to have a shared schema include file though.
-* command line options:
- * put a filename on command line to load it
- * If there is a -c or --compile before it, compiles the data file without making a window
-
-* compile options can change the contents of the bin file, which affects whether a header can load it or not.
-* hot reloading requires the entry LUT
-
-! make a way for people to support the project with $ if they want to
-
-* how hot reloading works:
- * if enabled, it stores the record name, data object ptr and generation counter inside every record.
- * when you call .get(), it checks if the file on disk changed and reloads if so (gated by time to not happen too fast)
- * when the file reloads, it increments the generation counter.
- * the record checks if the generation counter it has is the one the data object ptr has. if not, it does a look up by name to get the record again.
- ! need to call Tick() to have it check if the file changed (once a frame? can limit it by time if you want)
-  * it will return true if it reloaded the data.
-  * When Records use Get() or Valid(), it will update them to the new data.
- * can make it generate a version with hot reloading for debug, and a version without it, for release, and use a #define for which header and data file to use
 
 Data Examples:
 * Basic - one table, a few different basic types.
