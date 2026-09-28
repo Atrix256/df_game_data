@@ -48,10 +48,10 @@ There are templated versions of those functions as well, which can be helpful wh
 
 ### Record Objects and Hot Reloading
 
-Record objects hold a pointer to a data table entry and are templated to know what data type the entry is. They have a `.Get()` function on them which returns a const reference to the data entry. If the index or name was invalid, the Get() function will return a const reference to a default initialized object.
+Record objects hold a pointer to a data table entry and are templated to know what data type the entry is. They have a `.Get()` function on them which returns a const reference to the data entry. If the index or name was invalid, the Get() function will return a const reference to a default initialized object.  You can also call `.Valid()` to see if the record points at a valid entry or not.
 
 To enable hot reloading, call `Tick()` on the data periodically, such as once a frame, or maybe once a second.
 
-Record objects will automatically handle hot reload, by looking for the record with the same name in the newly loaded .bin file.
+Record objects will automatically handle hot reload, by looking for the record with the same name in the newly loaded .bin file.  If the record name no longer exists, it will happily decay to an invalid record, where Valid() returns false, and Get() returns a default initialized object.
 
-However, any data you have cached off from a record will not be updated. To help handle this, Tick will return true when hot reloading happened, so that you can react appropriately.
+Any data you have cached off from a record will not be updated after a hot reload though. To help handle this, Tick will return true when hot reloading happened, so that you can react appropriately.
