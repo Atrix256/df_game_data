@@ -723,6 +723,9 @@ static void ShowDataList()
 
         if (ImGui::Button("OK", ImVec2(120, 0)))
         {
+            // Make sure the data record is saved before we rename
+            OnFileSave();
+
             OnDataListRename(newName.c_str());
             ImGui::CloseCurrentPopup();
             showRename = false;
@@ -1063,6 +1066,8 @@ bool EditorOnAppLaunch(int argc, char** argv, int &returnCode)
 
 /*
 TODO:
+* delete the exampledata folder when done making the samples
+
 * finish documentation
 * make examples (3: simple, hot reload, exhaustive)
 * make blog post on binary serialization, after release. could include the kofi link and also the github support.
