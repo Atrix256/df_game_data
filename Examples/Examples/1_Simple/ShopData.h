@@ -32,11 +32,12 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <cstring>
-/*$Includes$*/
-class /*$ClassName$*/
+#include <algorithm>
+
+class ShopData
 {
 public:
-    ~/*$ClassName$*/();
+    ~ShopData();
 
     // Note: the memory will be modified, and it must stay around for the life of the object.
     bool LoadFromMemory(void* mem, uint32_t size);
@@ -64,10 +65,37 @@ public:
 
     #pragma pack(pop)
 
-/*$RecordDef$*/
+    template <typename T>
+    struct Record
+    {
+    public:
+        const T& Get() const
+        {
+            static const T s_dummy = T();
+            return m_record ? *m_record : s_dummy;
+        }
+
+        bool Valid() const
+        {
+            return m_record != nullptr;
+        }
+
+    private:
+        friend class ShopData;
+        T* m_record = nullptr;
+    };
+
 public:
     #pragma pack(push, 1)
-/*$EnumAndStructDefs$*/
+    struct Item
+    {
+        Ptr64<char> name;
+        uint32_t sellCost;
+        uint32_t buyCost;
+    };
+
+    using ItemRecord = Record<Item>;
+
     #pragma pack(pop)
 
 private:
@@ -128,14 +156,15 @@ private:
         DoPointerFixup(v, base);
     }
 
-/*$PointerFixupForwardDeclare$*/
+    static void DoEndianSwapAndPointerFixup(Item& v, void* base, bool endianSwap);
+
 private:
     uint8_t* m_ownedMemory = nullptr;
 
 public:
     // Returns whether the data was updated or not (hot reloading).
     bool Tick()
-    {/*$Tick$*/
+    {
         return false;
     }
 
@@ -151,21 +180,36 @@ public:
     {
         return Get((uint32_t)index);
     }
-/*$RecordGetFwd$*/
+
+    template <typename T>
+    inline Record<T> Get(const char* name) const;
+
+    inline uint32_t GetItemCount() const;
+    inline ItemRecord GetItem(uint32_t index) const;
+    inline ItemRecord GetItem(int index) const
+    {
+        // An int version to catch index 0 not being ambiguous with nullptr
+        return GetItem((uint32_t)index);
+    }
+    inline ItemRecord GetItem(const char* name) const;
+
 private:
-/*$PrivateStorage$*/};
+    uint32_t m_table_Item_count = 0;
+    Ptr64<Ptr64<char>> m_table_Item_names;
+    Ptr64<Item> m_table_Item;
+};
 
 // ================================= Misc =================================
 
-inline /*$ClassName$*/::~/*$ClassName$*/()
+inline ShopData::~ShopData()
 {
     delete[] m_ownedMemory;
     m_ownedMemory = nullptr;
-/*$Dtor$*/}
+}
 
 // ================================= LOADING =================================
 
-inline bool /*$ClassName$*/::LoadFromMemory(void* mem, uint32_t memSize)
+inline bool ShopData::LoadFromMemory(void* mem, uint32_t memSize)
 {
     auto MakeFourCC = [](char a, char b, char c, char d) -> uint32_t
     {
@@ -196,14 +240,43 @@ inline bool /*$ClassName$*/::LoadFromMemory(void* mem, uint32_t memSize)
     // Verify that the schema hash in the binary data matches the schema hash this file was made for
     {
         uint64_t hash = 0;
-        if (!Read(hash, mem, memIndex, memSize, endianSwap) || hash != /*$SchemaHash*/)
+        if (!Read(hash, mem, memIndex, memSize, endianSwap) || hash != 0xba2395692633945dULL)
             return false;
     }
-/*$LoadTables$*//*$LoadMemoryEnd$*/
+
+    // Item Table
+    {
+        if (!Read(m_table_Item_count, mem, memIndex, memSize, endianSwap))
+            return false;
+
+        if (m_table_Item_count > 0)
+        {
+            // get char** to LUT and fixup string pointers
+            if (memSize - memIndex < m_table_Item_count * sizeof(uint64_t))
+                return false;
+            m_table_Item_names._64 = memIndex;
+            DoEndianSwapAndPointerFixup(m_table_Item_names, mem, endianSwap);
+            for (uint32_t i = 0; i < m_table_Item_count; ++i)
+                DoEndianSwapAndPointerFixup(m_table_Item_names.ptr[i], mem, endianSwap);
+            memIndex += m_table_Item_count * sizeof(uint64_t);
+
+            // Get a pointer to the first entry in the table
+            if (memSize - memIndex < m_table_Item_count * sizeof(Item))
+                return false;
+            m_table_Item._64 = memIndex;
+            DoEndianSwapAndPointerFixup(m_table_Item, mem, endianSwap);
+            memIndex += m_table_Item_count * sizeof(Item);
+
+            // Do pointer fixup
+            for (uint32_t i = 0; i < m_table_Item_count; ++i)
+                DoEndianSwapAndPointerFixup(m_table_Item.ptr[i], mem, endianSwap);
+        }
+    }
+
     return true;
 }
 
-inline bool /*$ClassName$*/::LoadFromFile(const char* fileName)
+inline bool ShopData::LoadFromFile(const char* fileName)
 {
     FILE* file = nullptr;
     fopen_s(&file, fileName, "rb");
@@ -222,11 +295,76 @@ inline bool /*$ClassName$*/::LoadFromFile(const char* fileName)
     fclose(file);
 
     bool ret = LoadFromMemory(m_ownedMemory, fileSize);
-/*$LoadFileEnd$*/
+
     return ret;
 }
 
 // ================================= Pointer Fixup =================================
-/*$PointerFixup$*/
+
+inline void ShopData::DoEndianSwapAndPointerFixup(Item& v, void* base, bool endianSwap)
+{
+    DoEndianSwapAndPointerFixup(v.name, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v.sellCost, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v.buyCost, base, endianSwap);
+}
+
 // ================================= Public Interface =================================
-/*$PublicInterface$*/
+template <>
+inline uint32_t ShopData::GetCount<ShopData::Item>() const
+{
+    return m_table_Item_count;
+}
+
+template <>
+inline ShopData::ItemRecord ShopData::Get<ShopData::Item>(uint32_t index) const
+{
+    ItemRecord ret;
+    if (index < m_table_Item_count)
+    {
+        ret.m_record = &m_table_Item.ptr[index];
+    }
+    return ret;
+}
+
+template <>
+inline ShopData::ItemRecord ShopData::Get<ShopData::Item>(const char* name) const
+{
+    ItemRecord ret;
+
+    Ptr64<char>* array = m_table_Item_names.ptr;
+    const uint32_t count = m_table_Item_count;
+
+    auto it = std::lower_bound(
+        array,
+        array + count,
+        name,
+        [](const Ptr64<char>& item, const char* val)
+        {
+            return strcmp(item.ptr, val) < 0;
+        }
+    );
+
+    uint32_t index = uint32_t(it - array);
+
+    if (index < count && !strcmp(it->ptr, name))
+    {
+        ret.m_record = &m_table_Item.ptr[index];
+    }
+
+    return ret;
+}
+
+inline uint32_t ShopData::GetItemCount() const
+{
+    return GetCount<Item>();
+}
+
+inline ShopData::ItemRecord ShopData::GetItem(uint32_t index) const
+{
+    return Get<Item>(index);
+}
+
+inline ShopData::ItemRecord ShopData::GetItem(const char* name) const
+{
+    return Get<Item>(name);
+}

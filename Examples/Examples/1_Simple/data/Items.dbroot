@@ -1,0 +1,14 @@
+{
+    "compilersettings": [
+        {
+            "compiledHeaderFileName": "../ShopData.h",
+            "compiledBinFileName": "../Packed/ShopData.bin",
+            "className": "ShopData",
+            "includeEntryLUT": true,
+            "hotReloading": false
+        }
+    ],
+    "tables": [
+        "Items.def"
+    ]
+}

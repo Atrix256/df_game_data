@@ -51,7 +51,14 @@ static void LoadFile(const char* fileName)
         s_editorData.m_dbroot.SetErrorText(errMsg.c_str());
         return;
     }
-    s_editorData.m_recentFiles.AddEntry(fileName);
+
+    // Don't add .def files to the recent file list, add .dbroot files instead
+    {
+        std::filesystem::path recentFile = std::filesystem::path(fileName);
+        if (recentFile.extension() == ".def")
+            recentFile.replace_extension(".dbroot");
+        s_editorData.m_recentFiles.AddEntry(recentFile.generic_string().c_str());
+    }
 
     // select the first data item of the first table, if present
     if (s_editorData.m_dbroot.Load(fileName))

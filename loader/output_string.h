@@ -144,6 +144,13 @@ public:
 
     template <typename T>
     inline Record<T> Get(uint32_t index) const;
+
+    // An int version to catch index 0 not being ambiguous with nullptr
+    template <typename T>
+    inline Record<T> Get(int index) const
+    {
+        return Get((uint32_t)index);
+    }
 /*$RecordGetFwd$*/
 private:
 /*$PrivateStorage$*/};

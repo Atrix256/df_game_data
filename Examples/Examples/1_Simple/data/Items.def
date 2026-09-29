@@ -1,0 +1,8 @@
+struct Item
+{
+	string name;
+	uint32 sellCost;
+	uint32 buyCost;
+}
+
+#root Item

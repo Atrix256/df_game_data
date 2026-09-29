@@ -14,7 +14,7 @@ Once created, this is the file you want to open in the editor.
 
 ## Adding and Removing Tables
 
-The section highlighted below shows where you add a new table to the database, or remove the current table from the database.
+The section highlighted below shows where you add a new table to the database, or remove the current table from the database. This is also where you change which table you are looking at.
 
 The arrow buttons also allow you to move a table up and down in the table list. Table order matters when one table uses types defined by the def files of another table. Type definitions need to come before their use.
 

@@ -326,18 +326,23 @@ bool DBRoot::Load(const char* path)
     }
     else if (extension == ".def")
     {
-        // If given a .def file, make a .dbsroot file containing only that item, and load that
+        // If given a .def file, load the .dbroot file instead.
+        // If it doesn't exist, make one
+        std::error_code ec;
         std::filesystem::path dbroot = std::filesystem::path(path).replace_extension(".dbroot");
-        FILE* file = nullptr;
-        fopen_s(&file, dbroot.generic_string().c_str(), "wb");
-        if (!file)
+        if (!std::filesystem::exists(dbroot, ec))
         {
-            m_errorText = "Could not open for writing: " + dbroot.generic_string();
-            return false;
-        }
+            FILE* file = nullptr;
+            fopen_s(&file, dbroot.generic_string().c_str(), "wb");
+            if (!file)
+            {
+                m_errorText = "Could not open for writing: " + dbroot.generic_string();
+                return false;
+            }
 
-        fprintf(file, "{\n    \"tables\": [\n        \"%s\"\n    ]\n}\n", std::filesystem::path(path).filename().generic_string().c_str());
-        fclose(file);
+            fprintf(file, "{\n    \"tables\": [\n        \"%s\"\n    ]\n}\n", std::filesystem::path(path).filename().generic_string().c_str());
+            fclose(file);
+        }
 
         return Load(dbroot.generic_string().c_str());
     }

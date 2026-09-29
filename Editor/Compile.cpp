@@ -619,6 +619,11 @@ static bool MakeHeader_Global(const DBCompileSettings& compilerSettings, const D
                         "\n" <<
                         "    inline uint32_t Get" << s.name << "Count() const;\n" <<
                         "    inline " << s.name << "Record Get" << s.name << "(uint32_t index) const;\n"
+                        "    inline " << s.name << "Record Get" << s.name << "(int index) const\n"
+                        "    {\n"
+                        "        // An int version to catch index 0 not being ambiguous with nullptr\n"
+                        "        return Get" << s.name << "((uint32_t)index);\n"
+                        "    }\n"
                         ;
 
                     if (compilerSettings.includeEntryLUT)
@@ -632,6 +637,13 @@ static bool MakeHeader_Global(const DBCompileSettings& compilerSettings, const D
                 }
             );
         }
+    }
+
+    if (compilerSettings.includeEntryLUT)
+    {
+        s_data.tokenReplacement["/*$Includes$*/"] <<
+            "#include <algorithm>\n"
+            ;
     }
 
     // Hot reloading support
@@ -688,7 +700,6 @@ static bool MakeHeader_Global(const DBCompileSettings& compilerSettings, const D
 
         s_data.tokenReplacement["/*$Includes$*/"] <<
             "#include <filesystem>\n"
-            "#include <algorithm>\n"
             ;
     }
 
