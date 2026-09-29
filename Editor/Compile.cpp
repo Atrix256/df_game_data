@@ -826,6 +826,10 @@ static bool MakeHeader(const DBCompileSettings& compilerSettings, const DBRoot& 
     for (const auto& pair : s_data.tokenReplacement)
         StringReplaceAll(out, pair.first, pair.second.str());
 
+    // Create any directories needed
+    std::error_code ec;
+    std::filesystem::create_directories(std::filesystem::path(fileName).remove_filename().generic_string().c_str(), ec);
+
     // write file out
     FILE* file = nullptr;
     fopen_s(&file, fileName, "wb");
@@ -1227,6 +1231,10 @@ static bool MakeBin(const DBCompileSettings& compilerSettings, const DBRoot& dbR
 
     if (!ret)
         return false;
+
+    // Create any directories needed
+    std::error_code ec;
+    std::filesystem::create_directories(std::filesystem::path(fileName).remove_filename().generic_string().c_str(), ec);
 
     // write the data to disk
     FILE* file = nullptr;
