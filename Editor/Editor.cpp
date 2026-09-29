@@ -529,11 +529,14 @@ static void OnDataListRename(const char* newName)
 
     DBTable::JSONData& data = *table.m_data[s_editorData.m_selectedDataItemName].get();
 
+    // Make sure the name is unique
+    std::string itemName = GetUniqueDataItemName(newName);
+
     // Copy the file
     std::filesystem::path src(data.m_path);
 
     std::filesystem::path dst = src;
-    dst.replace_filename(newName).replace_extension(".json");
+    dst.replace_filename(itemName).replace_extension(".json");
 
     std::error_code ec;
     std::filesystem::copy_file(src, dst, std::filesystem::copy_options::overwrite_existing, ec);
@@ -548,7 +551,7 @@ static void OnDataListRename(const char* newName)
     table.LoadFile(dst.generic_string().c_str());
 
     // select the new item
-    s_editorData.m_selectedDataItemName = newName;
+    s_editorData.m_selectedDataItemName = itemName;
 }
 
 static void OnDataListDuplicate()
@@ -581,14 +584,14 @@ static void OnDataListDuplicate()
     s_editorData.m_selectedDataItemName = newItemName;
 }
 
-static void OnDataListNew()
+static void OnDataListNew(const char* name)
 {
     if (s_editorData.m_dbroot.m_tables.count(s_editorData.m_selectedTableName) == 0)
         return;
 
     DBTable& table = *s_editorData.m_dbroot.m_tables[s_editorData.m_selectedTableName].get();
 
-    std::string itemName = GetUniqueDataItemName("NewEntry");
+    std::string itemName = GetUniqueDataItemName(name);
     std::filesystem::path fileName = (std::filesystem::path(table.GetPath()).remove_filename() / itemName).replace_extension(".json");
 
     // make a dummy file
@@ -637,11 +640,14 @@ static void OnDataListDelete()
 
 static void ShowDataList()
 {
+    static bool showNew = false;
+    bool wantShowNew = false;
+
     {
         ImGui_Enabled enabled(s_editorData.m_dbroot.m_tables.contains(s_editorData.m_selectedTableName));
 
         if (ImGui::Button("New"))
-            OnDataListNew();
+            wantShowNew = true;
         ImGui::SameLine();
         if (ImGui::Button("Delete"))
             OnDataListDelete();
@@ -676,12 +682,12 @@ static void ShowDataList()
     //ImGui::PopStyleColor();
 
     static bool showRename = false;
-    static std::string newName;
     bool wantShowRename = false;
+    static std::string newName;
     if (ImGui::BeginPopupContextItem("my_item_context"))
     {
         if (ImGui::Selectable("New"))
-            OnDataListNew();
+            wantShowNew = true;
 
         if (ImGui::Selectable("Duplicate"))
             OnDataListDuplicate();
@@ -697,6 +703,44 @@ static void ShowDataList()
 
         if (ImGui::Selectable("Reload"))
             OnDataListReload();
+
+        ImGui::EndPopup();
+    }
+
+    if (wantShowNew)
+    {
+        showNew = true;
+        ImGui::OpenPopup("New Item");
+        newName = "NewEntry";
+    }
+
+    if (ImGui::BeginPopupModal("New Item", &showNew, ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        ImGui::Text("Please enter name");
+
+        static std::vector<char> tmpBuffer;
+        tmpBuffer.resize(4096);
+        strcpy_s(tmpBuffer.data(), tmpBuffer.size(), newName.c_str());
+
+        if (ImGui::InputText("##NameDataItem", tmpBuffer.data(), tmpBuffer.size()))
+            newName = tmpBuffer.data();
+
+        ImGui::Separator();
+
+        if (ImGui::Button("OK", ImVec2(120, 0)))
+        {
+            OnDataListNew(newName.c_str());
+            ImGui::CloseCurrentPopup();
+            showNew = false;
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Cancel", ImVec2(120, 0)))
+        {
+            ImGui::CloseCurrentPopup();
+            showNew = false;
+        }
 
         ImGui::EndPopup();
     }
