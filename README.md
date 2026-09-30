@@ -3,6 +3,22 @@ Minimalist C++ game data middleware by Alan Wolfe.
 
 Describe schemas, edit data, binary pack data, load data with a generated header. Hot reloading support.
 
+## Motivation
+
+Nearly every game needs read only configuration data.
+
+An RTS needs to know the stats of units, what buildings can produce what units for what cost, and requirements for unlocking buildings and units.
+
+A role playing game needs to know what items there are, stats for monsters, and what items monsters drop when they are killed, with what probabilities.
+
+An incremental game needs to know what upgrades are available, what unlocks them, and what benefit they give to the player.
+
+The list goes on and on, and this project fills that need.
+
+I made it for my own use but it aims to be a solution for people making their own engine, or for people who don't like the solution built into the engine they are using.
+
+I wrote some more about this topic 10 years ago: https://blog.demofox.org/2016/04/01/game-development-needs-data-pipeline-middleware/
+
 ## Data Model
 
 A database is made up of tables.
@@ -130,7 +146,11 @@ int main(int argc, char** argv)
 
 ## Examples
 
-TODO: fill in this section once the examples are made
+The `Examples` folder has three examples in it that you can run using the `Examples\Examples.slnx` solution.  Each example also has a data folder where you can see and edit the source data.
+
+1. [Simple](Examples/1_Simple/main.cpp) - This shows how to load a compiled bin file and read data from it.
+2. [HotReloading](Examples/2_HotReloading/main.cpp) - This shows how hot reloading works.
+3. [Exhaustive](Examples/3_Exhaustive/main.cpp) - This exercises every feature available, and shows how to read the data for each.
 
 ## Building
 
@@ -162,7 +182,7 @@ Thank you to the creators of the following!
 
 | Software | Use | URL |
 | -- | -- | -- |
-| rapidjson | To load json data | https://rapidjson.org/ |
 | Dear ImGui | For editor UI | https://github.com/ocornut/imgui |
+| rapidjson | To load json data | https://rapidjson.org/ |
 | Font Awesome | Editor button icons | https://github.com/FortAwesome/Font-Awesome |
 | xxHash | Portable non crypto hash | https://github.com/cyan4973/xxhash |

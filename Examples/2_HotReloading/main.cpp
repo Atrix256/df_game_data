@@ -70,7 +70,7 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    printf("Hot reloading is watching for updates. Press Q to exit.\n\n");
+    printf("Hot reloading is watching for updates. Edit and recompile source data. Press Q to exit.\n\n");
 
     bool showData = true;
     while (true)
