@@ -54,6 +54,40 @@ int main(int argc, char** argv)
     VERIFY(entry.entries_defaults._double == 1000.0);
     VERIFY(entry.entries_defaults._color == Data::Color::Hazel);
 
+    VERIFY(entry.entries_dynamic_arrays._bool_count == 3);
+    VERIFY(entry.entries_dynamic_arrays._bool.ptr[0].Get() == false);
+    VERIFY(entry.entries_dynamic_arrays._bool.ptr[1].Get() == true);
+    VERIFY(entry.entries_dynamic_arrays._bool.ptr[2].Get() == false);
+    VERIFY(entry.entries_dynamic_arrays._uint8_count == 1);
+    VERIFY(entry.entries_dynamic_arrays._uint8.ptr[0] == 2);
+    VERIFY(entry.entries_dynamic_arrays._sint8_count == 1);
+    VERIFY(entry.entries_dynamic_arrays._sint8.ptr[0] == 4);
+    VERIFY(entry.entries_dynamic_arrays._uint16_count == 1);
+    VERIFY(entry.entries_dynamic_arrays._uint16.ptr[0] == 6);
+    VERIFY(entry.entries_dynamic_arrays._sint16_count == 1);
+    VERIFY(entry.entries_dynamic_arrays._sint16.ptr[0] == 8);
+    VERIFY(entry.entries_dynamic_arrays._uint32_count == 1);
+    VERIFY(entry.entries_dynamic_arrays._uint32.ptr[0] == 10);
+    VERIFY(entry.entries_dynamic_arrays._sint32_count == 1);
+    VERIFY(entry.entries_dynamic_arrays._sint32.ptr[0] == 12);
+    VERIFY(entry.entries_dynamic_arrays._uint64_count == 1);
+    VERIFY(entry.entries_dynamic_arrays._uint64.ptr[0] == 14);
+    VERIFY(entry.entries_dynamic_arrays._sint64_count == 2);
+    VERIFY(entry.entries_dynamic_arrays._sint64.ptr[0] == 16);
+    VERIFY(entry.entries_dynamic_arrays._sint64.ptr[1] == 18);
+    VERIFY(entry.entries_dynamic_arrays._float_count == 1);
+    VERIFY(entry.entries_dynamic_arrays._float.ptr[0] == 20.0f);
+    VERIFY(entry.entries_dynamic_arrays._double_count == 1);
+    VERIFY(entry.entries_dynamic_arrays._double.ptr[0] == 22.0f);
+    VERIFY(entry.entries_dynamic_arrays._color_count == 2);
+    VERIFY(entry.entries_dynamic_arrays._color.ptr[0] == Data::Color::Blue);
+    VERIFY(entry.entries_dynamic_arrays._color.ptr[1] == Data::Color::Green);
+    VERIFY(entry.entries_dynamic_arrays._pos_count == 2);
+    VERIFY(entry.entries_dynamic_arrays._pos.ptr[0].x == 96.0f);
+    VERIFY(entry.entries_dynamic_arrays._pos.ptr[0].y == 48.0f);
+    VERIFY(entry.entries_dynamic_arrays._pos.ptr[1].x == 7.0f);
+    VERIFY(entry.entries_dynamic_arrays._pos.ptr[1].y == 12.0f);
+
     printf("All checks passed!");
     return 0;
 }
