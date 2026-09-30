@@ -1,0 +1,7 @@
+struct Item
+{
+    string name;
+    float value;
+};
+
+#root Item

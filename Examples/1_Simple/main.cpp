@@ -1,6 +1,5 @@
 
 #include "ShopData.h"
-#include <vector>
 
 #define VERIFY(x) if (!Verify(x, #x)) return 1;
 
@@ -23,8 +22,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    uint32_t itemCount = data.GetItemCount();
-    VERIFY(itemCount == 3);
+    VERIFY(data.GetItemCount() == 3);
 
     // test index 0
     {
@@ -55,8 +53,7 @@ int main(int argc, char** argv)
 
     // test an invalid index
     {
-        ShopData::ItemRecord itemRecord = data.GetItem(3);
-        VERIFY(!itemRecord.Valid());
+        VERIFY(!data.GetItem(3).Valid());
     }
 
     // test getting by name

@@ -4,4 +4,5 @@
     <Platform Name="x86" />
   </Configurations>
   <Project Path="1_Simple/1_Simple.vcxproj" Id="631cb758-f5e5-497c-98c4-496a8cd81ee3" />
+  <Project Path="2_HotReloading/2_HotReloading.vcxproj" Id="9343ca15-639a-423e-b1db-c3eb807d71c1" />
 </Solution>

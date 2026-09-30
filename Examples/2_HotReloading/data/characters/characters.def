@@ -1,0 +1,9 @@
+#include "../items/items.def"
+
+struct Character
+{
+    string name;
+    Link<Item> inventory[];
+};
+
+#root Character;
