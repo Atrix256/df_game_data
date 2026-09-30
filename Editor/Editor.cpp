@@ -1110,7 +1110,6 @@ bool EditorOnAppLaunch(int argc, char** argv, int &returnCode)
 
 /*
 TODO:
-* delete the exampledata folder when done making the samples
 * have test batch file run the tests with "-test" so the hot reload example doesn't enter the loop
 
 * finish documentation

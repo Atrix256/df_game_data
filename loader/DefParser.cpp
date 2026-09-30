@@ -799,7 +799,10 @@ uint64_t DefParser::GetHash() const
             hash.Add(f.structName);
             hash.Add(f.enumName);
             hash.Add(f.linkName);
-            hash.Add(f.dflt);
+
+            // Default value doesn't need to be part of the hash.
+            // It only affects what is written to the .bin when the field is missing from the json
+            //hash.Add(f.dflt);
         }
     }
 

@@ -6,19 +6,19 @@ struct EntryAll
     //8 bits
     bool _bool;
     uint8 _uint8;
-    int8 _int8;
+    int8 _sint8;
 
     // 16 bits
     uint16 _uint16;
-    int16 _int16;
+    int16 _sint16;
 
     // 32 bits
     uint32 _uint32;
-    int32 _int32;
+    int32 _sint32;
 
     // 64 bits
     uint64 _uint64;
-    int64 _int64;
+    int64 _sint64;
 
     // floating point
     float _float;
@@ -32,21 +32,21 @@ struct EntryAll
 struct EntryDefault
 {
     //8 bits
-    bool _bool = false;
+    bool _bool = true;
     uint8 _uint8 = 1;
-    int8 _int8 = -2;
+    int8 _sint8 = -2;
 
     // 16 bits
     uint16 _uint16 = 3;
-    int16 _int16 = -4;
+    int16 _sint16 = -4;
 
     // 32 bits
     uint32 _uint32 = 5;
-    int32 _int32 = -6;
+    int32 _sint32 = -6;
 
     // 64 bits
     uint64 _uint64 = 7;
-    int64 _int64 = -8;
+    int64 _sint64 = -8;
 
     // floating point
     float _float = 1e4;
@@ -62,19 +62,19 @@ struct EntryArrayDynamic
     //8 bits
     bool _bool[];
     uint8 _uint8[];
-    int8 _int8[];
+    int8 _sint8[];
 
     // 16 bits
     uint16 _uint16[];
-    int16 _int16[];
+    int16 _sint16[];
 
     // 32 bits
     uint32 _uint32[];
-    int32 _int32[];
+    int32 _sint32[];
 
     // 64 bits
     uint64 _uint64[];
-    int64 _int64[];
+    int64 _sint64[];
 
     // floating point
     float _float[];
@@ -85,31 +85,31 @@ struct EntryArrayDynamic
 };
 
 // All types as static sized arrays
-struct EntryArray4
+struct EntryArray2
 {
     //8 bits
-    bool _bool[4];
-    uint8 _uint8[4];
-    int8 _int8[4];
+    bool _bool[2];
+    uint8 _uint8[2];
+    int8 _sint8[2];
 
     // 16 bits
-    uint16 _uint16[4];
-    int16 _int16[4];
+    uint16 _uint16[2];
+    int16 _sint16[2];
 
     // 32 bits
-    uint32 _uint32[4];
-    int32 _int32[4];
+    uint32 _uint32[2];
+    int32 _sint32[2];
 
     // 64 bits
-    uint64 _uint64[4];
-    int64 _int64[4];
+    uint64 _uint64[2];
+    int64 _sint64[2];
 
     // floating point
-    float _float[4];
-    double _double[4];
+    float _float[2];
+    double _double[2];
 
-    TestInclude::Color _color[4];
-    TestInclude::Pos _pos[4];
+    TestInclude::Color _color[2];
+    TestInclude::Pos _pos[2];
 };
 
 struct Entry
@@ -117,7 +117,7 @@ struct Entry
     EntryAll entries;
     TestData::EntryDefault entries_defaults;
     EntryArrayDynamic entries_dynamic_arrays;
-    EntryArray4 entries_static_arrays;
+    EntryArray2 entries_static_arrays;
 }
 
 #root Entry

@@ -32,7 +32,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <cstring>
-#include <algorithm>
 
 class Data
 {
@@ -106,13 +105,13 @@ public:
     {
         Bool _bool;
         uint8_t _uint8;
-        int8_t _int8;
+        int8_t _sint8;
         uint16_t _uint16;
-        int16_t _int16;
+        int16_t _sint16;
         uint32_t _uint32;
-        int32_t _int32;
+        int32_t _sint32;
         uint64_t _uint64;
-        int64_t _int64;
+        int64_t _sint64;
         float _float;
         double _double;
         Color _color;
@@ -123,13 +122,13 @@ public:
     {
         Bool _bool;
         uint8_t _uint8;
-        int8_t _int8;
+        int8_t _sint8;
         uint16_t _uint16;
-        int16_t _int16;
+        int16_t _sint16;
         uint32_t _uint32;
-        int32_t _int32;
+        int32_t _sint32;
         uint64_t _uint64;
-        int64_t _int64;
+        int64_t _sint64;
         float _float;
         double _double;
         Color _color;
@@ -141,20 +140,20 @@ public:
         Ptr64<Bool> _bool;
         uint32_t _uint8_count = 0;
         Ptr64<uint8_t> _uint8;
-        uint32_t _int8_count = 0;
-        Ptr64<int8_t> _int8;
+        uint32_t _sint8_count = 0;
+        Ptr64<int8_t> _sint8;
         uint32_t _uint16_count = 0;
         Ptr64<uint16_t> _uint16;
-        uint32_t _int16_count = 0;
-        Ptr64<int16_t> _int16;
+        uint32_t _sint16_count = 0;
+        Ptr64<int16_t> _sint16;
         uint32_t _uint32_count = 0;
         Ptr64<uint32_t> _uint32;
-        uint32_t _int32_count = 0;
-        Ptr64<int32_t> _int32;
+        uint32_t _sint32_count = 0;
+        Ptr64<int32_t> _sint32;
         uint32_t _uint64_count = 0;
         Ptr64<uint64_t> _uint64;
-        uint32_t _int64_count = 0;
-        Ptr64<int64_t> _int64;
+        uint32_t _sint64_count = 0;
+        Ptr64<int64_t> _sint64;
         uint32_t _float_count = 0;
         Ptr64<float> _float;
         uint32_t _double_count = 0;
@@ -165,34 +164,34 @@ public:
         Ptr64<Pos> _pos;
     };
 
-    struct EntryArray4
+    struct EntryArray2
     {
-        static const uint32_t _bool_count = 4;
-        Bool _bool[4];
-        static const uint32_t _uint8_count = 4;
-        uint8_t _uint8[4];
-        static const uint32_t _int8_count = 4;
-        int8_t _int8[4];
-        static const uint32_t _uint16_count = 4;
-        uint16_t _uint16[4];
-        static const uint32_t _int16_count = 4;
-        int16_t _int16[4];
-        static const uint32_t _uint32_count = 4;
-        uint32_t _uint32[4];
-        static const uint32_t _int32_count = 4;
-        int32_t _int32[4];
-        static const uint32_t _uint64_count = 4;
-        uint64_t _uint64[4];
-        static const uint32_t _int64_count = 4;
-        int64_t _int64[4];
-        static const uint32_t _float_count = 4;
-        float _float[4];
-        static const uint32_t _double_count = 4;
-        double _double[4];
-        static const uint32_t _color_count = 4;
-        Color _color[4];
-        static const uint32_t _pos_count = 4;
-        Pos _pos[4];
+        static const uint32_t _bool_count = 2;
+        Bool _bool[2];
+        static const uint32_t _uint8_count = 2;
+        uint8_t _uint8[2];
+        static const uint32_t _sint8_count = 2;
+        int8_t _sint8[2];
+        static const uint32_t _uint16_count = 2;
+        uint16_t _uint16[2];
+        static const uint32_t _sint16_count = 2;
+        int16_t _sint16[2];
+        static const uint32_t _uint32_count = 2;
+        uint32_t _uint32[2];
+        static const uint32_t _sint32_count = 2;
+        int32_t _sint32[2];
+        static const uint32_t _uint64_count = 2;
+        uint64_t _uint64[2];
+        static const uint32_t _sint64_count = 2;
+        int64_t _sint64[2];
+        static const uint32_t _float_count = 2;
+        float _float[2];
+        static const uint32_t _double_count = 2;
+        double _double[2];
+        static const uint32_t _color_count = 2;
+        Color _color[2];
+        static const uint32_t _pos_count = 2;
+        Pos _pos[2];
     };
 
     struct Entry
@@ -200,7 +199,7 @@ public:
         EntryAll entries;
         EntryDefault entries_defaults;
         EntryArrayDynamic entries_dynamic_arrays;
-        EntryArray4 entries_static_arrays;
+        EntryArray2 entries_static_arrays;
     };
 
     using EntryRecord = Record<Entry>;
@@ -269,7 +268,7 @@ private:
     static void DoEndianSwapAndPointerFixup(EntryAll& v, void* base, bool endianSwap);
     static void DoEndianSwapAndPointerFixup(EntryDefault& v, void* base, bool endianSwap);
     static void DoEndianSwapAndPointerFixup(EntryArrayDynamic& v, void* base, bool endianSwap);
-    static void DoEndianSwapAndPointerFixup(EntryArray4& v, void* base, bool endianSwap);
+    static void DoEndianSwapAndPointerFixup(EntryArray2& v, void* base, bool endianSwap);
     static void DoEndianSwapAndPointerFixup(Entry& v, void* base, bool endianSwap);
 
 private:
@@ -295,9 +294,6 @@ public:
         return Get((uint32_t)index);
     }
 
-    template <typename T>
-    inline Record<T> Get(const char* name) const;
-
     inline uint32_t GetEntryCount() const;
     inline EntryRecord GetEntry(uint32_t index) const;
     inline EntryRecord GetEntry(int index) const
@@ -305,11 +301,9 @@ public:
         // An int version to catch index 0 not being ambiguous with nullptr
         return GetEntry((uint32_t)index);
     }
-    inline EntryRecord GetEntry(const char* name) const;
 
 private:
     uint32_t m_table_Entry_count = 0;
-    Ptr64<Ptr64<char>> m_table_Entry_names;
     Ptr64<Entry> m_table_Entry;
 };
 
@@ -354,7 +348,7 @@ inline bool Data::LoadFromMemory(void* mem, uint32_t memSize)
     // Verify that the schema hash in the binary data matches the schema hash this file was made for
     {
         uint64_t hash = 0;
-        if (!Read(hash, mem, memIndex, memSize, endianSwap) || hash != 0x07409f9ee6f974f7ULL)
+        if (!Read(hash, mem, memIndex, memSize, endianSwap) || hash != 0x5aae0d9b331c14d4ULL)
             return false;
     }
 
@@ -365,15 +359,6 @@ inline bool Data::LoadFromMemory(void* mem, uint32_t memSize)
 
         if (m_table_Entry_count > 0)
         {
-            // get char** to LUT and fixup string pointers
-            if (memSize - memIndex < m_table_Entry_count * sizeof(uint64_t))
-                return false;
-            m_table_Entry_names._64 = memIndex;
-            DoEndianSwapAndPointerFixup(m_table_Entry_names, mem, endianSwap);
-            for (uint32_t i = 0; i < m_table_Entry_count; ++i)
-                DoEndianSwapAndPointerFixup(m_table_Entry_names.ptr[i], mem, endianSwap);
-            memIndex += m_table_Entry_count * sizeof(uint64_t);
-
             // Get a pointer to the first entry in the table
             if (memSize - memIndex < m_table_Entry_count * sizeof(Entry))
                 return false;
@@ -425,13 +410,13 @@ inline void Data::DoEndianSwapAndPointerFixup(EntryAll& v, void* base, bool endi
 {
     DoEndianSwapAndPointerFixup(v._bool, base, endianSwap);
     DoEndianSwapAndPointerFixup(v._uint8, base, endianSwap);
-    DoEndianSwapAndPointerFixup(v._int8, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v._sint8, base, endianSwap);
     DoEndianSwapAndPointerFixup(v._uint16, base, endianSwap);
-    DoEndianSwapAndPointerFixup(v._int16, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v._sint16, base, endianSwap);
     DoEndianSwapAndPointerFixup(v._uint32, base, endianSwap);
-    DoEndianSwapAndPointerFixup(v._int32, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v._sint32, base, endianSwap);
     DoEndianSwapAndPointerFixup(v._uint64, base, endianSwap);
-    DoEndianSwapAndPointerFixup(v._int64, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v._sint64, base, endianSwap);
     DoEndianSwapAndPointerFixup(v._float, base, endianSwap);
     DoEndianSwapAndPointerFixup(v._double, base, endianSwap);
     DoEndianSwapAndPointerFixup(v._color, base, endianSwap);
@@ -442,13 +427,13 @@ inline void Data::DoEndianSwapAndPointerFixup(EntryDefault& v, void* base, bool 
 {
     DoEndianSwapAndPointerFixup(v._bool, base, endianSwap);
     DoEndianSwapAndPointerFixup(v._uint8, base, endianSwap);
-    DoEndianSwapAndPointerFixup(v._int8, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v._sint8, base, endianSwap);
     DoEndianSwapAndPointerFixup(v._uint16, base, endianSwap);
-    DoEndianSwapAndPointerFixup(v._int16, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v._sint16, base, endianSwap);
     DoEndianSwapAndPointerFixup(v._uint32, base, endianSwap);
-    DoEndianSwapAndPointerFixup(v._int32, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v._sint32, base, endianSwap);
     DoEndianSwapAndPointerFixup(v._uint64, base, endianSwap);
-    DoEndianSwapAndPointerFixup(v._int64, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v._sint64, base, endianSwap);
     DoEndianSwapAndPointerFixup(v._float, base, endianSwap);
     DoEndianSwapAndPointerFixup(v._double, base, endianSwap);
     DoEndianSwapAndPointerFixup(v._color, base, endianSwap);
@@ -464,34 +449,34 @@ inline void Data::DoEndianSwapAndPointerFixup(EntryArrayDynamic& v, void* base, 
     DoEndianSwapAndPointerFixup(v._uint8, base, endianSwap);
     for (uint32_t i = 0; i < v._uint8_count; ++i)
         DoEndianSwapAndPointerFixup(v._uint8.ptr[i], base, endianSwap);
-    DoEndianSwapAndPointerFixup(v._int8_count, base, endianSwap);
-    DoEndianSwapAndPointerFixup(v._int8, base, endianSwap);
-    for (uint32_t i = 0; i < v._int8_count; ++i)
-        DoEndianSwapAndPointerFixup(v._int8.ptr[i], base, endianSwap);
+    DoEndianSwapAndPointerFixup(v._sint8_count, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v._sint8, base, endianSwap);
+    for (uint32_t i = 0; i < v._sint8_count; ++i)
+        DoEndianSwapAndPointerFixup(v._sint8.ptr[i], base, endianSwap);
     DoEndianSwapAndPointerFixup(v._uint16_count, base, endianSwap);
     DoEndianSwapAndPointerFixup(v._uint16, base, endianSwap);
     for (uint32_t i = 0; i < v._uint16_count; ++i)
         DoEndianSwapAndPointerFixup(v._uint16.ptr[i], base, endianSwap);
-    DoEndianSwapAndPointerFixup(v._int16_count, base, endianSwap);
-    DoEndianSwapAndPointerFixup(v._int16, base, endianSwap);
-    for (uint32_t i = 0; i < v._int16_count; ++i)
-        DoEndianSwapAndPointerFixup(v._int16.ptr[i], base, endianSwap);
+    DoEndianSwapAndPointerFixup(v._sint16_count, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v._sint16, base, endianSwap);
+    for (uint32_t i = 0; i < v._sint16_count; ++i)
+        DoEndianSwapAndPointerFixup(v._sint16.ptr[i], base, endianSwap);
     DoEndianSwapAndPointerFixup(v._uint32_count, base, endianSwap);
     DoEndianSwapAndPointerFixup(v._uint32, base, endianSwap);
     for (uint32_t i = 0; i < v._uint32_count; ++i)
         DoEndianSwapAndPointerFixup(v._uint32.ptr[i], base, endianSwap);
-    DoEndianSwapAndPointerFixup(v._int32_count, base, endianSwap);
-    DoEndianSwapAndPointerFixup(v._int32, base, endianSwap);
-    for (uint32_t i = 0; i < v._int32_count; ++i)
-        DoEndianSwapAndPointerFixup(v._int32.ptr[i], base, endianSwap);
+    DoEndianSwapAndPointerFixup(v._sint32_count, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v._sint32, base, endianSwap);
+    for (uint32_t i = 0; i < v._sint32_count; ++i)
+        DoEndianSwapAndPointerFixup(v._sint32.ptr[i], base, endianSwap);
     DoEndianSwapAndPointerFixup(v._uint64_count, base, endianSwap);
     DoEndianSwapAndPointerFixup(v._uint64, base, endianSwap);
     for (uint32_t i = 0; i < v._uint64_count; ++i)
         DoEndianSwapAndPointerFixup(v._uint64.ptr[i], base, endianSwap);
-    DoEndianSwapAndPointerFixup(v._int64_count, base, endianSwap);
-    DoEndianSwapAndPointerFixup(v._int64, base, endianSwap);
-    for (uint32_t i = 0; i < v._int64_count; ++i)
-        DoEndianSwapAndPointerFixup(v._int64.ptr[i], base, endianSwap);
+    DoEndianSwapAndPointerFixup(v._sint64_count, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v._sint64, base, endianSwap);
+    for (uint32_t i = 0; i < v._sint64_count; ++i)
+        DoEndianSwapAndPointerFixup(v._sint64.ptr[i], base, endianSwap);
     DoEndianSwapAndPointerFixup(v._float_count, base, endianSwap);
     DoEndianSwapAndPointerFixup(v._float, base, endianSwap);
     for (uint32_t i = 0; i < v._float_count; ++i)
@@ -510,26 +495,26 @@ inline void Data::DoEndianSwapAndPointerFixup(EntryArrayDynamic& v, void* base, 
         DoEndianSwapAndPointerFixup(v._pos.ptr[i], base, endianSwap);
 }
 
-inline void Data::DoEndianSwapAndPointerFixup(EntryArray4& v, void* base, bool endianSwap)
+inline void Data::DoEndianSwapAndPointerFixup(EntryArray2& v, void* base, bool endianSwap)
 {
     for (uint32_t i = 0; i < v._bool_count; ++i)
         DoEndianSwapAndPointerFixup(v._bool[i], base, endianSwap);
     for (uint32_t i = 0; i < v._uint8_count; ++i)
         DoEndianSwapAndPointerFixup(v._uint8[i], base, endianSwap);
-    for (uint32_t i = 0; i < v._int8_count; ++i)
-        DoEndianSwapAndPointerFixup(v._int8[i], base, endianSwap);
+    for (uint32_t i = 0; i < v._sint8_count; ++i)
+        DoEndianSwapAndPointerFixup(v._sint8[i], base, endianSwap);
     for (uint32_t i = 0; i < v._uint16_count; ++i)
         DoEndianSwapAndPointerFixup(v._uint16[i], base, endianSwap);
-    for (uint32_t i = 0; i < v._int16_count; ++i)
-        DoEndianSwapAndPointerFixup(v._int16[i], base, endianSwap);
+    for (uint32_t i = 0; i < v._sint16_count; ++i)
+        DoEndianSwapAndPointerFixup(v._sint16[i], base, endianSwap);
     for (uint32_t i = 0; i < v._uint32_count; ++i)
         DoEndianSwapAndPointerFixup(v._uint32[i], base, endianSwap);
-    for (uint32_t i = 0; i < v._int32_count; ++i)
-        DoEndianSwapAndPointerFixup(v._int32[i], base, endianSwap);
+    for (uint32_t i = 0; i < v._sint32_count; ++i)
+        DoEndianSwapAndPointerFixup(v._sint32[i], base, endianSwap);
     for (uint32_t i = 0; i < v._uint64_count; ++i)
         DoEndianSwapAndPointerFixup(v._uint64[i], base, endianSwap);
-    for (uint32_t i = 0; i < v._int64_count; ++i)
-        DoEndianSwapAndPointerFixup(v._int64[i], base, endianSwap);
+    for (uint32_t i = 0; i < v._sint64_count; ++i)
+        DoEndianSwapAndPointerFixup(v._sint64[i], base, endianSwap);
     for (uint32_t i = 0; i < v._float_count; ++i)
         DoEndianSwapAndPointerFixup(v._float[i], base, endianSwap);
     for (uint32_t i = 0; i < v._double_count; ++i)
@@ -566,34 +551,6 @@ inline Data::EntryRecord Data::Get<Data::Entry>(uint32_t index) const
     return ret;
 }
 
-template <>
-inline Data::EntryRecord Data::Get<Data::Entry>(const char* name) const
-{
-    EntryRecord ret;
-
-    Ptr64<char>* array = m_table_Entry_names.ptr;
-    const uint32_t count = m_table_Entry_count;
-
-    auto it = std::lower_bound(
-        array,
-        array + count,
-        name,
-        [](const Ptr64<char>& item, const char* val)
-        {
-            return strcmp(item.ptr, val) < 0;
-        }
-    );
-
-    uint32_t index = uint32_t(it - array);
-
-    if (index < count && !strcmp(it->ptr, name))
-    {
-        ret.m_record = &m_table_Entry.ptr[index];
-    }
-
-    return ret;
-}
-
 inline uint32_t Data::GetEntryCount() const
 {
     return GetCount<Entry>();
@@ -602,9 +559,4 @@ inline uint32_t Data::GetEntryCount() const
 inline Data::EntryRecord Data::GetEntry(uint32_t index) const
 {
     return Get<Entry>(index);
-}
-
-inline Data::EntryRecord Data::GetEntry(const char* name) const
-{
-    return Get<Entry>(name);
 }

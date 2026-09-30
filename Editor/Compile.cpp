@@ -968,15 +968,15 @@ static bool MakeBin_WriteField(DBTable& table, const DefParser::StructField& fie
         // Integers and floats
         switch (fieldDef.fieldType)
         {
-            case DefParser::FieldType::_uint8:  MakeBin_WriteInt<uint8_t> (fieldStackIndex, fieldDef.dflt, json, jsonPathItem);  continue;
-            case DefParser::FieldType::_sint8:  MakeBin_WriteInt<int8_t>  (fieldStackIndex, fieldDef.dflt, json, jsonPathItem);   continue;
+            case DefParser::FieldType::_uint8:  MakeBin_WriteInt<uint8_t> (fieldStackIndex, fieldDef.dflt, json, jsonPathItem); continue;
+            case DefParser::FieldType::_sint8:  MakeBin_WriteInt<int8_t>  (fieldStackIndex, fieldDef.dflt, json, jsonPathItem); continue;
             case DefParser::FieldType::_uint16: MakeBin_WriteInt<uint16_t>(fieldStackIndex, fieldDef.dflt, json, jsonPathItem); continue;
-            case DefParser::FieldType::_sint16: MakeBin_WriteInt<int16_t> (fieldStackIndex, fieldDef.dflt, json, jsonPathItem);  continue;
+            case DefParser::FieldType::_sint16: MakeBin_WriteInt<int16_t> (fieldStackIndex, fieldDef.dflt, json, jsonPathItem); continue;
             case DefParser::FieldType::_uint32: MakeBin_WriteInt<uint32_t>(fieldStackIndex, fieldDef.dflt, json, jsonPathItem); continue;
-            case DefParser::FieldType::_sint32: MakeBin_WriteInt<int32_t> (fieldStackIndex, fieldDef.dflt, json, jsonPathItem);  continue;
+            case DefParser::FieldType::_sint32: MakeBin_WriteInt<int32_t> (fieldStackIndex, fieldDef.dflt, json, jsonPathItem); continue;
             case DefParser::FieldType::_uint64: MakeBin_WriteInt<uint64_t>(fieldStackIndex, fieldDef.dflt, json, jsonPathItem); continue;
-            case DefParser::FieldType::_sint64: MakeBin_WriteInt<int8_t>  (fieldStackIndex, fieldDef.dflt, json, jsonPathItem);   continue;
-            case DefParser::FieldType::_float:  MakeBin_WriteFloat<float> (fieldStackIndex, fieldDef.dflt, json, jsonPathItem);  continue;
+            case DefParser::FieldType::_sint64: MakeBin_WriteInt<int64_t> (fieldStackIndex, fieldDef.dflt, json, jsonPathItem); continue;
+            case DefParser::FieldType::_float:  MakeBin_WriteFloat<float> (fieldStackIndex, fieldDef.dflt, json, jsonPathItem); continue;
             case DefParser::FieldType::_double: MakeBin_WriteFloat<double>(fieldStackIndex, fieldDef.dflt, json, jsonPathItem); continue;
         }
 

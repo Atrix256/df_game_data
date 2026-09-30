@@ -198,3 +198,17 @@ Here is the generated code:
         Ptr64<uint16_t> numbers_dynamic;
 //...
 ```
+### Bools
+
+Bools are written as a uint8_t.  They are stored in a helper object where you can use `.Get()` to get the boolean value.
+
+```cpp
+struct Bool
+{
+    uint8_t _8 = 0;
+    bool Get() const
+    {
+        return _8 != 0;
+    }
+};
+```

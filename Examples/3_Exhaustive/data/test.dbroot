@@ -4,7 +4,7 @@
             "compiledHeaderFileName": "../Data.h",
             "compiledBinFileName": "../Packed/Data.bin",
             "className": "Data",
-            "includeEntryLUT": true,
+            "includeEntryLUT": false,
             "hotReloading": false
         }
     ],
