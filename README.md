@@ -160,8 +160,6 @@ This was developed on windows using microsoft visual studio.  Cloning the repo a
 
 Created by Alan Wolfe
 
-<First contributor will go here!>
-
 ### Contributing
 
 Contributions are most welcome!
@@ -173,8 +171,7 @@ or small earns a spot in the contributor list.
 
 If you are looking for ideas to contribute, the issues list has several todo items.
 
-Regarding AI use - I'd prefer you not use AI. If coding assistants worked as advertised, I wouldn't be able to tell if you
-were using AI unless you told me though.
+Regarding AI use - I'd prefer you not use AI. If coding assistants worked as advertised, I wouldn't be able to tell if you were using them though. Test your code, understand your code, be responsible for your code; don't be rude.
 
 ## Open Sourced Software Used
 
