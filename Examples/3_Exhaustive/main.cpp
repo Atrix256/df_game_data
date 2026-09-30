@@ -26,6 +26,7 @@ int main(int argc, char** argv)
 
     const Data::Entry& entry = data.GetEntry(0).Get();
 
+    // A bunch of types
     VERIFY(entry.entries._bool.Get() == true);
     VERIFY(entry.entries._uint8 == 2);
     VERIFY(entry.entries._sint8 == -3);
@@ -41,6 +42,7 @@ int main(int argc, char** argv)
     VERIFY(entry.entries._pos.x == 2.0f);
     VERIFY(entry.entries._pos.y == 1.0f);
 
+    // A bunch of types which have default values set in the def file
     VERIFY(entry.entries_defaults._bool.Get() == true);
     VERIFY(entry.entries_defaults._uint8 == 1);
     VERIFY(entry.entries_defaults._sint8 == -2);
@@ -54,6 +56,7 @@ int main(int argc, char** argv)
     VERIFY(entry.entries_defaults._double == 1000.0);
     VERIFY(entry.entries_defaults._color == Data::Color::Hazel);
 
+    // A bunch of dynamic arrays of types
     VERIFY(entry.entries_dynamic_arrays._bool_count == 3);
     VERIFY(entry.entries_dynamic_arrays._bool.ptr[0].Get() == false);
     VERIFY(entry.entries_dynamic_arrays._bool.ptr[1].Get() == true);
@@ -87,6 +90,49 @@ int main(int argc, char** argv)
     VERIFY(entry.entries_dynamic_arrays._pos.ptr[0].y == 48.0f);
     VERIFY(entry.entries_dynamic_arrays._pos.ptr[1].x == 7.0f);
     VERIFY(entry.entries_dynamic_arrays._pos.ptr[1].y == 12.0f);
+
+    // A bunch of static arrays of types
+    VERIFY(entry.entries_static_arrays._bool_count == 2);
+    VERIFY(entry.entries_static_arrays._bool[0].Get() == true);
+    VERIFY(entry.entries_static_arrays._bool[1].Get() == false);
+    VERIFY(entry.entries_static_arrays._uint8_count == 2);
+    VERIFY(entry.entries_static_arrays._uint8[0] == 4);
+    VERIFY(entry.entries_static_arrays._uint8[1] == 3);
+    VERIFY(entry.entries_static_arrays._sint8_count == 2);
+    VERIFY(entry.entries_static_arrays._sint8[0] == 8);
+    VERIFY(entry.entries_static_arrays._sint8[1] == 6);
+    VERIFY(entry.entries_static_arrays._uint16_count == 2);
+    VERIFY(entry.entries_static_arrays._uint16[0] == 1);
+    VERIFY(entry.entries_static_arrays._uint16[1] == 2);
+    VERIFY(entry.entries_static_arrays._sint16_count == 2);
+    VERIFY(entry.entries_static_arrays._sint16[0] == 2);
+    VERIFY(entry.entries_static_arrays._sint16[1] == 4);
+    VERIFY(entry.entries_static_arrays._uint32_count == 2);
+    VERIFY(entry.entries_static_arrays._uint32[0] == 3);
+    VERIFY(entry.entries_static_arrays._uint32[1] == 1);
+    VERIFY(entry.entries_static_arrays._sint32_count == 2);
+    VERIFY(entry.entries_static_arrays._sint32[0] == 5);
+    VERIFY(entry.entries_static_arrays._sint32[1] == 1);
+    VERIFY(entry.entries_static_arrays._uint32_count == 2);
+    VERIFY(entry.entries_static_arrays._uint64[0] == 2);
+    VERIFY(entry.entries_static_arrays._uint64[1] == 4);
+    VERIFY(entry.entries_static_arrays._sint64_count == 2);
+    VERIFY(entry.entries_static_arrays._sint64[0] == 9);
+    VERIFY(entry.entries_static_arrays._sint64[1] == 8);
+    VERIFY(entry.entries_static_arrays._float_count == 2);
+    VERIFY(entry.entries_static_arrays._float[0] == 6.0f);
+    VERIFY(entry.entries_static_arrays._float[1] == 7.0f);
+    VERIFY(entry.entries_static_arrays._double_count == 2);
+    VERIFY(entry.entries_static_arrays._double[0] == 11.0f);
+    VERIFY(entry.entries_static_arrays._double[1] == 41.0f);
+    VERIFY(entry.entries_static_arrays._color_count == 2);
+    VERIFY(entry.entries_static_arrays._color[0] == Data::Color::Hazel);
+    VERIFY(entry.entries_static_arrays._color[1] == Data::Color::Blue);
+    VERIFY(entry.entries_static_arrays._pos_count == 2);
+    VERIFY(entry.entries_static_arrays._pos[0].x == 4.0f);
+    VERIFY(entry.entries_static_arrays._pos[0].y == 3.0f);
+    VERIFY(entry.entries_static_arrays._pos[1].x == 5.0f);
+    VERIFY(entry.entries_static_arrays._pos[1].y == 9.0f);
 
     printf("All checks passed!");
     return 0;

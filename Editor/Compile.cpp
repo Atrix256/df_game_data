@@ -1010,7 +1010,7 @@ static bool MakeBin_WriteField(DBTable& table, const DefParser::StructField& fie
             {
                 // Write the type, which is a uint16: We write fieldIndex + 1, so that 0 is "none"
                 // Then write a pointer to the data in the next data stack down, since the size is variable.
-                json_pointer pathType = path / "_type";
+                json_pointer pathType = jsonPathItem / "_type";
 
                 std::string value = fieldDef.dflt;
                 value = GetOrDefault(json, pathType, value);
@@ -1049,7 +1049,7 @@ static bool MakeBin_WriteField(DBTable& table, const DefParser::StructField& fie
             }
             else
             {
-                MakeBin_WriteStruct(table, *structDef, json, path, fieldStackIndex);
+                MakeBin_WriteStruct(table, *structDef, json, jsonPathItem, fieldStackIndex);
             }
             continue;
         }
