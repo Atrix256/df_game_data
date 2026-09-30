@@ -136,20 +136,14 @@ static bool MakeHeader_EnumAndStructDefs(const DBRoot& dbRoot)
             [&os, &enumsWritten](const DefParser::Enum& e)
             {
                 // only write the same type once
-                if (enumsWritten.contains(e.FullName()))
+                if (enumsWritten.contains(e.name))
                     return true;
-                enumsWritten.insert(e.FullName());
+                enumsWritten.insert(e.name);
 
                 // make an extra newline to separate them
                 os << "\n";
 
                 std::string indent = "    ";
-
-                if (!e.nameSpace.empty())
-                {
-                    os << indent << "namespace " << e.nameSpace << "\n" << indent << "{\n";
-                    indent = "        ";
-                }
 
                 os << indent << "enum class " << e.name << " : uint16_t\n" << indent << "{\n";
 
@@ -158,11 +152,6 @@ static bool MakeHeader_EnumAndStructDefs(const DBRoot& dbRoot)
 
                 os << indent << "};\n";
 
-                if (!e.nameSpace.empty())
-                {
-                    indent = "    ";
-                    os << indent << "};\n";
-                }
                 return true;
             }
         );
@@ -178,21 +167,15 @@ static bool MakeHeader_EnumAndStructDefs(const DBRoot& dbRoot)
             [&os, &structsWritten, &parser, &dbRoot](const DefParser::Struct& s)
             {
                 // only write the same type once
-                if (structsWritten.contains(s.FullName()))
+                if (structsWritten.contains(s.name))
                     return true;
-                structsWritten.insert(s.FullName());
+                structsWritten.insert(s.name);
 
                 // If this isn't the first item written, make an extra newline to separate them
                 if (!os.view().empty())
                     os << "\n";
 
                 std::string indent = "    ";
-
-                if (!s.nameSpace.empty())
-                {
-                    os << indent << "namespace " << s.nameSpace << "\n" << indent << "{\n";
-                    indent = "        ";
-                }
 
                 if (s.isUnion)
                 {
@@ -281,11 +264,6 @@ static bool MakeHeader_EnumAndStructDefs(const DBRoot& dbRoot)
                 if (IsARootStruct(dbRoot, s.name.c_str()))
                     os << "\n" << indent << "using " << s.name << "Record = Record<" << s.name << ">;\n";
 
-                if (!s.nameSpace.empty())
-                {
-                    indent = "    ";
-                    os << indent << "};\n";
-                }
                 return true;
             }
         );
@@ -608,9 +586,9 @@ static bool MakeHeader_Global(const DBCompileSettings& compilerSettings, const D
                 [&structsWritten, &parser, &dbRoot, &compilerSettings](const DefParser::Struct& s)
                 {
                     // only write the same type once
-                    if (structsWritten.contains(s.FullName()))
+                    if (structsWritten.contains(s.name))
                         return true;
-                    structsWritten.insert(s.FullName());
+                    structsWritten.insert(s.name);
 
                     if (!IsARootStruct(dbRoot, s.name.c_str()))
                         return true;

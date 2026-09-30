@@ -14,7 +14,6 @@ enum class TokenType : uint8_t
     StructDef,
     UnionDef,
     EnumDef,
-    Namespace,
 
     DirectiveRoot,
     DirectiveInclude,
@@ -162,7 +161,6 @@ static void ConvertIdentifierToken(Token& token)
         {"struct", TokenType::StructDef},
         {"union", TokenType::UnionDef},
         {"enum", TokenType::EnumDef},
-        {"namespace", TokenType::Namespace},
         {"false", TokenType::LiteralBool},
         {"true", TokenType::LiteralBool},
     };
@@ -394,7 +392,6 @@ bool DefParser::ParseStructDef(const char*& cursor, bool isUnion)
 
     Struct& newStruct = m_structs.emplace_back();
     newStruct.name = std::string(token.token);
-    newStruct.nameSpace = m_currentNamespace;
     newStruct.isUnion = isUnion;
 
     GetToken(cursor, token);
@@ -425,7 +422,7 @@ bool DefParser::ParseStructDef(const char*& cursor, bool isUnion)
                 if (e)
                 {
                     newField.fieldType = FieldType::_enum;
-                    newField.enumName = e->FullName();
+                    newField.enumName = e->name;
                     break;
                 }
 
@@ -434,7 +431,7 @@ bool DefParser::ParseStructDef(const char*& cursor, bool isUnion)
                 if (s)
                 {
                     newField.fieldType = FieldType::_struct;
-                    newField.structName = s->FullName();
+                    newField.structName = s->name;
                     break;
                 }
 
@@ -582,7 +579,6 @@ bool DefParser::ParseEnumDef(const char*& cursor)
 
     Enum& newEnum = m_enums.emplace_back();
     newEnum.name = std::string(token.token);
-    newEnum.nameSpace = m_currentNamespace;
 
     GetToken(cursor, token);
     if (!TokenTypeExpected(token, TokenType::BraceBegin))
@@ -659,17 +655,6 @@ bool DefParser::ParseDirectiveInclude(const char*& cursor)
     return true;
 }
 
-bool DefParser::ParseNamespace(const char*& cursor)
-{
-    Token token;
-    GetToken(cursor, token);
-    if (!ParseNamespacedIdentifier(cursor, token))
-        return false;
-
-    m_currentNamespace = std::string(token.token);
-    return true;
-}
-
 bool DefParser::TokenTypeExpected(const Token& token, TokenType expectedType)
 {
     if (token.type == expectedType)
@@ -700,13 +685,13 @@ const DefParser::Struct* DefParser::GetStructByName(const char* name) const
 {
     std::string typeName;
     std::vector<std::string> namespaces;
-    GetTypeNameAndNamespaceSearchPaths(name, m_currentNamespace.c_str(), typeName, namespaces);
+    GetTypeNameAndNamespaceSearchPaths(name, "", typeName, namespaces);
 
     for (const std::string& n : namespaces)
     {
         for (const Struct& s : m_structs)
         {
-            if (s.nameSpace == n && s.name == typeName)
+            if (s.name == typeName)
                 return &s;
         }
     }
@@ -717,13 +702,13 @@ const DefParser::Enum* DefParser::GetEnumByName(const char* name) const
 {
     std::string typeName;
     std::vector<std::string> namespaces;
-    GetTypeNameAndNamespaceSearchPaths(name, m_currentNamespace.c_str(), typeName, namespaces);
+    GetTypeNameAndNamespaceSearchPaths(name, "", typeName, namespaces);
 
     for (const std::string& n : namespaces)
     {
         for (const Enum& e : m_enums)
         {
-            if (e.nameSpace == n && e.name == typeName)
+            if (e.name == typeName)
                 return &e;
         }
     }
@@ -749,12 +734,6 @@ bool DefParser::Parse(const char* fileName)
     {
         switch (token.type)
         {
-            case TokenType::Namespace:
-            {
-                if (!ParseNamespace(cursor))
-                    return false;
-                break;
-            }
             case TokenType::StructDef:
             {
                 if (!ParseStructDef(cursor, false))
@@ -810,7 +789,6 @@ uint64_t DefParser::GetHash() const
     for (const DefParser::Struct& s : m_structs)
     {
         hash.Add(s.name);
-        hash.Add(s.nameSpace);
 
         for (const DefParser::StructField& f : s.fields)
         {
@@ -828,7 +806,6 @@ uint64_t DefParser::GetHash() const
     for (const DefParser::Enum& e : m_enums)
     {
         hash.Add(e.name);
-        hash.Add(e.nameSpace);
 
         for (const std::string& l : e.labels)
             hash.Add(l);

@@ -88,143 +88,122 @@ public:
 public:
     #pragma pack(push, 1)
 
-    namespace TestInclude
+    enum class Color : uint16_t
     {
-        enum class Color : uint16_t
-        {
-            Brown,
-            Hazel,
-            Blue,
-            Green,
-        };
+        Brown,
+        Hazel,
+        Blue,
+        Green,
     };
 
-    namespace TestInclude
+    struct Pos
     {
-        struct Pos
-        {
-            float x;
-            float y;
-        };
+        float x;
+        float y;
     };
 
-    namespace TestData
+    struct EntryAll
     {
-        struct EntryAll
-        {
-            Bool _bool;
-            uint8_t _uint8;
-            int8_t _int8;
-            uint16_t _uint16;
-            int16_t _int16;
-            uint32_t _uint32;
-            int32_t _int32;
-            uint64_t _uint64;
-            int64_t _int64;
-            float _float;
-            double _double;
-            TestInclude::Color _color;
-            TestInclude::Pos _pos;
-        };
+        Bool _bool;
+        uint8_t _uint8;
+        int8_t _int8;
+        uint16_t _uint16;
+        int16_t _int16;
+        uint32_t _uint32;
+        int32_t _int32;
+        uint64_t _uint64;
+        int64_t _int64;
+        float _float;
+        double _double;
+        Color _color;
+        Pos _pos;
     };
 
-    namespace TestData
+    struct EntryDefault
     {
-        struct EntryDefault
-        {
-            Bool _bool;
-            uint8_t _uint8;
-            int8_t _int8;
-            uint16_t _uint16;
-            int16_t _int16;
-            uint32_t _uint32;
-            int32_t _int32;
-            uint64_t _uint64;
-            int64_t _int64;
-            float _float;
-            double _double;
-            TestInclude::Color _color;
-        };
+        Bool _bool;
+        uint8_t _uint8;
+        int8_t _int8;
+        uint16_t _uint16;
+        int16_t _int16;
+        uint32_t _uint32;
+        int32_t _int32;
+        uint64_t _uint64;
+        int64_t _int64;
+        float _float;
+        double _double;
+        Color _color;
     };
 
-    namespace TestData
+    struct EntryArrayDynamic
     {
-        struct EntryArrayDynamic
-        {
-            uint32_t _bool_count = 0;
-            Ptr64<Bool> _bool;
-            uint32_t _uint8_count = 0;
-            Ptr64<uint8_t> _uint8;
-            uint32_t _int8_count = 0;
-            Ptr64<int8_t> _int8;
-            uint32_t _uint16_count = 0;
-            Ptr64<uint16_t> _uint16;
-            uint32_t _int16_count = 0;
-            Ptr64<int16_t> _int16;
-            uint32_t _uint32_count = 0;
-            Ptr64<uint32_t> _uint32;
-            uint32_t _int32_count = 0;
-            Ptr64<int32_t> _int32;
-            uint32_t _uint64_count = 0;
-            Ptr64<uint64_t> _uint64;
-            uint32_t _int64_count = 0;
-            Ptr64<int64_t> _int64;
-            uint32_t _float_count = 0;
-            Ptr64<float> _float;
-            uint32_t _double_count = 0;
-            Ptr64<double> _double;
-            uint32_t _color_count = 0;
-            Ptr64<TestInclude::Color> _color;
-            uint32_t _pos_count = 0;
-            Ptr64<TestInclude::Pos> _pos;
-        };
+        uint32_t _bool_count = 0;
+        Ptr64<Bool> _bool;
+        uint32_t _uint8_count = 0;
+        Ptr64<uint8_t> _uint8;
+        uint32_t _int8_count = 0;
+        Ptr64<int8_t> _int8;
+        uint32_t _uint16_count = 0;
+        Ptr64<uint16_t> _uint16;
+        uint32_t _int16_count = 0;
+        Ptr64<int16_t> _int16;
+        uint32_t _uint32_count = 0;
+        Ptr64<uint32_t> _uint32;
+        uint32_t _int32_count = 0;
+        Ptr64<int32_t> _int32;
+        uint32_t _uint64_count = 0;
+        Ptr64<uint64_t> _uint64;
+        uint32_t _int64_count = 0;
+        Ptr64<int64_t> _int64;
+        uint32_t _float_count = 0;
+        Ptr64<float> _float;
+        uint32_t _double_count = 0;
+        Ptr64<double> _double;
+        uint32_t _color_count = 0;
+        Ptr64<Color> _color;
+        uint32_t _pos_count = 0;
+        Ptr64<Pos> _pos;
     };
 
-    namespace TestData
+    struct EntryArray4
     {
-        struct EntryArray4
-        {
-            static const uint32_t _bool_count = 4;
-            Bool _bool[4];
-            static const uint32_t _uint8_count = 4;
-            uint8_t _uint8[4];
-            static const uint32_t _int8_count = 4;
-            int8_t _int8[4];
-            static const uint32_t _uint16_count = 4;
-            uint16_t _uint16[4];
-            static const uint32_t _int16_count = 4;
-            int16_t _int16[4];
-            static const uint32_t _uint32_count = 4;
-            uint32_t _uint32[4];
-            static const uint32_t _int32_count = 4;
-            int32_t _int32[4];
-            static const uint32_t _uint64_count = 4;
-            uint64_t _uint64[4];
-            static const uint32_t _int64_count = 4;
-            int64_t _int64[4];
-            static const uint32_t _float_count = 4;
-            float _float[4];
-            static const uint32_t _double_count = 4;
-            double _double[4];
-            static const uint32_t _color_count = 4;
-            TestInclude::Color _color[4];
-            static const uint32_t _pos_count = 4;
-            TestInclude::Pos _pos[4];
-        };
+        static const uint32_t _bool_count = 4;
+        Bool _bool[4];
+        static const uint32_t _uint8_count = 4;
+        uint8_t _uint8[4];
+        static const uint32_t _int8_count = 4;
+        int8_t _int8[4];
+        static const uint32_t _uint16_count = 4;
+        uint16_t _uint16[4];
+        static const uint32_t _int16_count = 4;
+        int16_t _int16[4];
+        static const uint32_t _uint32_count = 4;
+        uint32_t _uint32[4];
+        static const uint32_t _int32_count = 4;
+        int32_t _int32[4];
+        static const uint32_t _uint64_count = 4;
+        uint64_t _uint64[4];
+        static const uint32_t _int64_count = 4;
+        int64_t _int64[4];
+        static const uint32_t _float_count = 4;
+        float _float[4];
+        static const uint32_t _double_count = 4;
+        double _double[4];
+        static const uint32_t _color_count = 4;
+        Color _color[4];
+        static const uint32_t _pos_count = 4;
+        Pos _pos[4];
     };
 
-    namespace TestData
+    struct Entry
     {
-        struct Entry
-        {
-            TestData::EntryAll entries;
-            TestData::EntryDefault entries_defaults;
-            TestData::EntryArrayDynamic entries_dynamic_arrays;
-            TestData::EntryArray4 entries_static_arrays;
-        };
-
-        using EntryRecord = Record<Entry>;
+        EntryAll entries;
+        EntryDefault entries_defaults;
+        EntryArrayDynamic entries_dynamic_arrays;
+        EntryArray4 entries_static_arrays;
     };
+
+    using EntryRecord = Record<Entry>;
 
     #pragma pack(pop)
 
@@ -375,7 +354,7 @@ inline bool Data::LoadFromMemory(void* mem, uint32_t memSize)
     // Verify that the schema hash in the binary data matches the schema hash this file was made for
     {
         uint64_t hash = 0;
-        if (!Read(hash, mem, memIndex, memSize, endianSwap) || hash != 0x59eb3c2d88f34ca0ULL)
+        if (!Read(hash, mem, memIndex, memSize, endianSwap) || hash != 0x07409f9ee6f974f7ULL)
             return false;
     }
 

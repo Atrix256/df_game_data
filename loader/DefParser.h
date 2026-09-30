@@ -53,30 +53,13 @@ public:
 
     struct Struct
     {
-        std::string FullName() const
-        {
-            if (nameSpace.empty())
-                return name;
-            else
-                return nameSpace + "::" + name;
-        }
-
         std::string name;
-        std::string nameSpace;
         std::vector<StructField> fields;
         bool isUnion = false;
     };
 
     struct Enum
     {
-        std::string FullName() const
-        {
-            if (nameSpace.empty())
-                return name;
-            else
-                return nameSpace + "::" + name;
-        }
-
         bool GetLabelIndex(const char* name, uint64_t& index) const
         {
             index = 0;
@@ -96,7 +79,6 @@ public:
         }
 
         std::string name;
-        std::string nameSpace;
         std::vector<std::string> labels;
     };
 
@@ -145,7 +127,6 @@ private:
     bool ParseEnumDef(const char*& cursor);
     bool ParseDirectiveRoot(const char*& cursor);
     bool ParseDirectiveInclude(const char*& cursor);
-    bool ParseNamespace(const char*& cursor);
     bool ParseNamespacedIdentifier(const char*& cursor, Token& token);
 
     void GetToken(const char*& cursor, Token& token);
@@ -160,7 +141,6 @@ private:
 
     int m_lineNumber = 1;
     std::ostringstream m_errorText;
-    std::string m_currentNamespace;
 
     std::string m_path;
 
