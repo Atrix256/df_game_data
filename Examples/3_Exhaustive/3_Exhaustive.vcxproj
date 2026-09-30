@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{9343ca15-639a-423e-b1db-c3eb807d71c1}</ProjectGuid>
-    <RootNamespace>My2HotReloading</RootNamespace>
+    <ProjectGuid>{4eec2952-2e5d-44b2-ab86-69d908ec44ef}</ProjectGuid>
+    <RootNamespace>My3Exhaustive</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

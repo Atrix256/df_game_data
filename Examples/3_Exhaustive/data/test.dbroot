@@ -1,0 +1,14 @@
+{
+    "compilersettings": [
+        {
+            "compiledHeaderFileName": "../Data.h",
+            "compiledBinFileName": "../Packed/Data.bin",
+            "className": "Data",
+            "includeEntryLUT": true,
+            "hotReloading": false
+        }
+    ],
+    "tables": [
+        "test.def"
+    ]
+}
