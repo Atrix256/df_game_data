@@ -75,6 +75,20 @@ for %%f in (fontawesome-webfont.ttf licence.txt LICENSE.txt) do (
     )
 )
 
+rem --- Copy the example data folders, keeping their relative paths ---
+rem Robocopy exit codes below 8 mean success.
+for %%d in (Examples\1_Simple\data Examples\2_HotReloading\data Examples\3_Exhaustive\data) do (
+    if not exist "%%d\" (
+        echo ERROR: %%d not found
+        goto :fail
+    )
+    robocopy "%%d" "%DEST%\%%d" /E /NFL /NDL /NJH /NJS /NP >nul
+    if errorlevel 8 (
+        echo ERROR: failed to copy %%d
+        goto :fail
+    )
+)
+
 echo.
 echo Release package ready: %DEST%
 dir /b /s "%DEST%"

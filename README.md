@@ -169,6 +169,8 @@ Contributions are most welcome!
 
 Please try to follow the style of code near where you are editing, and test your changes.
 
+The `RunTests.bat` file can be used to quickly make sure things are still working ok.  It runs the three examples in debug and release, and also in x86 (32 bit) and x64 (64 bit). You should run this before making a pull request.
+
 You can add your name to the contributor list in the section above (sorted alphabetically by first name). Any change large
 or small earns a spot in the contributor list.
 
