@@ -1,0 +1,6 @@
+struct People
+{
+    string name;
+};
+
+#root People

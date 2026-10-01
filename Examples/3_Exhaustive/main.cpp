@@ -38,9 +38,11 @@ int main(int argc, char** argv)
     VERIFY(entry.entries._sint64 == -9);
     VERIFY(entry.entries._float == 10.0f);
     VERIFY(entry.entries._double == -11.0);
+    VERIFY(!strcmp(entry.entries._string.ptr, "some text!"));
     VERIFY(entry.entries._color == Data::Color::Blue);
     VERIFY(entry.entries._pos.x == 2.0f);
     VERIFY(entry.entries._pos.y == 1.0f);
+    VERIFY(entry.entries._people.ptr == nullptr);
 
     // A bunch of types which have default values set in the def file
     VERIFY(entry.entries_defaults._bool.Get() == true);
@@ -54,7 +56,10 @@ int main(int argc, char** argv)
     VERIFY(entry.entries_defaults._sint64 == -8);
     VERIFY(entry.entries_defaults._float == 10000.0f);
     VERIFY(entry.entries_defaults._double == 1000.0);
+    VERIFY(!strcmp(entry.entries_defaults._string.ptr, "yo!"));
     VERIFY(entry.entries_defaults._color == Data::Color::Hazel);
+    VERIFY(entry.entries_defaults._people.ptr != nullptr);
+    VERIFY(!strcmp(entry.entries_defaults._people.ptr->name.ptr, "Larry"));
 
     // A bunch of dynamic arrays of types
     VERIFY(entry.entries_dynamic_arrays._bool_count == 3);
@@ -82,6 +87,10 @@ int main(int argc, char** argv)
     VERIFY(entry.entries_dynamic_arrays._float.ptr[0] == 20.0f);
     VERIFY(entry.entries_dynamic_arrays._double_count == 1);
     VERIFY(entry.entries_dynamic_arrays._double.ptr[0] == 22.0f);
+    VERIFY(entry.entries_dynamic_arrays._string_count == 3);
+    VERIFY(!strcmp(entry.entries_dynamic_arrays._string.ptr[0].ptr, "uno"));
+    VERIFY(!strcmp(entry.entries_dynamic_arrays._string.ptr[1].ptr, ""));
+    VERIFY(!strcmp(entry.entries_dynamic_arrays._string.ptr[2].ptr, "tres"));
     VERIFY(entry.entries_dynamic_arrays._color_count == 2);
     VERIFY(entry.entries_dynamic_arrays._color.ptr[0] == Data::Color::Blue);
     VERIFY(entry.entries_dynamic_arrays._color.ptr[1] == Data::Color::Green);
@@ -90,6 +99,12 @@ int main(int argc, char** argv)
     VERIFY(entry.entries_dynamic_arrays._pos.ptr[0].y == 48.0f);
     VERIFY(entry.entries_dynamic_arrays._pos.ptr[1].x == 7.0f);
     VERIFY(entry.entries_dynamic_arrays._pos.ptr[1].y == 12.0f);
+    VERIFY(entry.entries_dynamic_arrays._people_count == 3);
+    VERIFY(entry.entries_dynamic_arrays._people.ptr[0].ptr != nullptr);
+    VERIFY(!strcmp(entry.entries_dynamic_arrays._people.ptr[0].ptr->name.ptr, "Larry"));
+    VERIFY(entry.entries_dynamic_arrays._people.ptr[1].ptr == nullptr);
+    VERIFY(entry.entries_dynamic_arrays._people.ptr[2].ptr != nullptr);
+    VERIFY(!strcmp(entry.entries_dynamic_arrays._people.ptr[2].ptr->name.ptr, "Moe"));
 
     // A bunch of static arrays of types
     VERIFY(entry.entries_static_arrays._bool_count == 2);
@@ -125,6 +140,9 @@ int main(int argc, char** argv)
     VERIFY(entry.entries_static_arrays._double_count == 2);
     VERIFY(entry.entries_static_arrays._double[0] == 11.0f);
     VERIFY(entry.entries_static_arrays._double[1] == 41.0f);
+    VERIFY(entry.entries_static_arrays._string_count == 2);
+    VERIFY(!strcmp(entry.entries_static_arrays._string[0].ptr, "un"));
+    VERIFY(!strcmp(entry.entries_static_arrays._string[1].ptr, "deux"));
     VERIFY(entry.entries_static_arrays._color_count == 2);
     VERIFY(entry.entries_static_arrays._color[0] == Data::Color::Hazel);
     VERIFY(entry.entries_static_arrays._color[1] == Data::Color::Blue);
@@ -133,6 +151,10 @@ int main(int argc, char** argv)
     VERIFY(entry.entries_static_arrays._pos[0].y == 3.0f);
     VERIFY(entry.entries_static_arrays._pos[1].x == 5.0f);
     VERIFY(entry.entries_static_arrays._pos[1].y == 9.0f);
+    VERIFY(entry.entries_static_arrays._people_count == 2);
+    VERIFY(entry.entries_static_arrays._people[0].ptr == nullptr);
+    VERIFY(entry.entries_static_arrays._people[1].ptr != nullptr);
+    VERIFY(!strcmp(entry.entries_static_arrays._people[1].ptr->name.ptr, "Curly"));
 
     printf("All checks passed!");
     return 0;

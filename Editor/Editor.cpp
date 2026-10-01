@@ -1111,73 +1111,12 @@ bool EditorOnAppLaunch(int argc, char** argv, int &returnCode)
 /*
 TODO:
 * have test batch file run the tests with "-test" so the hot reload example doesn't enter the loop
-
-* finish documentation
-* make examples (3: simple, hot reload, exhaustive)
-* make blog post on binary serialization, after release. could include the kofi link and also the github support.
-
 * Can you test 32 bit by building x86 instead of x64?
  ! yes! and that should be part of the testing procedures i guess. debug / release x 32 / 64
 
-* test data needs to have union, static array of unions, dynamic array of unions
-* and a pod in a union
-* and nested namespaces. Like namespace blah::moof.
-* have the tests assert that every value is correct. a lot of typing, but worth while.
-
-* the example data needs a small c++ main.cpp that loads the data and prints something from it.
- * ExampleData\example_code\main.cpp when it's time to do this again.
-* test data should have a struct of array of struct of array of struct or something
-* maybe have single link in "test" data too. Also static and dynamic array of links.
-* fix up the demo to be something sensible.
-* also make some sort of demo for the exhaustive test data.
-
 * use it a bit before announcing it and making builds available
  * could see if anyone wants to test it first? idk. asking for feedback could be useful for the software and for getting more people to try it.
-! make a blog post about the binary serialization stack. static size go in stack N, dynamic is written into N+1 and a pointer is written into N.
- * could also talk about the multi pass approach, for final pointer fixup
- * also talk about pointer fixup on load
 
 * Make a script to make binary releases.
-* installer
- * with option to add to path (for binary compilation)
- * nah. just binaries i think?
-* Also need version number in app and installer.
-* add contributors list and how to contribute
-* Let people Add their name. Alpha sort. Along with a description of what they did?
- * Or a link to a page with their check ins or something.
-* Add a help about with version and contributor list.
- * could also put the larger df.png on there
-* make flatc.exe get copied to where the editor exe is, on compile and make it .gitignored. call it from there. needed for binaries / installer?
-
-Data Examples:
-* Basic - one table, a few different basic types.
-* Game - a couple tables. text based game with hot reload?
-* Exhaustive - all the things.
-! in all tests, make sure the data read in matches. like an assert, but make it work in release too.
- ? how do we run a data test in debug/release x x86 / x64?
-
-
-
-
-
-Serialization blog post:
-Unions -
-They are great. Variants are great.
-They let you express more complex things, like having a list of dissimilar object.
-
-In c++, they are a runtime dynamic feature. You can use whatever field you want based on runtime logic.
-
-Binary data is static however.
-No need to decide at runtime to hold enough memory for all values.
-No need to reserve memory in the bin for the largest value, and waste space.
-But, data needs to be known size in the bin file. Cant write N objects that contain unions and have different sizes.
-
-So, we write the union into dynamic memory and write a fixed size pointer to the static memory.
-
-No wasted space. Fixed sized objects.
-
-Only storing the data we actually need.
-
-But, we also need a field to say what type the union is. A uint16 does that. 0 for none which gives a null ptr.
-
+* put up binaries and make a release. don't worry about installer
 */

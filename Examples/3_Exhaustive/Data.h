@@ -101,6 +101,13 @@ public:
         float y;
     };
 
+    struct People
+    {
+        Ptr64<char> name;
+    };
+
+    using PeopleRecord = Record<People>;
+
     struct EntryAll
     {
         Bool _bool;
@@ -114,8 +121,10 @@ public:
         int64_t _sint64;
         float _float;
         double _double;
+        Ptr64<char> _string;
         Color _color;
         Pos _pos;
+        Ptr64<People> _people;
     };
 
     struct EntryDefault
@@ -131,7 +140,9 @@ public:
         int64_t _sint64;
         float _float;
         double _double;
+        Ptr64<char> _string;
         Color _color;
+        Ptr64<People> _people;
     };
 
     struct EntryArrayDynamic
@@ -158,10 +169,14 @@ public:
         Ptr64<float> _float;
         uint32_t _double_count = 0;
         Ptr64<double> _double;
+        uint32_t _string_count = 0;
+        Ptr64<Ptr64<char>> _string;
         uint32_t _color_count = 0;
         Ptr64<Color> _color;
         uint32_t _pos_count = 0;
         Ptr64<Pos> _pos;
+        uint32_t _people_count = 0;
+        Ptr64<Ptr64<People>> _people;
     };
 
     struct EntryArray2
@@ -188,10 +203,14 @@ public:
         float _float[2];
         static const uint32_t _double_count = 2;
         double _double[2];
+        static const uint32_t _string_count = 2;
+        Ptr64<char> _string[2];
         static const uint32_t _color_count = 2;
         Color _color[2];
         static const uint32_t _pos_count = 2;
         Pos _pos[2];
+        static const uint32_t _people_count = 2;
+        Ptr64<People> _people[2];
     };
 
     struct Entry
@@ -265,6 +284,7 @@ private:
     }
 
     static void DoEndianSwapAndPointerFixup(Pos& v, void* base, bool endianSwap);
+    static void DoEndianSwapAndPointerFixup(People& v, void* base, bool endianSwap);
     static void DoEndianSwapAndPointerFixup(EntryAll& v, void* base, bool endianSwap);
     static void DoEndianSwapAndPointerFixup(EntryDefault& v, void* base, bool endianSwap);
     static void DoEndianSwapAndPointerFixup(EntryArrayDynamic& v, void* base, bool endianSwap);
@@ -294,6 +314,14 @@ public:
         return Get((uint32_t)index);
     }
 
+    inline uint32_t GetPeopleCount() const;
+    inline PeopleRecord GetPeople(uint32_t index) const;
+    inline PeopleRecord GetPeople(int index) const
+    {
+        // An int version to catch index 0 not being ambiguous with nullptr
+        return GetPeople((uint32_t)index);
+    }
+
     inline uint32_t GetEntryCount() const;
     inline EntryRecord GetEntry(uint32_t index) const;
     inline EntryRecord GetEntry(int index) const
@@ -305,6 +333,9 @@ public:
 private:
     uint32_t m_table_Entry_count = 0;
     Ptr64<Entry> m_table_Entry;
+
+    uint32_t m_table_People_count = 0;
+    Ptr64<People> m_table_People;
 };
 
 // ================================= Misc =================================
@@ -348,7 +379,7 @@ inline bool Data::LoadFromMemory(void* mem, uint32_t memSize)
     // Verify that the schema hash in the binary data matches the schema hash this file was made for
     {
         uint64_t hash = 0;
-        if (!Read(hash, mem, memIndex, memSize, endianSwap) || hash != 0x5aae0d9b331c14d4ULL)
+        if (!Read(hash, mem, memIndex, memSize, endianSwap) || hash != 0x2c75796dab1c51dcULL)
             return false;
     }
 
@@ -369,6 +400,26 @@ inline bool Data::LoadFromMemory(void* mem, uint32_t memSize)
             // Do pointer fixup
             for (uint32_t i = 0; i < m_table_Entry_count; ++i)
                 DoEndianSwapAndPointerFixup(m_table_Entry.ptr[i], mem, endianSwap);
+        }
+    }
+
+    // People Table
+    {
+        if (!Read(m_table_People_count, mem, memIndex, memSize, endianSwap))
+            return false;
+
+        if (m_table_People_count > 0)
+        {
+            // Get a pointer to the first entry in the table
+            if (memSize - memIndex < m_table_People_count * sizeof(People))
+                return false;
+            m_table_People._64 = memIndex;
+            DoEndianSwapAndPointerFixup(m_table_People, mem, endianSwap);
+            memIndex += m_table_People_count * sizeof(People);
+
+            // Do pointer fixup
+            for (uint32_t i = 0; i < m_table_People_count; ++i)
+                DoEndianSwapAndPointerFixup(m_table_People.ptr[i], mem, endianSwap);
         }
     }
 
@@ -406,6 +457,11 @@ inline void Data::DoEndianSwapAndPointerFixup(Pos& v, void* base, bool endianSwa
     DoEndianSwapAndPointerFixup(v.y, base, endianSwap);
 }
 
+inline void Data::DoEndianSwapAndPointerFixup(People& v, void* base, bool endianSwap)
+{
+    DoEndianSwapAndPointerFixup(v.name, base, endianSwap);
+}
+
 inline void Data::DoEndianSwapAndPointerFixup(EntryAll& v, void* base, bool endianSwap)
 {
     DoEndianSwapAndPointerFixup(v._bool, base, endianSwap);
@@ -419,8 +475,10 @@ inline void Data::DoEndianSwapAndPointerFixup(EntryAll& v, void* base, bool endi
     DoEndianSwapAndPointerFixup(v._sint64, base, endianSwap);
     DoEndianSwapAndPointerFixup(v._float, base, endianSwap);
     DoEndianSwapAndPointerFixup(v._double, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v._string, base, endianSwap);
     DoEndianSwapAndPointerFixup(v._color, base, endianSwap);
     DoEndianSwapAndPointerFixup(v._pos, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v._people, base, endianSwap);
 }
 
 inline void Data::DoEndianSwapAndPointerFixup(EntryDefault& v, void* base, bool endianSwap)
@@ -436,7 +494,9 @@ inline void Data::DoEndianSwapAndPointerFixup(EntryDefault& v, void* base, bool 
     DoEndianSwapAndPointerFixup(v._sint64, base, endianSwap);
     DoEndianSwapAndPointerFixup(v._float, base, endianSwap);
     DoEndianSwapAndPointerFixup(v._double, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v._string, base, endianSwap);
     DoEndianSwapAndPointerFixup(v._color, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v._people, base, endianSwap);
 }
 
 inline void Data::DoEndianSwapAndPointerFixup(EntryArrayDynamic& v, void* base, bool endianSwap)
@@ -485,6 +545,10 @@ inline void Data::DoEndianSwapAndPointerFixup(EntryArrayDynamic& v, void* base, 
     DoEndianSwapAndPointerFixup(v._double, base, endianSwap);
     for (uint32_t i = 0; i < v._double_count; ++i)
         DoEndianSwapAndPointerFixup(v._double.ptr[i], base, endianSwap);
+    DoEndianSwapAndPointerFixup(v._string_count, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v._string, base, endianSwap);
+    for (uint32_t i = 0; i < v._string_count; ++i)
+        DoEndianSwapAndPointerFixup(v._string.ptr[i], base, endianSwap);
     DoEndianSwapAndPointerFixup(v._color_count, base, endianSwap);
     DoEndianSwapAndPointerFixup(v._color, base, endianSwap);
     for (uint32_t i = 0; i < v._color_count; ++i)
@@ -493,6 +557,10 @@ inline void Data::DoEndianSwapAndPointerFixup(EntryArrayDynamic& v, void* base, 
     DoEndianSwapAndPointerFixup(v._pos, base, endianSwap);
     for (uint32_t i = 0; i < v._pos_count; ++i)
         DoEndianSwapAndPointerFixup(v._pos.ptr[i], base, endianSwap);
+    DoEndianSwapAndPointerFixup(v._people_count, base, endianSwap);
+    DoEndianSwapAndPointerFixup(v._people, base, endianSwap);
+    for (uint32_t i = 0; i < v._people_count; ++i)
+        DoEndianSwapAndPointerFixup(v._people.ptr[i], base, endianSwap);
 }
 
 inline void Data::DoEndianSwapAndPointerFixup(EntryArray2& v, void* base, bool endianSwap)
@@ -519,10 +587,14 @@ inline void Data::DoEndianSwapAndPointerFixup(EntryArray2& v, void* base, bool e
         DoEndianSwapAndPointerFixup(v._float[i], base, endianSwap);
     for (uint32_t i = 0; i < v._double_count; ++i)
         DoEndianSwapAndPointerFixup(v._double[i], base, endianSwap);
+    for (uint32_t i = 0; i < v._string_count; ++i)
+        DoEndianSwapAndPointerFixup(v._string[i], base, endianSwap);
     for (uint32_t i = 0; i < v._color_count; ++i)
         DoEndianSwapAndPointerFixup(v._color[i], base, endianSwap);
     for (uint32_t i = 0; i < v._pos_count; ++i)
         DoEndianSwapAndPointerFixup(v._pos[i], base, endianSwap);
+    for (uint32_t i = 0; i < v._people_count; ++i)
+        DoEndianSwapAndPointerFixup(v._people[i], base, endianSwap);
 }
 
 inline void Data::DoEndianSwapAndPointerFixup(Entry& v, void* base, bool endianSwap)
@@ -559,4 +631,31 @@ inline uint32_t Data::GetEntryCount() const
 inline Data::EntryRecord Data::GetEntry(uint32_t index) const
 {
     return Get<Entry>(index);
+}
+
+template <>
+inline uint32_t Data::GetCount<Data::People>() const
+{
+    return m_table_People_count;
+}
+
+template <>
+inline Data::PeopleRecord Data::Get<Data::People>(uint32_t index) const
+{
+    PeopleRecord ret;
+    if (index < m_table_People_count)
+    {
+        ret.m_record = &m_table_People.ptr[index];
+    }
+    return ret;
+}
+
+inline uint32_t Data::GetPeopleCount() const
+{
+    return GetCount<People>();
+}
+
+inline Data::PeopleRecord Data::GetPeople(uint32_t index) const
+{
+    return Get<People>(index);
 }

@@ -555,6 +555,14 @@ bool DefParser::ParseStructDef(const char*& cursor, bool isUnion)
                 newField.dflt = std::string(token.token);
                 break;
             }
+            case FieldType::_string:
+            case FieldType::_link:
+            {
+                if (!TokenTypeExpected(token, TokenType::LiteralString))
+                    return false;
+                newField.dflt = std::string(token.token);
+                break;
+            }
             default:
             {
                 m_errorText << "Error in " << m_path << "(" << m_lineNumber << ") : unexpected: " << token.token;

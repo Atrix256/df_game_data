@@ -9,6 +9,7 @@
         }
     ],
     "tables": [
-        "test.def"
+        "people/people.def",
+        "entry/test.def"
     ]
 }

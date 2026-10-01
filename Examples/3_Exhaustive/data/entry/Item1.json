@@ -11,6 +11,7 @@
         "_sint64": -9,
         "_float": 10.0,
         "_double": -11.0,
+        "_string": "some text!",
         "_color": "Blue",
         "_pos": {
             "x": 2.0,
@@ -54,6 +55,11 @@
         "_double": [
             22.0
         ],
+        "_string": [
+            "uno",
+            null,
+            "tres"
+        ],
         "_color": [
             "Blue",
             "Green"
@@ -67,6 +73,11 @@
                 "x": 7.0,
                 "y": 12.0
             }
+        ],
+        "_people": [
+            "Larry",
+            null,
+            "Moe"
         ]
     },
     "entries_static_arrays": {
@@ -124,6 +135,10 @@
             11.0,
             41.0
         ],
+        "_string": [
+            "un",
+            "deux"
+        ],
         "_color": [
             "Hazel",
             "Blue"
@@ -137,6 +152,10 @@
                 "x": 5.0,
                 "y": 9.0
             }
+        ],
+        "_people": [
+            null,
+            "Curly"
         ]
     }
 }

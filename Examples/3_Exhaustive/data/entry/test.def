@@ -1,4 +1,5 @@
 #include "test_include.def"
+#include "../people/people.def"
 
 // All types
 struct EntryAll
@@ -24,8 +25,13 @@ struct EntryAll
     float _float;
     double _double;
 
+    // string
+    string _string;
+
     TestInclude::Color _color;
     TestInclude::Pos _pos;
+
+    Link<People> _people;
 };
 
 /* All types with default values */
@@ -52,8 +58,13 @@ struct EntryDefault
     float _float = 1e4;
     double _double = 1000.0;
 
+    // string
+    string _string = "yo!";
+
     TestInclude::Color _color = Hazel;
     //TestInclude::Pos _pos = {32, 45};
+
+    Link<People> _people = "Larry";
 };
 
 // All types in dynamic arrays
@@ -80,8 +91,12 @@ struct EntryArrayDynamic
     float _float[];
     double _double[];
 
+    string _string[];
+
     TestInclude::Color _color[];
     TestInclude::Pos _pos[];
+
+    Link<People> _people[];
 };
 
 // All types as static sized arrays
@@ -108,8 +123,12 @@ struct EntryArray2
     float _float[2];
     double _double[2];
 
+    string _string[2];
+
     TestInclude::Color _color[2];
     TestInclude::Pos _pos[2];
+
+    Link<People> _people[2];
 };
 
 struct Entry
