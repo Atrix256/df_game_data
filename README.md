@@ -165,7 +165,8 @@ int main(int argc, char** argv)
         // Records auto update after hot reload, but any data you cached from a record
         // will need to be updated manually.
         // Tick returns true when a hot reload happens, so that you can react to it.
-        data.Tick();
+        if(data.Tick())
+            OnHotReload();
     }
 
     return 0;
