@@ -49,7 +49,7 @@ I wrote some more about this topic 10 years ago: https://blog.demofox.org/2016/0
 
 ## Data Model
 
-A database is made up of tables.
+A database is the root object and is made up of tables.
 
 A table is an array of entries that can be looked up by name or index.
 
