@@ -3,7 +3,10 @@ setlocal EnableDelayedExpansion
 
 REM ---- edit these ----
 set "SLN=Examples/Examples.slnx"
+set "DATA_SLN=df_game_data.slnx"
+set "DATA_EXE_NAME=Editor.exe"
 set "TESTS=1_Simple 2_HotReloading 3_Exhaustive"
+set "DBROOTS=Examples\1_Simple\data\Items.dbroot Examples\2_HotReloading\data\main.dbroot Examples\3_Exhaustive\data\test.dbroot"
 REM --------------------
 
 REM Optional args: RunTests.bat [Debug|Release] [x86|x64]
@@ -22,6 +25,31 @@ if not defined MSBUILD (
 
 set "ROOT=%~dp0"
 
+REM ---- build the data compiler (Release x64) and compile all data ----
+echo.
+echo ===== Building data compiler: %DATA_SLN% [Release x64] =====
+"%MSBUILD%" "%ROOT%%DATA_SLN%" /m /nologo /v:minimal /p:Configuration=Release /p:Platform=x64
+if errorlevel 1 (
+  echo BUILD FAILED: %DATA_SLN% [Release x64]
+  exit /b 1
+)
+
+set "DATA_EXE=%ROOT%x64\Release\%DATA_EXE_NAME%"
+if not exist "%DATA_EXE%" (
+  echo Data compiler exe not found at: %DATA_EXE%
+  exit /b 1
+)
+
+for %%D in (%DBROOTS%) do (
+  echo --- Compiling %%D ---
+  "%DATA_EXE%" --compile "%ROOT%%%D"
+  if errorlevel 1 (
+    echo DATA COMPILE FAILED: %%D
+    exit /b 1
+  )
+)
+
+REM ---- build and run example tests ----
 set FAILS=0
 for %%C in (%CONFIGS%) do for %%P in (%PLATS%) do call :one %%C %%P
 
