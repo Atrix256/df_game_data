@@ -1029,7 +1029,7 @@ static bool MakeBin_WriteField(DBTable& table, const DefParser::StructField& fie
                         DataOffset src = MakeBin_GetOffset(fieldStackIndex + 1);
                         s_data.dataOffsets.push_back({ src, dst });
 
-                        json_pointer pathValue = path / field.name;
+                        json_pointer pathValue = jsonPathItem / field.name;
 
                         MakeBin_WriteField(table, field, json, pathValue, fieldStackIndex + 1);
 

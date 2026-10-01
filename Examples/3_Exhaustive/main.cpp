@@ -43,6 +43,8 @@ int main(int argc, char** argv)
     VERIFY(entry.entries._pos.x == 2.0f);
     VERIFY(entry.entries._pos.y == 1.0f);
     VERIFY(entry.entries._people.ptr == nullptr);
+    VERIFY(entry.entries._UTest.type == Data::UTest_type::_float);
+    VERIFY(*entry.entries._UTest._float() == 23.0f);
 
     // A bunch of types which have default values set in the def file
     VERIFY(entry.entries_defaults._bool.Get() == true);
@@ -105,6 +107,13 @@ int main(int argc, char** argv)
     VERIFY(entry.entries_dynamic_arrays._people.ptr[1].ptr == nullptr);
     VERIFY(entry.entries_dynamic_arrays._people.ptr[2].ptr != nullptr);
     VERIFY(!strcmp(entry.entries_dynamic_arrays._people.ptr[2].ptr->name.ptr, "Moe"));
+    VERIFY(entry.entries_dynamic_arrays._UTest_count == 3);
+    VERIFY(entry.entries_dynamic_arrays._UTest.ptr[0].type == Data::UTest_type::None);
+    VERIFY(entry.entries_dynamic_arrays._UTest.ptr[1].type == Data::UTest_type::_pos);
+    VERIFY(entry.entries_dynamic_arrays._UTest.ptr[1]._pos()->x == 2.0f);
+    VERIFY(entry.entries_dynamic_arrays._UTest.ptr[1]._pos()->y == 3.0f);
+    VERIFY(entry.entries_dynamic_arrays._UTest.ptr[2].type == Data::UTest_type::_float);
+    VERIFY(*entry.entries_dynamic_arrays._UTest.ptr[2]._float() == 4.0f);
 
     // A bunch of static arrays of types
     VERIFY(entry.entries_static_arrays._bool_count == 2);
@@ -155,6 +164,10 @@ int main(int argc, char** argv)
     VERIFY(entry.entries_static_arrays._people[0].ptr == nullptr);
     VERIFY(entry.entries_static_arrays._people[1].ptr != nullptr);
     VERIFY(!strcmp(entry.entries_static_arrays._people[1].ptr->name.ptr, "Curly"));
+    VERIFY(entry.entries_static_arrays._UTest_count == 2);
+    VERIFY(entry.entries_static_arrays._UTest[0].type == Data::UTest_type::_float);
+    VERIFY(*entry.entries_static_arrays._UTest[0]._float() == 99.0f);
+    VERIFY(entry.entries_static_arrays._UTest[1].type == Data::UTest_type::None);
 
     printf("All checks passed!");
     return 0;

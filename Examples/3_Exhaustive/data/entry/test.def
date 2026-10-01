@@ -1,6 +1,12 @@
 #include "test_include.def"
 #include "../people/people.def"
 
+union UTest
+{
+    Pos _pos;
+    float _float;
+}
+
 // All types
 struct EntryAll
 {
@@ -32,6 +38,8 @@ struct EntryAll
     TestInclude::Pos _pos;
 
     Link<People> _people;
+
+    UTest _UTest;
 };
 
 /* All types with default values */
@@ -65,6 +73,8 @@ struct EntryDefault
     //TestInclude::Pos _pos = {32, 45};
 
     Link<People> _people = "Larry";
+
+    // UTest _UTest;
 };
 
 // All types in dynamic arrays
@@ -97,6 +107,8 @@ struct EntryArrayDynamic
     TestInclude::Pos _pos[];
 
     Link<People> _people[];
+
+    UTest _UTest[];
 };
 
 // All types as static sized arrays
@@ -129,6 +141,8 @@ struct EntryArray2
     TestInclude::Pos _pos[2];
 
     Link<People> _people[2];
+
+    UTest _UTest[2];
 };
 
 struct Entry

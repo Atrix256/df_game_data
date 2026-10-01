@@ -16,6 +16,10 @@
         "_pos": {
             "x": 2.0,
             "y": 1.0
+        },
+        "_UTest": {
+            "_float": 23.0,
+            "_type": "_float"
         }
     },
     "entries_dynamic_arrays": {
@@ -78,6 +82,20 @@
             "Larry",
             null,
             "Moe"
+        ],
+        "_UTest": [
+            null,
+            {
+                "_pos": {
+                    "x": 2.0,
+                    "y": 3.0
+                },
+                "_type": "_pos"
+            },
+            {
+                "_float": 4.0,
+                "_type": "_float"
+            }
         ]
     },
     "entries_static_arrays": {
@@ -156,6 +174,12 @@
         "_people": [
             null,
             "Curly"
+        ],
+        "_UTest": [
+            {
+                "_float": 99.0,
+                "_type": "_float"
+            }
         ]
     }
 }
