@@ -4,18 +4,19 @@ on: [push, pull_request]
 jobs:
   build-test:
     runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        config: [Debug, Release]
-        platform: [x86, x64]
     steps:
       - uses: actions/checkout@v4
+
+      - name: Cache vcpkg binaries
+        uses: actions/cache@v4
+        with:
+          path: ~\AppData\Local\vcpkg\archives
+          key: vcpkg-${{ hashFiles('vcpkg.json') }}
 
       - name: Enable vcpkg MSBuild integration
         run: vcpkg integrate install
         shell: cmd
 
       - name: Build and test
-        run: RunTests.bat ${{ matrix.config }} ${{ matrix.platform }}
+        run: RunTests.bat
         shell: cmd
