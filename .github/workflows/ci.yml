@@ -1,0 +1,17 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  build-test:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [Debug, Release]
+        platform: [x86, x64]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and test
+        run: RunTests.bat ${{ matrix.config }} ${{ matrix.platform }}
+        shell: cmd
