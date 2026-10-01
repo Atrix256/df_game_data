@@ -1,4 +1,7 @@
 # df_game_data
+
+![CI](https://github.com/Atrix256/df_game_data/actions/workflows/ci.yml/badge.svg)
+
 Minimalist C++ game data middleware by Alan Wolfe.
 
 Describe schemas, edit data, binary pack data, load data with a generated header. Hot reloading support.
