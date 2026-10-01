@@ -1,6 +1,6 @@
 # df_game_data
 
-![CI](https://github.com/Atrix256/df_game_data/actions/workflows/ci.yml/badge.svg)
+[![CI](https://github.com/Atrix256/df_game_data/actions/workflows/ci.yml/badge.svg)](https://github.com/Atrix256/df_game_data/actions/workflows/ci.yml)
 
 Minimalist C++ game data middleware by Alan Wolfe.
 
