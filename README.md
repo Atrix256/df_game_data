@@ -134,12 +134,12 @@ Here is some code showing how to use the compiled output .bin and .h files:
 
 ```cpp
 // main.cpp
-#include "data.h"
+#include "data.h" // Header generated during data compilation
 
 int main(int argc, char** argv)
 {
     Data data;
-    if (!data.LoadFromFile("data.bin"))
+    if (!data.LoadFromFile("data.bin")) // bin file generated during data compilation
         return 1;
 
     Data::MonsterRecord kobold = data.GetMonster("kobold");
