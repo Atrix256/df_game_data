@@ -1107,16 +1107,3 @@ bool EditorOnAppLaunch(int argc, char** argv, int &returnCode)
 
     return !wantsCompile;
 }
-
-/*
-TODO:
-* have test batch file run the tests with "-test" so the hot reload example doesn't enter the loop
-* Can you test 32 bit by building x86 instead of x64?
- ! yes! and that should be part of the testing procedures i guess. debug / release x 32 / 64
-
-* use it a bit before announcing it and making builds available
- * could see if anyone wants to test it first? idk. asking for feedback could be useful for the software and for getting more people to try it.
-
-* Make a script to make binary releases.
-* put up binaries and make a release. don't worry about installer
-*/
