@@ -18,7 +18,7 @@ int main(int argc, char** argv)
     ShopData data;
     if (!data.LoadFromFile("packed/ShopData.bin"))
     {
-        printf("Could not load packed/ShopData.bin");
+        printf("Could not load packed/ShopData.bin\n");
         return 1;
     }
 
@@ -63,6 +63,6 @@ int main(int argc, char** argv)
         VERIFY(!strcmp(itemRecord.Get().name.ptr, "Rusty Dagger"));
     }
 
-    printf("All checks passed!");
+    printf("All checks passed!\n");
     return 0;
 }

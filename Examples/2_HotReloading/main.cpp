@@ -21,7 +21,7 @@ int main(int argc, char** argv)
     Data data;
     if (!data.LoadFromFile("packed/Data.bin"))
     {
-        printf("Could not load packed/Data.bin");
+        printf("Could not load packed/Data.bin\n");
         return 1;
     }
 
@@ -66,7 +66,7 @@ int main(int argc, char** argv)
 
     if (argc >= 2 && !strcmp(argv[1], "-test"))
     {
-        printf("All checks passed!");
+        printf("All checks passed!\n");
         return 0;
     }
 

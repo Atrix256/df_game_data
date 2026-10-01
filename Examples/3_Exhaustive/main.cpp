@@ -18,7 +18,7 @@ int main(int argc, char** argv)
     Data data;
     if (!data.LoadFromFile("packed/Data.bin"))
     {
-        printf("Could not load packed/Data.bin");
+        printf("Could not load packed/Data.bin\n");
         return 1;
     }
 
@@ -169,6 +169,6 @@ int main(int argc, char** argv)
     VERIFY(*entry.entries_static_arrays._UTest[0]._float() == 99.0f);
     VERIFY(entry.entries_static_arrays._UTest[1].type == Data::UTest_type::None);
 
-    printf("All checks passed!");
+    printf("All checks passed!\n");
     return 0;
 }
