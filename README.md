@@ -8,12 +8,12 @@ Describe schemas, edit data in the editor, binary pack data, load data with a ge
 
 ```cpp
 #include <stdio.h>
-#include "Data.h"
+#include "Data.h" // Header generated during data compilation
 
 int main(int argc, char** argv)
 {
     Data data;
-    if (!data.LoadFromFile("packed/Data.bin"))
+    if (!data.LoadFromFile("packed/Data.bin")) // bin file made during data compilation
     {
         printf("Could not load packed/Data.bin\n");
         return 1;
