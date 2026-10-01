@@ -4,9 +4,32 @@
 
 Minimalist C++ game data middleware by Alan Wolfe.
 
-Describe schemas, edit data, binary pack data, load data with a generated header. Hot reloading support.
+Describe schemas, edit data in the editor, binary pack data, load data with a generated header. Hot reloading support.
 
-![The editor](editor.png)
+```cpp
+#include <stdio.h>
+#include "Data.h"
+
+int main(int argc, char** argv)
+{
+    Data data;
+    if (!data.LoadFromFile("packed/Data.bin"))
+    {
+        printf("Could not load packed/Data.bin\n");
+        return 1;
+    }
+
+    // get by index
+    Data::CharacterRecord char0 = data.GetCharacter(0);
+
+    // get by name
+    Data::CharacterRecord char0 = data.GetCharacter("Larry");
+
+    //...
+
+    return 0;
+}
+```
 
 ## Motivation
 
@@ -18,7 +41,7 @@ A role playing game needs to know what items there are, stats for monsters, and 
 
 An incremental game needs to know what upgrades are available, what unlocks them, and what benefit they give to the player.
 
-The list goes on and on, and this project fills that need.
+The list goes on and on. This need is what this project addresses.
 
 I made it for my own use but it aims to be a solution for people making their own engine, or for people who don't like the solution built into the engine they are using.
 
