@@ -6,6 +6,8 @@ Minimalist C++ game data middleware by Alan Wolfe.
 
 Describe schemas, edit data, binary pack data, load data with a generated header. Hot reloading support.
 
+![The editor](editor.png)
+
 ## Motivation
 
 Nearly every game needs read only configuration data.
