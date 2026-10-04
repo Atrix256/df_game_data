@@ -183,7 +183,7 @@ The `Examples` folder has three examples in it that you can run using the `Examp
 
 ## Building
 
-This was developed on windows using microsoft visual studio.  Cloning the repo and building the solution should be all that is needed.
+This was developed on windows using microsoft visual studio 2026 community edition.  Cloning the repo and building the solution should be all that is needed.
 
 ## Contributors
 
