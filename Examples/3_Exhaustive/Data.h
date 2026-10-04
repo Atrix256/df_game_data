@@ -26,6 +26,7 @@
 * Record objects will start pointing at the new data when used. They will find the
 * record which has the same name in the new data.
 */
+// Made with df_game_data version 1.0.0
 
 #pragma once
 

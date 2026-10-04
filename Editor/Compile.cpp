@@ -565,6 +565,8 @@ static bool MakeHeader_Global(const DBCompileSettings& compilerSettings, const D
 
     s_data.tokenReplacement["/*$SchemaHash*/"] << "0x" << std::hex << std::setfill('0') << std::setw(16) << hash << "ULL";
 
+    s_data.tokenReplacement["/*$Version$*/"] << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_PATCH;
+
     // LUT functionality not covered by hot reloading
     if (compilerSettings.includeEntryLUT)
     {
