@@ -1149,6 +1149,11 @@ static bool MakeBin(const DBCompileSettings& compilerSettings, const DBRoot& dbR
     uint32_t fourcc = MakeFourCC('D', 'F', 'G', 'D');
     MakeBin_Write(stackIndex, fourcc);
 
+    // Write the version
+    MakeBin_Write(stackIndex, (uint8_t)VERSION_MAJOR);
+    MakeBin_Write(stackIndex, (uint8_t)VERSION_MINOR);
+    MakeBin_Write(stackIndex, (uint8_t)VERSION_PATCH);
+
     // Write schema hash
     MakeBin_Write(stackIndex, hash);
 

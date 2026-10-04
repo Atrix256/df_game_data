@@ -5,6 +5,7 @@ REM ---- edit these ----
 set "SLN=Examples/Examples.slnx"
 set "DATA_SLN=df_game_data.slnx"
 set "DATA_EXE_NAME=Editor.exe"
+set "DATA_REQUIRED_FILES=Editor.exe nfd.dll"
 set "TESTS=1_Simple 2_HotReloading 3_Exhaustive"
 set "DBROOTS=Examples\1_Simple\data\Items.dbroot Examples\2_HotReloading\data\main.dbroot Examples\3_Exhaustive\data\test.dbroot"
 REM --------------------
@@ -26,28 +27,43 @@ if not defined MSBUILD (
 set "ROOT=%~dp0"
 
 REM ---- build the data compiler (Release x64) and compile all data ----
+REM NOTE: /m omitted deliberately here - parallel build was racing a DLL
+REM copy step and silently producing an Editor.exe without nfd.dll.
 echo.
 echo ===== Building data compiler: %DATA_SLN% [Release x64] =====
-"%MSBUILD%" "%ROOT%%DATA_SLN%" /m /nologo /v:minimal /p:Configuration=Release /p:Platform=x64
+set "DATA_EXE_DIR=%ROOT%x64\Release"
+
+REM Clear any stale output from a previous build so a broken build can't
+REM silently "succeed" by running against leftover artifacts.
+for %%F in (%DATA_REQUIRED_FILES%) do (
+  if exist "%DATA_EXE_DIR%\%%F" del /f /q "%DATA_EXE_DIR%\%%F"
+)
+
+"%MSBUILD%" "%ROOT%%DATA_SLN%" /nologo /v:minimal /p:Configuration=Release /p:Platform=x64
 if errorlevel 1 (
   echo BUILD FAILED: %DATA_SLN% [Release x64]
   exit /b 1
 )
 
-set "DATA_EXE=%ROOT%x64\Release\%DATA_EXE_NAME%"
-if not exist "%DATA_EXE%" (
-  echo Data compiler exe not found at: %DATA_EXE%
-  exit /b 1
+set "DATA_EXE=%DATA_EXE_DIR%\%DATA_EXE_NAME%"
+for %%F in (%DATA_REQUIRED_FILES%) do (
+  if not exist "%DATA_EXE_DIR%\%%F" (
+    echo Required data-compiler file missing after build: %DATA_EXE_DIR%\%%F
+    exit /b 1
+  )
 )
 
+pushd "%DATA_EXE_DIR%"
 for %%D in (%DBROOTS%) do (
   echo --- Compiling %%D ---
   "%DATA_EXE%" --compile "%ROOT%%%D"
   if errorlevel 1 (
     echo DATA COMPILE FAILED: %%D
+    popd
     exit /b 1
   )
 )
+popd
 
 REM ---- build and run example tests ----
 set FAILS=0

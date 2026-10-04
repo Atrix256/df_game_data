@@ -193,6 +193,18 @@ inline bool /*$ClassName$*/::LoadFromMemory(void* mem, uint32_t memSize)
             return false;
     }
 
+    // Read the version number the binary file was made with.
+    // Unused now, but can be used for backwards compatibility etc later.
+    {
+        uint8_t version[3];
+        if (!Read(version[0], mem, memIndex, memSize, endianSwap) ||
+            !Read(version[1], mem, memIndex, memSize, endianSwap) ||
+            !Read(version[2], mem, memIndex, memSize, endianSwap))
+        {
+            return false;
+        }
+    }
+
     // Verify that the schema hash in the binary data matches the schema hash this file was made for
     {
         uint64_t hash = 0;
