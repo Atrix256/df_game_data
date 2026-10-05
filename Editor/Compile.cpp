@@ -589,7 +589,7 @@ static bool MakeHeader_Global(const DBCompileSettings& compilerSettings, const D
             "        size_t bytesRemaining = memSize - contentStart;\n"
             "        uint32_t rng = pcg_hash(0x1337beef);\n"
             "        uint8_t* data = &((uint8_t*)mem)[contentStart];\n"
-            "        while (bytesRemaining >= 4)\n"
+            "        while (bytesRemaining > 0)\n"
             "        {\n"
             "            rng = pcg_hash(rng);\n"
             "\n"
@@ -1264,7 +1264,7 @@ static bool MakeBin(const DBCompileSettings& compilerSettings, const DBRoot& dbR
         size_t bytesRemaining = s_data.dataStack[0].size() - contentStart;
         uint32_t rng = pcg_hash(0x1337beef);
         uint8_t* data = (uint8_t*)&s_data.dataStack[0][contentStart];
-        while (bytesRemaining >= 4)
+        while (bytesRemaining > 0)
         {
             rng = pcg_hash(rng);
 

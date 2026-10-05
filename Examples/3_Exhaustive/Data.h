@@ -433,7 +433,7 @@ inline bool Data::LoadFromMemory(void* mem, uint32_t memSize)
         size_t bytesRemaining = memSize - contentStart;
         uint32_t rng = pcg_hash(0x1337beef);
         uint8_t* data = &((uint8_t*)mem)[contentStart];
-        while (bytesRemaining >= 4)
+        while (bytesRemaining > 0)
         {
             rng = pcg_hash(rng);
 
