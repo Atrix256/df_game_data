@@ -26,7 +26,7 @@
 * Record objects will start pointing at the new data when used. They will find the
 * record which has the same name in the new data.
 */
-// Made with df_game_data version 1.0.0
+// Made with df_game_data version 1.0.1
 
 #pragma once
 
@@ -125,6 +125,16 @@ private:
             EndianSwap(value);
 
         return true;
+    }
+
+private:
+    // From https://jcgt.org/published/0009/03/02/
+    // supplemental material uint pcg(uint v)
+    static inline uint32_t pcg_hash(uint32_t input)
+    {
+        uint32_t state = input * 747796405u + 2891336453u;
+        uint32_t word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+        return (word >> 22u) ^ word;
     }
 
 private:
@@ -250,10 +260,32 @@ inline bool ShopData::LoadFromMemory(void* mem, uint32_t memSize)
         }
     }
 
+    // De obfuscate the data
+    {
+        size_t contentStart = 7; // start after the fourcc and the 3 byte version
+        size_t bytesRemaining = memSize - contentStart;
+        uint32_t rng = pcg_hash(0x1337beef);
+        uint8_t* data = &((uint8_t*)mem)[contentStart];
+        while (bytesRemaining >= 4)
+        {
+            rng = pcg_hash(rng);
+
+            for (size_t i = 0; i < ((bytesRemaining < 4) ? bytesRemaining : 4); ++i)
+                data[i] = data[i] ^ ((uint8_t*)&rng)[i];
+
+            data += 4;
+
+            if (bytesRemaining >= 4)
+                bytesRemaining -= 4;
+            else
+                bytesRemaining = 0;
+        }
+    }
+
     // Verify that the schema hash in the binary data matches the schema hash this file was made for
     {
         uint64_t hash = 0;
-        if (!Read(hash, mem, memIndex, memSize, endianSwap) || hash != 0xba2395692633945dULL)
+        if (!Read(hash, mem, memIndex, memSize, endianSwap) || hash != 0x01fc484eb8ae9f02ULL)
             return false;
     }
 

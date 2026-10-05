@@ -100,6 +100,16 @@ private:
     }
 
 private:
+    // From https://jcgt.org/published/0009/03/02/
+    // supplemental material uint pcg(uint v)
+    static inline uint32_t pcg_hash(uint32_t input)
+    {
+        uint32_t state = input * 747796405u + 2891336453u;
+        uint32_t word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+        return (word >> 22u) ^ word;
+    }
+
+private:
     template <typename T>
     inline static void DoPointerFixup(T& v, void* base)
     {
@@ -204,12 +214,12 @@ inline bool /*$ClassName$*/::LoadFromMemory(void* mem, uint32_t memSize)
         {
             return false;
         }
-    }
+    }/*$Obfuscation$*/
 
     // Verify that the schema hash in the binary data matches the schema hash this file was made for
     {
         uint64_t hash = 0;
-        if (!Read(hash, mem, memIndex, memSize, endianSwap) || hash != /*$SchemaHash*/)
+        if (!Read(hash, mem, memIndex, memSize, endianSwap) || hash != /*$SchemaHash$*/)
             return false;
     }
 /*$LoadTables$*//*$LoadMemoryEnd$*/

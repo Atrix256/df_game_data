@@ -5,7 +5,16 @@
             "compiledBinFileName": "../Packed/Data.bin",
             "className": "Data",
             "includeEntryLUT": false,
-            "hotReloading": false
+            "hotReloading": false,
+            "obfuscation": true
+        },
+        {
+            "compiledHeaderFileName": "../Data_No_Obfuscation.h",
+            "compiledBinFileName": "../Packed/Data_No_Obfuscation.bin",
+            "className": "Data_No_Obfuscation",
+            "includeEntryLUT": false,
+            "hotReloading": false,
+            "obfuscation": false
         }
     ],
     "tables": [

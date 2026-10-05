@@ -130,6 +130,9 @@ void DBRoot::LoadSettings(json& data)
 
         if (data.contains(indexPtr / "hotReloading"))
             m_compileSettings[index].hotReloading = data.at(indexPtr / "hotReloading");
+
+        if (data.contains(indexPtr / "obfuscation"))
+            m_compileSettings[index].obfuscation = data.at(indexPtr / "obfuscation");
     }
 }
 
@@ -157,6 +160,7 @@ void DBRoot::SaveDBRoot()
             compilerSettingObject["className"] = setting.className;
             compilerSettingObject["includeEntryLUT"] = setting.includeEntryLUT;
             compilerSettingObject["hotReloading"] = setting.hotReloading;
+            compilerSettingObject["obfuscation"] = setting.obfuscation;
 
             compilerSettingsArray.push_back(compilerSettingObject);
         }

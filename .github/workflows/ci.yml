@@ -20,3 +20,5 @@ jobs:
       - name: Build and test
         run: RunTests.bat
         shell: cmd
+        env:
+          NOPAUSE: 1

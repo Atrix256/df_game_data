@@ -1,5 +1,6 @@
 
 #include "Data.h"
+#include "Data_No_Obfuscation.h"
 
 #define VERIFY(x) if (!Verify(x, #x)) return 1;
 
@@ -13,18 +14,21 @@ bool Verify(bool value, const char* cond)
     return false;
 }
 
-int main(int argc, char** argv)
+template <typename TData>
+bool DoTest(const char* fileName)
 {
-    Data data;
-    if (!data.LoadFromFile("packed/Data.bin"))
+    TData data;
+    if (!data.LoadFromFile(fileName))
     {
-        printf("Could not load packed/Data.bin\n");
-        return 1;
+        printf("Could not load %s\n", fileName);
+        return false;
     }
+
+    printf("%s\n", fileName);
 
     VERIFY(data.GetEntryCount() == 1);
 
-    const Data::Entry& entry = data.GetEntry(0).Get();
+    const TData::Entry& entry = data.GetEntry(0).Get();
 
     // A bunch of types
     VERIFY(entry.entries._bool.Get() == true);
@@ -39,11 +43,11 @@ int main(int argc, char** argv)
     VERIFY(entry.entries._float == 10.0f);
     VERIFY(entry.entries._double == -11.0);
     VERIFY(!strcmp(entry.entries._string.ptr, "some text!"));
-    VERIFY(entry.entries._color == Data::Color::Blue);
+    VERIFY(entry.entries._color == TData::Color::Blue);
     VERIFY(entry.entries._pos.x == 2.0f);
     VERIFY(entry.entries._pos.y == 1.0f);
     VERIFY(entry.entries._people.ptr == nullptr);
-    VERIFY(entry.entries._UTest.type == Data::UTest_type::_float);
+    VERIFY(entry.entries._UTest.type == TData::UTest_type::_float);
     VERIFY(*entry.entries._UTest._float() == 23.0f);
 
     // A bunch of types which have default values set in the def file
@@ -59,7 +63,7 @@ int main(int argc, char** argv)
     VERIFY(entry.entries_defaults._float == 10000.0f);
     VERIFY(entry.entries_defaults._double == 1000.0);
     VERIFY(!strcmp(entry.entries_defaults._string.ptr, "yo!"));
-    VERIFY(entry.entries_defaults._color == Data::Color::Hazel);
+    VERIFY(entry.entries_defaults._color == TData::Color::Hazel);
     VERIFY(entry.entries_defaults._people.ptr != nullptr);
     VERIFY(!strcmp(entry.entries_defaults._people.ptr->name.ptr, "Larry"));
 
@@ -94,8 +98,8 @@ int main(int argc, char** argv)
     VERIFY(!strcmp(entry.entries_dynamic_arrays._string.ptr[1].ptr, ""));
     VERIFY(!strcmp(entry.entries_dynamic_arrays._string.ptr[2].ptr, "tres"));
     VERIFY(entry.entries_dynamic_arrays._color_count == 2);
-    VERIFY(entry.entries_dynamic_arrays._color.ptr[0] == Data::Color::Blue);
-    VERIFY(entry.entries_dynamic_arrays._color.ptr[1] == Data::Color::Green);
+    VERIFY(entry.entries_dynamic_arrays._color.ptr[0] == TData::Color::Blue);
+    VERIFY(entry.entries_dynamic_arrays._color.ptr[1] == TData::Color::Green);
     VERIFY(entry.entries_dynamic_arrays._pos_count == 2);
     VERIFY(entry.entries_dynamic_arrays._pos.ptr[0].x == 96.0f);
     VERIFY(entry.entries_dynamic_arrays._pos.ptr[0].y == 48.0f);
@@ -108,11 +112,11 @@ int main(int argc, char** argv)
     VERIFY(entry.entries_dynamic_arrays._people.ptr[2].ptr != nullptr);
     VERIFY(!strcmp(entry.entries_dynamic_arrays._people.ptr[2].ptr->name.ptr, "Moe"));
     VERIFY(entry.entries_dynamic_arrays._UTest_count == 3);
-    VERIFY(entry.entries_dynamic_arrays._UTest.ptr[0].type == Data::UTest_type::None);
-    VERIFY(entry.entries_dynamic_arrays._UTest.ptr[1].type == Data::UTest_type::_pos);
+    VERIFY(entry.entries_dynamic_arrays._UTest.ptr[0].type == TData::UTest_type::None);
+    VERIFY(entry.entries_dynamic_arrays._UTest.ptr[1].type == TData::UTest_type::_pos);
     VERIFY(entry.entries_dynamic_arrays._UTest.ptr[1]._pos()->x == 2.0f);
     VERIFY(entry.entries_dynamic_arrays._UTest.ptr[1]._pos()->y == 3.0f);
-    VERIFY(entry.entries_dynamic_arrays._UTest.ptr[2].type == Data::UTest_type::_float);
+    VERIFY(entry.entries_dynamic_arrays._UTest.ptr[2].type == TData::UTest_type::_float);
     VERIFY(*entry.entries_dynamic_arrays._UTest.ptr[2]._float() == 4.0f);
 
     // A bunch of static arrays of types
@@ -153,8 +157,8 @@ int main(int argc, char** argv)
     VERIFY(!strcmp(entry.entries_static_arrays._string[0].ptr, "un"));
     VERIFY(!strcmp(entry.entries_static_arrays._string[1].ptr, "deux"));
     VERIFY(entry.entries_static_arrays._color_count == 2);
-    VERIFY(entry.entries_static_arrays._color[0] == Data::Color::Hazel);
-    VERIFY(entry.entries_static_arrays._color[1] == Data::Color::Blue);
+    VERIFY(entry.entries_static_arrays._color[0] == TData::Color::Hazel);
+    VERIFY(entry.entries_static_arrays._color[1] == TData::Color::Blue);
     VERIFY(entry.entries_static_arrays._pos_count == 2);
     VERIFY(entry.entries_static_arrays._pos[0].x == 4.0f);
     VERIFY(entry.entries_static_arrays._pos[0].y == 3.0f);
@@ -165,9 +169,22 @@ int main(int argc, char** argv)
     VERIFY(entry.entries_static_arrays._people[1].ptr != nullptr);
     VERIFY(!strcmp(entry.entries_static_arrays._people[1].ptr->name.ptr, "Curly"));
     VERIFY(entry.entries_static_arrays._UTest_count == 2);
-    VERIFY(entry.entries_static_arrays._UTest[0].type == Data::UTest_type::_float);
+    VERIFY(entry.entries_static_arrays._UTest[0].type == TData::UTest_type::_float);
     VERIFY(*entry.entries_static_arrays._UTest[0]._float() == 99.0f);
-    VERIFY(entry.entries_static_arrays._UTest[1].type == Data::UTest_type::None);
+    VERIFY(entry.entries_static_arrays._UTest[1].type == TData::UTest_type::None);
+
+    return true;
+}
+
+int main(int argc, char** argv)
+{
+    bool success =
+        DoTest<Data>("packed/Data.bin") &&
+        DoTest<Data_No_Obfuscation>("packed/Data_No_Obfuscation.bin")
+        ;
+
+    if (!success)
+        return 1;
 
     printf("All checks passed!\n");
     return 0;

@@ -61,12 +61,21 @@ static StaticData s_data;
 
 static bool MakeBin_WriteStruct(DBTable& table, const DefParser::Struct& structDef, const json& json, const json_pointer& path, size_t stackIndex);
 
-inline constexpr uint32_t MakeFourCC(char a, char b, char c, char d)
+static inline constexpr uint32_t MakeFourCC(char a, char b, char c, char d)
 {
     return (uint32_t)(uint8_t)a
         | ((uint32_t)(uint8_t)b << 8)
         | ((uint32_t)(uint8_t)c << 16)
         | ((uint32_t)(uint8_t)d << 24);
+}
+
+// From https://jcgt.org/published/0009/03/02/
+// supplemental material uint pcg(uint v)
+static inline uint32_t pcg_hash(uint32_t input)
+{
+    uint32_t state = input * 747796405u + 2891336453u;
+    uint32_t word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+    return (word >> 22u) ^ word;
 }
 
 inline void StringReplaceAll(std::string& str, const std::string& from, const std::string& to)
@@ -560,12 +569,43 @@ static bool MakeHeader_Global(const DBCompileSettings& compilerSettings, const D
     s_data.tokenReplacement["/*$Tick$*/"] << "";
     s_data.tokenReplacement["/*$Dtor$*/"] << "";
     s_data.tokenReplacement["/*$RecordGetFwd$*/"] << "";
+    s_data.tokenReplacement["/*$Obfuscation$*/"] << "";
 
     s_data.tokenReplacement["/*$ClassName$*/"] << compilerSettings.className;
 
-    s_data.tokenReplacement["/*$SchemaHash*/"] << "0x" << std::hex << std::setfill('0') << std::setw(16) << hash << "ULL";
+    s_data.tokenReplacement["/*$SchemaHash$*/"] << "0x" << std::hex << std::setfill('0') << std::setw(16) << hash << "ULL";
 
     s_data.tokenReplacement["/*$Version$*/"] << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_PATCH;
+
+    // Obfuscation
+    if (compilerSettings.obfuscation)
+    {
+        s_data.tokenReplacement["/*$Obfuscation$*/"] <<
+            "\n"
+            "\n"
+            "    // De obfuscate the data\n"
+            "    {\n"
+            "        size_t contentStart = 7; // start after the fourcc and the 3 byte version\n"
+            "        size_t bytesRemaining = memSize - contentStart;\n"
+            "        uint32_t rng = pcg_hash(0x1337beef);\n"
+            "        uint8_t* data = &((uint8_t*)mem)[contentStart];\n"
+            "        while (bytesRemaining >= 4)\n"
+            "        {\n"
+            "            rng = pcg_hash(rng);\n"
+            "\n"
+            "            for (size_t i = 0; i < ((bytesRemaining < 4) ? bytesRemaining : 4); ++i)\n"
+            "                data[i] = data[i] ^ ((uint8_t*)&rng)[i];\n"
+            "\n"
+            "            data += 4;\n"
+            "\n"
+            "            if (bytesRemaining >= 4)\n"
+            "                bytesRemaining -= 4;\n"
+            "            else\n"
+            "                bytesRemaining = 0;\n"
+            "        }\n"
+            "    }"
+            ;
+    }
 
     // LUT functionality not covered by hot reloading
     if (compilerSettings.includeEntryLUT)
@@ -1217,6 +1257,29 @@ static bool MakeBin(const DBCompileSettings& compilerSettings, const DBRoot& dbR
     if (!ret)
         return false;
 
+    // Obfuscate the data if that setting is on.
+    if (compilerSettings.obfuscation)
+    {
+        size_t contentStart = 7; // start after the fourcc and the 3 byte version
+        size_t bytesRemaining = s_data.dataStack[0].size() - contentStart;
+        uint32_t rng = pcg_hash(0x1337beef);
+        uint8_t* data = (uint8_t*)&s_data.dataStack[0][contentStart];
+        while (bytesRemaining >= 4)
+        {
+            rng = pcg_hash(rng);
+
+            for (size_t i = 0; i < ((bytesRemaining < 4) ? bytesRemaining : 4); ++i)
+                data[i] = data[i] ^ ((uint8_t*)&rng)[i];
+
+            data += 4;
+
+            if (bytesRemaining >= 4)
+                bytesRemaining -= 4;
+            else
+                bytesRemaining = 0;
+        }
+    }
+
     // Create any directories needed
     std::error_code ec;
     std::filesystem::create_directories(std::filesystem::path(fileName).remove_filename().generic_string().c_str(), ec);
@@ -1262,13 +1325,16 @@ bool Compile(const DBRoot& dbRoot, const DBCompileSettings& compilerSettings_, s
     for (auto& it : dbRoot.m_tables)
         hash.Add(it.second->GetParser().GetHash());
     hash.Add(compilerSettings.includeEntryLUT);
+    hash.Add(compilerSettings.obfuscation);
 
     std::string dbRootPath = std::filesystem::path(dbRoot.GetPath()).remove_filename().generic_string();
 
     std::string fileNameBin = std::filesystem::weakly_canonical(std::filesystem::path(dbRootPath) / compilerSettings.compiledBinFileName).generic_string();
     std::string fileNameHeader = std::filesystem::weakly_canonical(std::filesystem::path(dbRootPath) / compilerSettings.compiledHeaderFileName).generic_string();
 
-    bool ret = MakeBin(compilerSettings, dbRoot, fileNameBin.c_str(), hash.Result()) && MakeHeader(compilerSettings, dbRoot, fileNameHeader.c_str(), hash.Result());
+    bool ret =
+        MakeBin(compilerSettings, dbRoot, fileNameBin.c_str(), hash.Result()) &&
+        MakeHeader(compilerSettings, dbRoot, fileNameHeader.c_str(), hash.Result());
 
     error = s_data.error.str();
     return ret;

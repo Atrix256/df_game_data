@@ -16,6 +16,7 @@ struct DBCompileSettings
     std::string className = "dfgd";
     bool includeEntryLUT = true;
     bool hotReloading = true;
+    bool obfuscation = true;
 };
 
 class DBTable

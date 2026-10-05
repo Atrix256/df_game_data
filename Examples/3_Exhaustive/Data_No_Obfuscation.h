@@ -34,10 +34,10 @@
 #include <stdio.h>
 #include <cstring>
 
-class Data
+class Data_No_Obfuscation
 {
 public:
-    ~Data();
+    ~Data_No_Obfuscation();
 
     // Note: the memory will be modified, and it must stay around for the life of the object.
     bool LoadFromMemory(void* mem, uint32_t size);
@@ -81,7 +81,7 @@ public:
         }
 
     private:
-        friend class Data;
+        friend class Data_No_Obfuscation;
         T* m_record = nullptr;
     };
 
@@ -379,7 +379,7 @@ private:
 
 // ================================= Misc =================================
 
-inline Data::~Data()
+inline Data_No_Obfuscation::~Data_No_Obfuscation()
 {
     delete[] m_ownedMemory;
     m_ownedMemory = nullptr;
@@ -387,7 +387,7 @@ inline Data::~Data()
 
 // ================================= LOADING =================================
 
-inline bool Data::LoadFromMemory(void* mem, uint32_t memSize)
+inline bool Data_No_Obfuscation::LoadFromMemory(void* mem, uint32_t memSize)
 {
     auto MakeFourCC = [](char a, char b, char c, char d) -> uint32_t
     {
@@ -427,32 +427,10 @@ inline bool Data::LoadFromMemory(void* mem, uint32_t memSize)
         }
     }
 
-    // De obfuscate the data
-    {
-        size_t contentStart = 7; // start after the fourcc and the 3 byte version
-        size_t bytesRemaining = memSize - contentStart;
-        uint32_t rng = pcg_hash(0x1337beef);
-        uint8_t* data = &((uint8_t*)mem)[contentStart];
-        while (bytesRemaining >= 4)
-        {
-            rng = pcg_hash(rng);
-
-            for (size_t i = 0; i < ((bytesRemaining < 4) ? bytesRemaining : 4); ++i)
-                data[i] = data[i] ^ ((uint8_t*)&rng)[i];
-
-            data += 4;
-
-            if (bytesRemaining >= 4)
-                bytesRemaining -= 4;
-            else
-                bytesRemaining = 0;
-        }
-    }
-
     // Verify that the schema hash in the binary data matches the schema hash this file was made for
     {
         uint64_t hash = 0;
-        if (!Read(hash, mem, memIndex, memSize, endianSwap) || hash != 0xf5b91463cd875894ULL)
+        if (!Read(hash, mem, memIndex, memSize, endianSwap) || hash != 0xd03270eef3cfc80fULL)
             return false;
     }
 
@@ -499,7 +477,7 @@ inline bool Data::LoadFromMemory(void* mem, uint32_t memSize)
     return true;
 }
 
-inline bool Data::LoadFromFile(const char* fileName)
+inline bool Data_No_Obfuscation::LoadFromFile(const char* fileName)
 {
     FILE* file = nullptr;
     fopen_s(&file, fileName, "rb");
@@ -524,18 +502,18 @@ inline bool Data::LoadFromFile(const char* fileName)
 
 // ================================= Pointer Fixup =================================
 
-inline void Data::DoEndianSwapAndPointerFixup(Pos& v, void* base, bool endianSwap)
+inline void Data_No_Obfuscation::DoEndianSwapAndPointerFixup(Pos& v, void* base, bool endianSwap)
 {
     DoEndianSwapAndPointerFixup(v.x, base, endianSwap);
     DoEndianSwapAndPointerFixup(v.y, base, endianSwap);
 }
 
-inline void Data::DoEndianSwapAndPointerFixup(People& v, void* base, bool endianSwap)
+inline void Data_No_Obfuscation::DoEndianSwapAndPointerFixup(People& v, void* base, bool endianSwap)
 {
     DoEndianSwapAndPointerFixup(v.name, base, endianSwap);
 }
 
-inline void Data::DoEndianSwapAndPointerFixup(UTest& v, void* base, bool endianSwap)
+inline void Data_No_Obfuscation::DoEndianSwapAndPointerFixup(UTest& v, void* base, bool endianSwap)
 {
     DoEndianSwapAndPointerFixup(v.type, base, endianSwap);
     DoEndianSwapAndPointerFixup(v.ptr, base, endianSwap);
@@ -546,7 +524,7 @@ inline void Data::DoEndianSwapAndPointerFixup(UTest& v, void* base, bool endianS
     }
 }
 
-inline void Data::DoEndianSwapAndPointerFixup(EntryAll& v, void* base, bool endianSwap)
+inline void Data_No_Obfuscation::DoEndianSwapAndPointerFixup(EntryAll& v, void* base, bool endianSwap)
 {
     DoEndianSwapAndPointerFixup(v._bool, base, endianSwap);
     DoEndianSwapAndPointerFixup(v._uint8, base, endianSwap);
@@ -566,7 +544,7 @@ inline void Data::DoEndianSwapAndPointerFixup(EntryAll& v, void* base, bool endi
     DoEndianSwapAndPointerFixup(v._UTest, base, endianSwap);
 }
 
-inline void Data::DoEndianSwapAndPointerFixup(EntryDefault& v, void* base, bool endianSwap)
+inline void Data_No_Obfuscation::DoEndianSwapAndPointerFixup(EntryDefault& v, void* base, bool endianSwap)
 {
     DoEndianSwapAndPointerFixup(v._bool, base, endianSwap);
     DoEndianSwapAndPointerFixup(v._uint8, base, endianSwap);
@@ -584,7 +562,7 @@ inline void Data::DoEndianSwapAndPointerFixup(EntryDefault& v, void* base, bool 
     DoEndianSwapAndPointerFixup(v._people, base, endianSwap);
 }
 
-inline void Data::DoEndianSwapAndPointerFixup(EntryArrayDynamic& v, void* base, bool endianSwap)
+inline void Data_No_Obfuscation::DoEndianSwapAndPointerFixup(EntryArrayDynamic& v, void* base, bool endianSwap)
 {
     DoEndianSwapAndPointerFixup(v._bool_count, base, endianSwap);
     DoEndianSwapAndPointerFixup(v._bool, base, endianSwap);
@@ -652,7 +630,7 @@ inline void Data::DoEndianSwapAndPointerFixup(EntryArrayDynamic& v, void* base, 
         DoEndianSwapAndPointerFixup(v._UTest.ptr[i], base, endianSwap);
 }
 
-inline void Data::DoEndianSwapAndPointerFixup(EntryArray2& v, void* base, bool endianSwap)
+inline void Data_No_Obfuscation::DoEndianSwapAndPointerFixup(EntryArray2& v, void* base, bool endianSwap)
 {
     for (uint32_t i = 0; i < v._bool_count; ++i)
         DoEndianSwapAndPointerFixup(v._bool[i], base, endianSwap);
@@ -688,7 +666,7 @@ inline void Data::DoEndianSwapAndPointerFixup(EntryArray2& v, void* base, bool e
         DoEndianSwapAndPointerFixup(v._UTest[i], base, endianSwap);
 }
 
-inline void Data::DoEndianSwapAndPointerFixup(Entry& v, void* base, bool endianSwap)
+inline void Data_No_Obfuscation::DoEndianSwapAndPointerFixup(Entry& v, void* base, bool endianSwap)
 {
     DoEndianSwapAndPointerFixup(v.entries, base, endianSwap);
     DoEndianSwapAndPointerFixup(v.entries_defaults, base, endianSwap);
@@ -698,13 +676,13 @@ inline void Data::DoEndianSwapAndPointerFixup(Entry& v, void* base, bool endianS
 
 // ================================= Public Interface =================================
 template <>
-inline uint32_t Data::GetCount<Data::Entry>() const
+inline uint32_t Data_No_Obfuscation::GetCount<Data_No_Obfuscation::Entry>() const
 {
     return m_table_Entry_count;
 }
 
 template <>
-inline Data::EntryRecord Data::Get<Data::Entry>(uint32_t index) const
+inline Data_No_Obfuscation::EntryRecord Data_No_Obfuscation::Get<Data_No_Obfuscation::Entry>(uint32_t index) const
 {
     EntryRecord ret;
     if (index < m_table_Entry_count)
@@ -714,24 +692,24 @@ inline Data::EntryRecord Data::Get<Data::Entry>(uint32_t index) const
     return ret;
 }
 
-inline uint32_t Data::GetEntryCount() const
+inline uint32_t Data_No_Obfuscation::GetEntryCount() const
 {
     return GetCount<Entry>();
 }
 
-inline Data::EntryRecord Data::GetEntry(uint32_t index) const
+inline Data_No_Obfuscation::EntryRecord Data_No_Obfuscation::GetEntry(uint32_t index) const
 {
     return Get<Entry>(index);
 }
 
 template <>
-inline uint32_t Data::GetCount<Data::People>() const
+inline uint32_t Data_No_Obfuscation::GetCount<Data_No_Obfuscation::People>() const
 {
     return m_table_People_count;
 }
 
 template <>
-inline Data::PeopleRecord Data::Get<Data::People>(uint32_t index) const
+inline Data_No_Obfuscation::PeopleRecord Data_No_Obfuscation::Get<Data_No_Obfuscation::People>(uint32_t index) const
 {
     PeopleRecord ret;
     if (index < m_table_People_count)
@@ -741,12 +719,12 @@ inline Data::PeopleRecord Data::Get<Data::People>(uint32_t index) const
     return ret;
 }
 
-inline uint32_t Data::GetPeopleCount() const
+inline uint32_t Data_No_Obfuscation::GetPeopleCount() const
 {
     return GetCount<People>();
 }
 
-inline Data::PeopleRecord Data::GetPeople(uint32_t index) const
+inline Data_No_Obfuscation::PeopleRecord Data_No_Obfuscation::GetPeople(uint32_t index) const
 {
     return Get<People>(index);
 }

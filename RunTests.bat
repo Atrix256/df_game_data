@@ -1,5 +1,6 @@
 @echo off
 setlocal EnableDelayedExpansion
+set "RC=0"
 
 REM ---- edit these ----
 set "SLN=Examples/Examples.slnx"
@@ -11,6 +12,7 @@ set "DBROOTS=Examples\1_Simple\data\Items.dbroot Examples\2_HotReloading\data\ma
 REM --------------------
 
 REM Optional args: RunTests.bat [Debug|Release] [x86|x64]
+REM Set NOPAUSE=1 in the environment to skip the final pause (e.g. for CI).
 set "CONFIGS=%~1"
 if "%CONFIGS%"=="" set "CONFIGS=Debug Release"
 set "PLATS=%~2"
@@ -21,7 +23,8 @@ set "VSWHERE=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
 for /f "usebackq delims=" %%i in (`"%VSWHERE%" -latest -find MSBuild\**\Bin\MSBuild.exe`) do set "MSBUILD=%%i"
 if not defined MSBUILD (
   echo MSBuild not found
-  exit /b 1
+  set "RC=1"
+  goto :end
 )
 
 set "ROOT=%~dp0"
@@ -42,14 +45,16 @@ for %%F in (%DATA_REQUIRED_FILES%) do (
 "%MSBUILD%" "%ROOT%%DATA_SLN%" /nologo /v:minimal /p:Configuration=Release /p:Platform=x64
 if errorlevel 1 (
   echo BUILD FAILED: %DATA_SLN% [Release x64]
-  exit /b 1
+  set "RC=1"
+  goto :end
 )
 
 set "DATA_EXE=%DATA_EXE_DIR%\%DATA_EXE_NAME%"
 for %%F in (%DATA_REQUIRED_FILES%) do (
   if not exist "%DATA_EXE_DIR%\%%F" (
     echo Required data-compiler file missing after build: %DATA_EXE_DIR%\%%F
-    exit /b 1
+    set "RC=1"
+    goto :end
   )
 )
 
@@ -60,7 +65,8 @@ for %%D in (%DBROOTS%) do (
   if errorlevel 1 (
     echo DATA COMPILE FAILED: %%D
     popd
-    exit /b 1
+    set "RC=1"
+    goto :end
   )
 )
 popd
@@ -72,10 +78,16 @@ for %%C in (%CONFIGS%) do for %%P in (%PLATS%) do call :one %%C %%P
 echo.
 if %FAILS% neq 0 (
   echo %FAILS% FAILURE^(S^)
-  exit /b 1
+  set "RC=1"
+) else (
+  echo ALL PASSED
 )
-echo ALL PASSED
-exit /b 0
+goto :end
+
+:end
+echo.
+if not defined NOPAUSE pause
+exit /b %RC%
 
 :one
 set "CFG=%~1"
@@ -107,4 +119,5 @@ for %%T in (%TESTS%) do (
   )
   popd
 )
+
 exit /b 0

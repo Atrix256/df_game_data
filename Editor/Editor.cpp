@@ -909,6 +909,10 @@ void HandleSettingsWindow()
             ShowToolTip("If true, includes code to support hot reloading. Turning this on will also force\n"
                         "the Entry Look Up Table to be on as well.");
 
+            // Content Hash
+            ImGui::Checkbox("Obfuscation", &s.obfuscation);
+            ShowToolTip("Xors the data of the file by a one time pad generated using pcg32. Harder for players to read/write the bin file.");
+
             ImGui::TreePop();
         }
 

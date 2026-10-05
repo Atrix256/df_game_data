@@ -185,9 +185,19 @@ The `Examples` folder has three examples in it that you can run using the `Examp
 
 This was developed on windows using microsoft visual studio 2026 community edition.  Cloning the repo and building the solution should be all that is needed.
 
+Vcpkg is required though. If you don't yet have vcpkg set up on your machine, clone the repo and boot strap:
+
+```
+git clone https://github.com/microsoft/vcpkg
+.\vcpkg\bootstrap-vcpkg.bat
+vcpkg integrate install
+```
+
 ## Contributors
 
 Created by Alan Wolfe
+
+Manoj MJ
 
 ### Contributing
 
