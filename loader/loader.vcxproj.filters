@@ -13,6 +13,7 @@
     <ClInclude Include="hash.h" />
     <ClInclude Include="output_string.h" />
     <ClInclude Include="..\Version.h" />
+    <ClInclude Include="..\Utils.h" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="output.h" />

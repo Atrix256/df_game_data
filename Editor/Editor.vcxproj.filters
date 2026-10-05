@@ -18,6 +18,8 @@
     <ClCompile Include="RecentFiles.cpp" />
     <ClCompile Include="Compile.cpp" />
     <ClCompile Include="Platform.cpp" />
+    <ClCompile Include="Compile_Bin.cpp" />
+    <ClCompile Include="Compile_CPP.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Editor.h" />
