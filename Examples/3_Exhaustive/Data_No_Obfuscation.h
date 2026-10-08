@@ -430,7 +430,7 @@ inline bool Data_No_Obfuscation::LoadFromMemory(void* mem, uint32_t memSize)
     // Verify that the schema hash in the binary data matches the schema hash this file was made for
     {
         uint64_t hash = 0;
-        if (!Read(hash, mem, memIndex, memSize, endianSwap) || hash != 0xd03270eef3cfc80fULL)
+        if (!Read(hash, mem, memIndex, memSize, endianSwap) || hash != 0xde44f0aaf3b760d9ULL)
             return false;
     }
 

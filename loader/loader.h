@@ -9,6 +9,34 @@
 
 #include "DefParser.h"
 
+enum class CodeGenLanguage : uint16_t
+{
+    CPP = 0,
+    C,
+
+    Count,
+    First = 0,
+};
+
+inline const char* CodeGenLanguageToString(CodeGenLanguage lang)
+{
+    switch (lang)
+    {
+        case CodeGenLanguage::CPP: return "cpp";
+        case CodeGenLanguage::C: return "c";
+        default: return "unknown";
+    }
+}
+
+inline CodeGenLanguage CodeGenLanguageFromString(const char* string)
+{
+    if (strcmp(string, "cpp") == 0)
+        return CodeGenLanguage::CPP;
+    if (strcmp(string, "c") == 0)
+        return CodeGenLanguage::C;
+    return CodeGenLanguage::CPP;
+}
+
 struct DBCompileSettings
 {
     std::string compiledHeaderFileName = "out.h";
@@ -17,6 +45,7 @@ struct DBCompileSettings
     bool includeEntryLUT = true;
     bool hotReloading = true;
     bool obfuscation = true;
+    CodeGenLanguage codeGenLanguage = CodeGenLanguage::CPP;
 };
 
 class DBTable

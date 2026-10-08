@@ -1,1 +1,1 @@
-static constexpr const char* c_output_h = R"EMBED(
+static constexpr const char* c_file_text = R"EMBED(

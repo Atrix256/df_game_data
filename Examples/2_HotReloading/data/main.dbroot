@@ -5,7 +5,18 @@
             "compiledBinFileName": "../Packed/Data.bin",
             "className": "Data",
             "includeEntryLUT": true,
-            "hotReloading": true
+            "hotReloading": true,
+            "obfuscation": true,
+            "codeGenLanguage": "cpp"
+        },
+        {
+            "compiledHeaderFileName": "../../2_HotReloading_C/Data_C.h",
+            "compiledBinFileName": "../../2_HotReloading_C/Packed/Data.bin",
+            "className": "Data_C",
+            "includeEntryLUT": true,
+            "hotReloading": true,
+            "obfuscation": true,
+            "codeGenLanguage": "c"
         }
     ],
     "tables": [

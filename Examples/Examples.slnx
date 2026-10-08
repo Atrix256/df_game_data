@@ -4,6 +4,9 @@
     <Platform Name="x86" />
   </Configurations>
   <Project Path="1_Simple/1_Simple.vcxproj" Id="631cb758-f5e5-497c-98c4-496a8cd81ee3" />
+  <Project Path="1_Simple_C/1_Simple_C.vcxproj" Id="18693109-cffc-4059-924c-0510738eacb6" />
   <Project Path="2_HotReloading/2_HotReloading.vcxproj" Id="9343ca15-639a-423e-b1db-c3eb807d71c1" />
+  <Project Path="2_HotReloading_C/2_HotReloading_C.vcxproj" Id="d2281545-8c96-4896-a667-736ba8c25f1f" />
   <Project Path="3_Exhaustive/3_Exhaustive.vcxproj" Id="4eec2952-2e5d-44b2-ab86-69d908ec44ef" />
+  <Project Path="3_Exhaustive_C/3_Exhaustive_C.vcxproj" Id="17cef2c5-559c-4f30-b170-0401bcf7fcc1" />
 </Solution>

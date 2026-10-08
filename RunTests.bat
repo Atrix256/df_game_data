@@ -7,7 +7,7 @@ set "SLN=Examples/Examples.slnx"
 set "DATA_SLN=df_game_data.slnx"
 set "DATA_EXE_NAME=Editor.exe"
 set "DATA_REQUIRED_FILES=Editor.exe nfd.dll"
-set "TESTS=1_Simple 2_HotReloading 3_Exhaustive"
+set "TESTS=1_Simple 1_Simple_C 2_HotReloading 2_HotReloading_C 3_Exhaustive 3_Exhaustive_C"
 set "DBROOTS=Examples\1_Simple\data\Items.dbroot Examples\2_HotReloading\data\main.dbroot Examples\3_Exhaustive\data\test.dbroot"
 REM --------------------
 

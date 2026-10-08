@@ -285,7 +285,7 @@ inline bool ShopData::LoadFromMemory(void* mem, uint32_t memSize)
     // Verify that the schema hash in the binary data matches the schema hash this file was made for
     {
         uint64_t hash = 0;
-        if (!Read(hash, mem, memIndex, memSize, endianSwap) || hash != 0x01fc484eb8ae9f02ULL)
+        if (!Read(hash, mem, memIndex, memSize, endianSwap) || hash != 0x4c4477647ea536c7ULL)
             return false;
     }
 

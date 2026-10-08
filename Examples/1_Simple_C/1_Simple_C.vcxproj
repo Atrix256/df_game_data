@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{4eec2952-2e5d-44b2-ab86-69d908ec44ef}</ProjectGuid>
-    <RootNamespace>My3Exhaustive</RootNamespace>
+    <ProjectGuid>{18693109-cffc-4059-924c-0510738eacb6}</ProjectGuid>
+    <RootNamespace>My1SimpleC</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -142,12 +142,11 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="other.cpp" />
+    <ClCompile Include="main.c" />
+    <ClCompile Include="other.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Data.h" />
-    <ClInclude Include="Data_No_Obfuscation.h" />
+    <ClInclude Include="ShopData_C.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

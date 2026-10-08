@@ -160,6 +160,7 @@ dxgi.lib
   <ItemGroup>
     <ClCompile Include="Compile.cpp" />
     <ClCompile Include="Compile_Bin.cpp" />
+    <ClCompile Include="Compile_C.cpp" />
     <ClCompile Include="Compile_CPP.cpp" />
     <ClCompile Include="DataItem.cpp" />
     <ClCompile Include="Editor.cpp" />
@@ -174,6 +175,9 @@ dxgi.lib
     <ClInclude Include="..\df_resource.h" />
     <ClInclude Include="..\Version.h" />
     <ClInclude Include="Compile.h" />
+    <ClInclude Include="Compile_Bin.h" />
+    <ClInclude Include="Compile_C.h" />
+    <ClInclude Include="Compile_CPP.h" />
     <ClInclude Include="DataItem.h" />
     <ClInclude Include="Editor.h" />
     <ClInclude Include="FontAwesome\IconsFontAwesome7.h" />

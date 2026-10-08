@@ -6,7 +6,8 @@
             "className": "Data",
             "includeEntryLUT": false,
             "hotReloading": false,
-            "obfuscation": true
+            "obfuscation": true,
+            "codeGenLanguage": "cpp"
         },
         {
             "compiledHeaderFileName": "../Data_No_Obfuscation.h",
@@ -14,7 +15,26 @@
             "className": "Data_No_Obfuscation",
             "includeEntryLUT": false,
             "hotReloading": false,
-            "obfuscation": false
+            "obfuscation": false,
+            "codeGenLanguage": "cpp"
+        },
+        {
+            "compiledHeaderFileName": "../../3_Exhaustive_C/Data_C.h",
+            "compiledBinFileName": "../../3_Exhaustive_C/Packed/Data.bin",
+            "className": "Data_C",
+            "includeEntryLUT": true,
+            "hotReloading": true,
+            "obfuscation": true,
+            "codeGenLanguage": "c"
+        },
+        {
+            "compiledHeaderFileName": "../../3_Exhaustive_C/Data_No_Obfuscation_C.h",
+            "compiledBinFileName": "../../3_Exhaustive_C/Packed/Data_No_Obfuscation.bin",
+            "className": "Data_No_Obfuscation_C",
+            "includeEntryLUT": true,
+            "hotReloading": true,
+            "obfuscation": true,
+            "codeGenLanguage": "c"
         }
     ],
     "tables": [
