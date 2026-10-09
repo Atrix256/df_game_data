@@ -176,6 +176,18 @@ void ShopData_C_DoEndianSwapAndPointerFixup_U64(uint64_t* value, void* mem, bool
         ShopData_C_EndianSwap_U64(value);
 }
 
+void ShopData_C_DoEndianSwapAndPointerFixup_float(float* value, void* mem, bool endianSwap)
+{
+    if (endianSwap)
+        ShopData_C_EndianSwap_U32((uint32_t*)value);
+}
+
+void ShopData_C_DoEndianSwapAndPointerFixup_double(double* value, void* mem, bool endianSwap)
+{
+    if (endianSwap)
+        ShopData_C_EndianSwap_U64((uint64_t*)value);
+}
+
 void ShopData_C_DoEndianSwapAndPointerFixup_Ptr(uint64_t* value, void* mem, bool endianSwap)
 {
     if (endianSwap)

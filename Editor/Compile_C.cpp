@@ -371,7 +371,7 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
                         if (field.isArray)
                         {
                             os << "    " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_U32(&value->" << field.name << "_count, mem, endianSwap);\n";
-                            os << "    " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_U64(&value->" << field.name << ", mem, endianSwap);\n";
+                            os << "    " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&value->" << field.name << ", mem, endianSwap);\n";
                             os << "    for (uint32_t i = 0; i < value->" << field.name << "_count; ++i)\n";
                             os << "    {\n";
                             os << "        " << typeName << "* fieldPtr = &((" << typeName << "*)(value->" << field.name << "))[i];\n";

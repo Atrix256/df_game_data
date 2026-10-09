@@ -50,6 +50,7 @@ void Data_C_InitDatabase(Data_C_Database* db);
 void Data_C_DestroyDatabase(Data_C_Database* db);
 bool Data_C_LoadFromMemory(void* mem, uint32_t size, Data_C_Database* db);
 bool Data_C_LoadFromFile(const char* fileName, Data_C_Database* db);
+bool Data_C_Tick(Data_C_Database* db) { return false; }
 
 // Private implementation
 #ifdef DF_GAMEDATA_IMPLEMENTATION
