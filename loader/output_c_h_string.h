@@ -43,6 +43,18 @@ uint32_t /*$ClassName$*/_pcg_hash(uint32_t input)
     return (word >> 22u) ^ word;
 }
 
+int /*$ClassName$*/_CompareKeyToElement(const void* key, const void* elem)
+{
+    return strcmp((const char*)key, *(const char* const*)elem);
+}
+
+// Returns count if not found
+size_t /*$ClassName$*/_StringIndex(const char** arr, size_t count, const char* key)
+{
+    char** hit = bsearch(key, arr, count, sizeof(const char*), /*$ClassName$*/_CompareKeyToElement);
+    return hit ? (hit - arr) : count;
+}
+
 void /*$ClassName$*/_EndianSwap_U8(uint8_t* value)
 {
     (void)value;
@@ -162,7 +174,7 @@ void /*$ClassName$*/_DoEndianSwapAndPointerFixup_Ptr(uint64_t* value, void* mem,
         *value += (uint64_t)mem;
 }
 
-void /*$ClassName$*/_InitDatabase(/*$ClassName$*/_Database* db)
+/*$DoEndianSwapAndPointerFixups$*/void /*$ClassName$*/_InitDatabase(/*$ClassName$*/_Database* db)
 {
     db->m_ownedMemory = NULL;
 /*$StructInit$*/}
@@ -252,5 +264,7 @@ bool /*$ClassName$*/_LoadFromFile(const char* fileName, /*$ClassName$*/_Database
 TODO:
 * document how to use it at the top, like we do the C++ interface
 * impl Hot reloading
+* How to handle records? or don't? tick can return true, but it's up to you to look up all the records again?
+* probably should have a function to get an index by name though, when we have the name table LUT
 */
 )EMBED";

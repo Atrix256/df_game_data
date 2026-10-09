@@ -24,6 +24,43 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    VERIFY(data.m_table_Item_count == 3);
+    ShopData_C_Item* items = (ShopData_C_Item*)data.m_table_Item;
+
+    // test index 0
+    {
+        ShopData_C_Item* item = &items[0];
+        VERIFY(!strcmp((const char*)item->name, "Gladius"));
+        VERIFY(item->sellCost == 2);
+        VERIFY(item->buyCost == 20);
+    }
+
+    // test index 1
+    {
+        ShopData_C_Item* item = &items[1];
+        VERIFY(!strcmp((const char*)item->name, "Long Sword"));
+        VERIFY(item->sellCost == 5);
+        VERIFY(item->buyCost == 50);
+    }
+
+    // test index 2
+    {
+        ShopData_C_Item* item = &items[2];
+        VERIFY(!strcmp((const char*)item->name, "Rusty Dagger"));
+        VERIFY(item->sellCost == 1);
+        VERIFY(item->buyCost == 10);
+    }
+
+    // test getting by name
+    {
+        size_t index = ShopData_C_StringIndex((const char**)data.m_table_Item_names, data.m_table_Item_count, "Rusty Dagger");
+        VERIFY(index < data.m_table_Item_count);
+        ShopData_C_Item* item = &items[index];
+        VERIFY(!strcmp((const char*)item->name, "Rusty Dagger"));
+    }
+
+    printf("All checks passed!\n");
+
     ShopData_C_DestroyDatabase(&data);
 
     return 0;

@@ -31,8 +31,8 @@ typedef struct ShopData_C_Database
     uint8_t* m_ownedMemory;
 
     uint32_t m_table_Item_count;
-    uint64_t m_table_Item_names; // Ptr64<Ptr64<char>>
-    uint64_t m_table_Item;       // Ptr64<Item>
+    uint64_t m_table_Item_names; // char**
+    uint64_t m_table_Item;       // ShopData_C_Item*
 } ShopData_C_Database;
 
 // Public interface
@@ -51,6 +51,18 @@ uint32_t ShopData_C_pcg_hash(uint32_t input)
     uint32_t state = input * 747796405u + 2891336453u;
     uint32_t word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
     return (word >> 22u) ^ word;
+}
+
+int ShopData_C_CompareKeyToElement(const void* key, const void* elem)
+{
+    return strcmp((const char*)key, *(const char* const*)elem);
+}
+
+// Returns count if not found
+size_t ShopData_C_StringIndex(const char** arr, size_t count, const char* key)
+{
+    char** hit = bsearch(key, arr, count, sizeof(const char*), ShopData_C_CompareKeyToElement);
+    return hit ? (hit - arr) : count;
 }
 
 void ShopData_C_EndianSwap_U8(uint8_t* value)
@@ -321,4 +333,6 @@ bool ShopData_C_LoadFromFile(const char* fileName, ShopData_C_Database* db)
 TODO:
 * document how to use it at the top, like we do the C++ interface
 * impl Hot reloading
+* How to handle records? or don't? tick can return true, but it's up to you to look up all the records again?
+* probably should have a function to get an index by name though, when we have the name table LUT
 */

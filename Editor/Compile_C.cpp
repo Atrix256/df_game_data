@@ -119,195 +119,261 @@ static bool MakeC_Global(const DBCompileSettings& compilerSettings, const DBRoot
     return true;
 }
 
+static const char* GetEndianSwapPostFix(const DefParser::StructField& field)
+{
+    switch (field.fieldType)
+    {
+        case DefParser::FieldType::_bool: return "U8";
+        case DefParser::FieldType::_uint8: return "U8";
+        case DefParser::FieldType::_sint8: return "U8";
+        case DefParser::FieldType::_uint16: return "U16";
+        case DefParser::FieldType::_sint16: return "U16";
+        case DefParser::FieldType::_uint32: return "U32";
+        case DefParser::FieldType::_sint32: return "U32";
+        case DefParser::FieldType::_uint64: return "U64";
+        case DefParser::FieldType::_sint64: return "U64";
+        case DefParser::FieldType::_float: return "float";
+        case DefParser::FieldType::_double: return "double";
+        case DefParser::FieldType::_string: return "Ptr";
+        case DefParser::FieldType::_enum: return field.enumName.c_str();
+        case DefParser::FieldType::_struct: return field.structName.c_str();
+        case DefParser::FieldType::_link: return "Ptr";
+        default: return nullptr;
+    }
+}
+
 static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoot& dbRoot)
 {
     // make storage for each table
-    std::ostringstream& privateStorage = s_data.tokenReplacement["/*$StructFields$*/"];
-    std::ostringstream& init = s_data.tokenReplacement["/*$StructInit$*/"];
-    for (const auto& pair : dbRoot.m_tables)
     {
-        std::string indent = "    ";
+        std::ostringstream& privateStorage = s_data.tokenReplacement["/*$StructFields$*/"];
+        std::ostringstream& init = s_data.tokenReplacement["/*$StructInit$*/"];
+        for (const auto& pair : dbRoot.m_tables)
+        {
+            std::string indent = "    ";
 
-        const DefParser& parser = pair.second->GetParser();
+            const DefParser& parser = pair.second->GetParser();
 
-        init << indent << "db->m_table_" << parser.GetRootStructName() << "_count = 0;\n";
+            init << indent << "db->m_table_" << parser.GetRootStructName() << "_count = 0;\n";
 
-        // Make an extra newline to separate them
-        privateStorage << "\n";
+            // Make an extra newline to separate them
+            privateStorage << "\n";
 
-        privateStorage << indent << "uint32_t m_table_" << parser.GetRootStructName() << "_count;\n";
+            privateStorage << indent << "uint32_t m_table_" << parser.GetRootStructName() << "_count;\n";
 
-        // The sorted list of table names. Tables are written in sorted order
-        if (compilerSettings.includeEntryLUT)
-            privateStorage << indent << "uint64_t m_table_" << parser.GetRootStructName() << "_names; // Ptr64<Ptr64<char>>\n";
+            // The sorted list of table names. Tables are written in sorted order
+            if (compilerSettings.includeEntryLUT)
+                privateStorage << indent << "uint64_t m_table_" << parser.GetRootStructName() << "_names; // char**\n";
 
-        privateStorage << indent << "uint64_t m_table_" << parser.GetRootStructName() << ";       // Ptr64<" << parser.GetRootStructName() << ">\n";
+            privateStorage << indent << "uint64_t m_table_" << parser.GetRootStructName() << ";       // " << compilerSettings.className << "_" << parser.GetRootStructName() << "*\n";
+        }
     }
 
     // make the code to load each table
-    std::ostringstream& loadTables = s_data.tokenReplacement["/*$LoadTables$*/"];
-    for (const auto& pair : dbRoot.m_tables)
     {
-        // seperate table loading with an extra newline
-        loadTables << "\n";
-
-        std::string indent = "    ";
-
-        loadTables << indent << "// " << pair.first << " Table\n";
-        loadTables << indent << "{\n";
-        loadTables << indent << "    if (!" << compilerSettings.className << "_Read_U32(&db->m_table_" << pair.first << "_count, mem, &memIndex, memSize, endianSwap))\n";
-        loadTables << indent << "        return false;\n";
-        loadTables << "\n";
-        loadTables << indent << "    if (db->m_table_" << pair.first << "_count > 0)\n";
-        loadTables << indent << "    {\n";
-
-        if (compilerSettings.includeEntryLUT)
+        std::ostringstream& loadTables = s_data.tokenReplacement["/*$LoadTables$*/"];
+        for (const auto& pair : dbRoot.m_tables)
         {
-            loadTables << indent << "        // get char** to LUT and fixup string pointers\n";
-            loadTables << indent << "        if (memSize - memIndex < db->m_table_" << pair.first << "_count * sizeof(uint64_t))\n";
-            loadTables << indent << "            return false;\n";
-            loadTables << indent << "        db->m_table_" << pair.first << "_names = memIndex;\n";
-            loadTables << indent << "        " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&db->m_table_" << pair.first << "_names, mem, endianSwap);\n";
-            loadTables << indent << "        for (uint32_t i = 0; i < db->m_table_" << pair.first << "_count; ++i)\n";
-            loadTables << indent << "            " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&((uint64_t*)db->m_table_" << pair.first << "_names)[i], mem, endianSwap);\n";
-            loadTables << indent << "        memIndex += db->m_table_" << pair.first << "_count * sizeof(uint64_t);\n";
+            // seperate table loading with an extra newline
             loadTables << "\n";
+
+            std::string indent = "    ";
+
+            loadTables << indent << "// " << pair.first << " Table\n";
+            loadTables << indent << "{\n";
+            loadTables << indent << "    if (!" << compilerSettings.className << "_Read_U32(&db->m_table_" << pair.first << "_count, mem, &memIndex, memSize, endianSwap))\n";
+            loadTables << indent << "        return false;\n";
+            loadTables << "\n";
+            loadTables << indent << "    if (db->m_table_" << pair.first << "_count > 0)\n";
+            loadTables << indent << "    {\n";
+
+            if (compilerSettings.includeEntryLUT)
+            {
+                loadTables << indent << "        // get char** to LUT and fixup string pointers\n";
+                loadTables << indent << "        if (memSize - memIndex < db->m_table_" << pair.first << "_count * sizeof(uint64_t))\n";
+                loadTables << indent << "            return false;\n";
+                loadTables << indent << "        db->m_table_" << pair.first << "_names = memIndex;\n";
+                loadTables << indent << "        " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&db->m_table_" << pair.first << "_names, mem, endianSwap);\n";
+                loadTables << indent << "        for (uint32_t i = 0; i < db->m_table_" << pair.first << "_count; ++i)\n";
+                loadTables << indent << "            " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&((uint64_t*)db->m_table_" << pair.first << "_names)[i], mem, endianSwap);\n";
+                loadTables << indent << "        memIndex += db->m_table_" << pair.first << "_count * sizeof(uint64_t);\n";
+                loadTables << "\n";
+            }
+
+            loadTables << indent << "        // Get a pointer to the first entry in the table\n";
+            loadTables << indent << "        if (memSize - memIndex < db->m_table_" << pair.first << "_count * sizeof(" << compilerSettings.className << "_" << pair.first << "))\n";
+            loadTables << indent << "            return false;\n";
+            loadTables << indent << "        db->m_table_" << pair.first << " = memIndex;\n";
+            loadTables << indent << "        " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&db->m_table_" << pair.first << ", mem, endianSwap);\n";
+            loadTables << indent << "        memIndex += db->m_table_" << pair.first << "_count * sizeof(" << compilerSettings.className << "_" << pair.first << ");\n";
+            loadTables << "\n";
+            loadTables << indent << "        // Do pointer fixup\n";
+            loadTables << indent << "        for (uint32_t i = 0; i < db->m_table_" << pair.first << "_count; ++i)\n";
+            loadTables << indent << "            " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_" << pair.first << "(&((" << compilerSettings.className << "_" << pair.first << "*)db->m_table_" << pair.first << ")[i], mem, endianSwap);\n";
+
+            loadTables << indent << "    }\n";
+            loadTables << indent << "}\n";
         }
-
-        loadTables << indent << "        // Get a pointer to the first entry in the table\n";
-        loadTables << indent << "        if (memSize - memIndex < db->m_table_" << pair.first << "_count * sizeof(" << compilerSettings.className << "_" << pair.first << "))\n";
-        loadTables << indent << "            return false;\n";
-        loadTables << indent << "        db->m_table_" << pair.first << " = memIndex;\n";
-        loadTables << indent << "        " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&db->m_table_" << pair.first << ", mem, endianSwap);\n";
-        loadTables << indent << "        memIndex += db->m_table_" << pair.first << "_count * sizeof(" << compilerSettings.className << "_" << pair.first << ");\n";
-        loadTables << "\n";
-        loadTables << indent << "        // Do pointer fixup\n";
-        loadTables << indent << "        for (uint32_t i = 0; i < db->m_table_" << pair.first << "_count; ++i)\n";
-        loadTables << indent << "            " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_" << pair.first << "(&((" << compilerSettings.className << "_" << pair.first << "*)db->m_table_" << pair.first << ")[i], mem, endianSwap);\n";
-
-        loadTables << indent << "    }\n";
-        loadTables << indent << "}\n";
     }
 
-    std::ostringstream& enumsAndStructDefs = s_data.tokenReplacement["/*$EnumAndStructDefs$*/"];
-
-    // Make struct defs
-    std::unordered_set<std::string> structsWritten;
-    for (const auto& pair : dbRoot.m_tables)
     {
-        const DefParser& parser = pair.second->GetParser();
+        // Make struct defs
+        std::ostringstream& enumsAndStructDefs = s_data.tokenReplacement["/*$EnumAndStructDefs$*/"];
+        std::unordered_set<std::string> structsWritten;
+        for (const auto& pair : dbRoot.m_tables)
+        {
+            const DefParser& parser = pair.second->GetParser();
 
-        bool ret = parser.ForEachStruct(
-            [&enumsAndStructDefs, &structsWritten, &parser, &dbRoot, &compilerSettings](const DefParser::Struct& s)
-            {
-                // only write the same type once
-                if (structsWritten.contains(s.name))
-                    return true;
-                structsWritten.insert(s.name);
-
-                // If this isn't the first item written, make an extra newline to separate them
-                if (!enumsAndStructDefs.view().empty())
-                    enumsAndStructDefs << "\n";
-
-                std::string indent = "";
-
-                if (s.isUnion)
+            bool ret = parser.ForEachStruct(
+                [&enumsAndStructDefs, &structsWritten, &parser, &dbRoot, &compilerSettings](const DefParser::Struct& s)
                 {
-                    enumsAndStructDefs << indent << "enum class " << s.name << "_type : uint16_t\n" << indent << "{\n";
-                    enumsAndStructDefs << indent << "    None,\n";
-                    for (const DefParser::StructField& field : s.fields)
-                        enumsAndStructDefs << indent << "    " << field.name << ",\n";
-                    enumsAndStructDefs << indent << "};\n\n";
+                    // only write the same type once
+                    if (structsWritten.contains(s.name))
+                        return true;
+                    structsWritten.insert(s.name);
 
-                    enumsAndStructDefs <<
-                        indent << "typedef struct " << compilerSettings.className << "_" << s.name << "\n" <<
-                        indent << "{\n" <<
-                        indent << "    " << s.name << "_type type;\n" <<
-                        indent << "    uint64_t ptr; // Ptr64<void>\n"
-                        "\n"
-                        ;
-
-                    // TODO: union interface for C? maybe global functions?
-
-                    /*
-                    // make type aliases
-                    for (const DefParser::StructField& field : s.fields)
-                    {
-                        std::string typeName;
-                        if (!FieldToCPPType(s, field, typeName))
-                            return false;
-                        enumsAndStructDefs << indent << "    using " << field.name << "_type = " << typeName << ";\n";
-                    }
-
-                    // accessor functions
-                    for (const DefParser::StructField& field : s.fields)
-                    {
+                    // If this isn't the first item written, make an extra newline to separate them
+                    if (!enumsAndStructDefs.view().empty())
                         enumsAndStructDefs << "\n";
-                        enumsAndStructDefs << indent << "    " << field.name << "_type* " << field.name << "() { return type == " << s.name << "_type::" << field.name << " ? reinterpret_cast<" << field.name << "_type*>(ptr.ptr) : nullptr; }\n";
-                        enumsAndStructDefs << indent << "    const " << field.name << "_type* " << field.name << "() const { return type == " << s.name << "_type::" << field.name << " ? reinterpret_cast<const " << field.name << "_type*>(ptr.ptr) : nullptr; }\n";
+
+                    std::string indent = "";
+
+                    if (s.isUnion)
+                    {
+                        enumsAndStructDefs << indent << "enum class " << s.name << "_type : uint16_t\n" << indent << "{\n";
+                        enumsAndStructDefs << indent << "    None,\n";
+                        for (const DefParser::StructField& field : s.fields)
+                            enumsAndStructDefs << indent << "    " << field.name << ",\n";
+                        enumsAndStructDefs << indent << "};\n\n";
+
+                        enumsAndStructDefs <<
+                            indent << "typedef struct " << compilerSettings.className << "_" << s.name << "\n" <<
+                            indent << "{\n" <<
+                            indent << "    " << s.name << "_type type;\n" <<
+                            indent << "    uint64_t ptr; // Ptr64<void>\n"
+                            "\n"
+                            ;
+
+                        // TODO: union interface for C? maybe global functions?
+
+                        /*
+                        // make type aliases
+                        for (const DefParser::StructField& field : s.fields)
+                        {
+                            std::string typeName;
+                            if (!FieldToCPPType(s, field, typeName))
+                                return false;
+                            enumsAndStructDefs << indent << "    using " << field.name << "_type = " << typeName << ";\n";
+                        }
+
+                        // accessor functions
+                        for (const DefParser::StructField& field : s.fields)
+                        {
+                            enumsAndStructDefs << "\n";
+                            enumsAndStructDefs << indent << "    " << field.name << "_type* " << field.name << "() { return type == " << s.name << "_type::" << field.name << " ? reinterpret_cast<" << field.name << "_type*>(ptr.ptr) : nullptr; }\n";
+                            enumsAndStructDefs << indent << "    const " << field.name << "_type* " << field.name << "() const { return type == " << s.name << "_type::" << field.name << " ? reinterpret_cast<const " << field.name << "_type*>(ptr.ptr) : nullptr; }\n";
+                        }
+                        */
+
+                        enumsAndStructDefs <<
+                            indent << "} " << compilerSettings.className << "_" << s.name << ";\n"
+                            ;
                     }
-                    */
+                    else
+                    {
+                        enumsAndStructDefs << indent << "typedef struct " << compilerSettings.className << "_" << s.name << "\n" << indent << "{\n";
 
-                    enumsAndStructDefs <<
-                        indent << "} " << compilerSettings.className << "_" << s.name << ";\n"
-                        ;
+                        // Write the fields
+                        for (const DefParser::StructField& field : s.fields)
+                        {
+                            // Get the C++ name of the type
+                            std::string typeName;
+                            if (!FieldToCPPType(s, field, typeName))
+                                return false;
+
+                            bool isUnion = false;
+                            if (field.fieldType == DefParser::FieldType::_struct)
+                            {
+                                const DefParser::Struct* fieldStruct = parser.GetStructByName(field.structName.c_str());
+                                if (!fieldStruct)
+                                {
+                                    s_data.error << "Could not find struct " << field.structName << " for " << s.name << "." << field.name;
+                                    return false;
+                                }
+                                isUnion = fieldStruct->isUnion;
+                            }
+
+                            // Arrays are a count and a pointer to the data.
+                            // Dynamic arrays get their count from the bin file. Static arrays know their count at compile time.
+                            if (field.isArray)
+                            {
+                                if (field.fixedArraySize > 0)
+                                {
+                                    enumsAndStructDefs << indent << "    static const uint32_t " << field.name << "_count = " << field.fixedArraySize << ";\n";
+                                    enumsAndStructDefs << indent << "    " << typeName << " " << field.name << "[" << field.fixedArraySize << "];\n";
+                                }
+                                else
+                                {
+                                    enumsAndStructDefs << indent << "    uint32_t " << field.name << "_count = 0;\n";
+                                    enumsAndStructDefs << indent << "    uint64_t " << field.name << "; // Ptr64<" << typeName << ">\n";
+                                }
+                                continue;
+                            }
+
+                            enumsAndStructDefs << indent << "    " << typeName << " " << field.name << ";\n";
+                        }
+
+                        enumsAndStructDefs << indent << "} " << compilerSettings.className << "_" << s.name << ";\n";
+                    }
+
+                    // TODO: record interface?
+                    //if (IsARootStruct(dbRoot, s.name.c_str()))
+                        //enumsAndStructDefs << "\n" << indent << "using " << s.name << "Record = Record<" << s.name << ">;\n";
+
+                    return true;
                 }
-                else
-                {
-                    enumsAndStructDefs << indent << "typedef struct " << compilerSettings.className << "_" << s.name << "\n" << indent << "{\n";
+            );
+            if (!ret)
+                return false;
+        }
+    }
 
-                    // Write the fields
+    {
+        std::ostringstream& os = s_data.tokenReplacement["/*$DoEndianSwapAndPointerFixups$*/"];
+        std::unordered_set<std::string> structsWritten;
+        for (const auto& pair : dbRoot.m_tables)
+        {
+            const DefParser& parser = pair.second->GetParser();
+
+            bool ret = parser.ForEachStruct(
+                [&os, &structsWritten, &parser, &dbRoot, &compilerSettings](const DefParser::Struct& s)
+                {
+                    // only write the same type once
+                    if (structsWritten.contains(s.name))
+                        return true;
+                    structsWritten.insert(s.name);
+
+                    os << "void " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_" << s.name <<
+                        "(" << compilerSettings.className << "_" << s.name << "* value, void* mem, bool endianSwap)\n";
+                    os << "{\n";
+
                     for (const DefParser::StructField& field : s.fields)
                     {
-                        // Get the C++ name of the type
-                        std::string typeName;
-                        if (!FieldToCPPType(s, field, typeName))
+                        const char* endianSwapFuncPostFix = GetEndianSwapPostFix(field);
+                        if (endianSwapFuncPostFix == nullptr)
                             return false;
-
-                        bool isUnion = false;
-                        if (field.fieldType == DefParser::FieldType::_struct)
-                        {
-                            const DefParser::Struct* fieldStruct = parser.GetStructByName(field.structName.c_str());
-                            if (!fieldStruct)
-                            {
-                                s_data.error << "Could not find struct " << field.structName << " for " << s.name << "." << field.name;
-                                return false;
-                            }
-                            isUnion = fieldStruct->isUnion;
-                        }
-
-                        // Arrays are a count and a pointer to the data.
-                        // Dynamic arrays get their count from the bin file. Static arrays know their count at compile time.
-                        if (field.isArray)
-                        {
-                            if (field.fixedArraySize > 0)
-                            {
-                                enumsAndStructDefs << indent << "    static const uint32_t " << field.name << "_count = " << field.fixedArraySize << ";\n";
-                                enumsAndStructDefs << indent << "    " << typeName << " " << field.name << "[" << field.fixedArraySize << "];\n";
-                            }
-                            else
-                            {
-                                enumsAndStructDefs << indent << "    uint32_t " << field.name << "_count = 0;\n";
-                                enumsAndStructDefs << indent << "    uint64_t " << field.name << "; // Ptr64<" << typeName << ">\n";
-                            }
-                            continue;
-                        }
-
-                        enumsAndStructDefs << indent << "    " << typeName << " " << field.name << ";\n";
+                        os << "    " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_" << endianSwapFuncPostFix << "(&value->" << field.name << ", mem, endianSwap);\n";
                     }
 
-                    enumsAndStructDefs << indent << "} " << compilerSettings.className << "_" << s.name << ";\n";
+                    os << "}\n\n";
+
+                    return true;
                 }
+            );
 
-                // TODO: record interface?
-                //if (IsARootStruct(dbRoot, s.name.c_str()))
-                    //enumsAndStructDefs << "\n" << indent << "using " << s.name << "Record = Record<" << s.name << ">;\n";
-
-                return true;
-            }
-        );
-        if (!ret)
-            return false;
+            if (!ret)
+                return false;
+        }
     }
 
     return true;

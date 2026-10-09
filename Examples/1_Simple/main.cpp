@@ -42,7 +42,7 @@ int main(int argc, char** argv)
         VERIFY(itemRecord.Get().buyCost == 50);
     }
 
-    // test index 3
+    // test index 2
     {
         ShopData::ItemRecord itemRecord = data.GetItem(2);
         VERIFY(itemRecord.Valid());
