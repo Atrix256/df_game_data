@@ -20,7 +20,7 @@ Do not edit manually, unless you understand the consequences.
 #pragma pack(push, 1)
 /*$EnumAndStructDefs$*/#pragma pack(pop)
 
-typedef struct
+typedef struct /*$ClassName$*/_Database
 {
     uint8_t* m_ownedMemory;
 /*$StructFields$*/} /*$ClassName$*/_Database;
@@ -36,19 +36,25 @@ bool /*$ClassName$*/_LoadFromFile(const char* fileName, /*$ClassName$*/_Database
 
 // From https://jcgt.org/published/0009/03/02/
 // supplemental material uint pcg(uint v)
-uint32_t pcg_hash(uint32_t input)
+uint32_t /*$ClassName$*/_pcg_hash(uint32_t input)
 {
     uint32_t state = input * 747796405u + 2891336453u;
     uint32_t word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
     return (word >> 22u) ^ word;
 }
 
-void EndianSwap_U8(uint8_t* value)
+void /*$ClassName$*/_EndianSwap_U8(uint8_t* value)
 {
     (void)value;
 }
 
-void EndianSwap_U32(uint32_t* value)
+void /*$ClassName$*/_EndianSwap_U16(uint16_t* value)
+{
+    *value = ((*value & 0x00FF) << 8) |
+             ((*value & 0xFF00) >> 8);
+}
+
+void /*$ClassName$*/_EndianSwap_U32(uint32_t* value)
 {
     *value = ((*value & 0x000000FF) << 24) |
              ((*value & 0x0000FF00) << 8) |
@@ -56,7 +62,7 @@ void EndianSwap_U32(uint32_t* value)
              ((*value & 0xFF000000) >> 24);
 }
 
-void EndianSwap_U64(uint64_t* value)
+void /*$ClassName$*/_EndianSwap_U64(uint64_t* value)
 {
     *value = ((*value & 0x00000000000000FFULL) << 56) |
         ((*value & 0x000000000000FF00ULL) << 40) |
@@ -68,7 +74,7 @@ void EndianSwap_U64(uint64_t* value)
         ((*value & 0xFF00000000000000ULL) >> 56);
 }
 
-bool Read_U8(uint8_t* value, void* mem, uint32_t* memIndex, uint32_t memSize, bool endianSwap)
+bool /*$ClassName$*/_Read_U8(uint8_t* value, void* mem, uint32_t* memIndex, uint32_t memSize, bool endianSwap)
 {
     if (memSize - *memIndex < sizeof(*value))
         return false;
@@ -77,12 +83,12 @@ bool Read_U8(uint8_t* value, void* mem, uint32_t* memIndex, uint32_t memSize, bo
     *memIndex += sizeof(*value);
 
     if (endianSwap)
-        EndianSwap_U8(value);
+        /*$ClassName$*/_EndianSwap_U8(value);
 
     return true;
 }
 
-bool Read_U32(uint32_t* value, void* mem, uint32_t* memIndex, uint32_t memSize, bool endianSwap)
+bool /*$ClassName$*/_Read_U16(uint16_t* value, void* mem, uint32_t* memIndex, uint32_t memSize, bool endianSwap)
 {
     if (memSize - *memIndex < sizeof(*value))
         return false;
@@ -91,12 +97,12 @@ bool Read_U32(uint32_t* value, void* mem, uint32_t* memIndex, uint32_t memSize, 
     *memIndex += sizeof(*value);
 
     if (endianSwap)
-        EndianSwap_U32(value);
+        /*$ClassName$*/_EndianSwap_U16(value);
 
     return true;
 }
 
-bool Read_U64(uint64_t* value, void* mem, uint32_t* memIndex, uint32_t memSize, bool endianSwap)
+bool /*$ClassName$*/_Read_U32(uint32_t* value, void* mem, uint32_t* memIndex, uint32_t memSize, bool endianSwap)
 {
     if (memSize - *memIndex < sizeof(*value))
         return false;
@@ -105,9 +111,55 @@ bool Read_U64(uint64_t* value, void* mem, uint32_t* memIndex, uint32_t memSize, 
     *memIndex += sizeof(*value);
 
     if (endianSwap)
-        EndianSwap_U64(value);
+        /*$ClassName$*/_EndianSwap_U32(value);
 
     return true;
+}
+
+bool /*$ClassName$*/_Read_U64(uint64_t* value, void* mem, uint32_t* memIndex, uint32_t memSize, bool endianSwap)
+{
+    if (memSize - *memIndex < sizeof(*value))
+        return false;
+
+    memcpy(value, &((uint8_t*)mem)[*memIndex], sizeof(*value));
+    *memIndex += sizeof(*value);
+
+    if (endianSwap)
+        /*$ClassName$*/_EndianSwap_U64(value);
+
+    return true;
+}
+
+void /*$ClassName$*/_DoEndianSwapAndPointerFixup_U8(uint8_t* value, void* mem, bool endianSwap)
+{
+    if (endianSwap)
+        /*$ClassName$*/_EndianSwap_U8(value);
+}
+
+void /*$ClassName$*/_DoEndianSwapAndPointerFixup_U16(uint16_t* value, void* mem, bool endianSwap)
+{
+    if (endianSwap)
+        /*$ClassName$*/_EndianSwap_U16(value);
+}
+
+void /*$ClassName$*/_DoEndianSwapAndPointerFixup_U32(uint32_t* value, void* mem, bool endianSwap)
+{
+    if (endianSwap)
+        /*$ClassName$*/_EndianSwap_U32(value);
+}
+
+void /*$ClassName$*/_DoEndianSwapAndPointerFixup_U64(uint64_t* value, void* mem, bool endianSwap)
+{
+    if (endianSwap)
+        /*$ClassName$*/_EndianSwap_U64(value);
+}
+
+void /*$ClassName$*/_DoEndianSwapAndPointerFixup_Ptr(uint64_t* value, void* mem, bool endianSwap)
+{
+    if (endianSwap)
+        /*$ClassName$*/_EndianSwap_U64(value);
+    if (*value != 0)
+        *value += (uint64_t)mem;
 }
 
 void /*$ClassName$*/_InitDatabase(/*$ClassName$*/_Database* db)
@@ -141,7 +193,7 @@ bool /*$ClassName$*/_LoadFromMemory(void* mem, uint32_t memSize, /*$ClassName$*/
         static const uint32_t fourcc_swapped = MAKE_FOUR_CC('D', 'G', 'F', 'D');
 
         uint32_t fourcc = 0;
-        if (!Read_U32(&fourcc, mem, &memIndex, memSize, false))
+        if (!/*$ClassName$*/_Read_U32(&fourcc, mem, &memIndex, memSize, false))
             return false;
 
         if (fourcc == fourcc_swapped)
@@ -154,9 +206,9 @@ bool /*$ClassName$*/_LoadFromMemory(void* mem, uint32_t memSize, /*$ClassName$*/
     // Unused now, but can be used for backwards compatibility etc later.
     {
         uint8_t version[3];
-        if (!Read_U8(&version[0], mem, &memIndex, memSize, endianSwap) ||
-            !Read_U8(&version[1], mem, &memIndex, memSize, endianSwap) ||
-            !Read_U8(&version[2], mem, &memIndex, memSize, endianSwap))
+        if (!/*$ClassName$*/_Read_U8(&version[0], mem, &memIndex, memSize, endianSwap) ||
+            !/*$ClassName$*/_Read_U8(&version[1], mem, &memIndex, memSize, endianSwap) ||
+            !/*$ClassName$*/_Read_U8(&version[2], mem, &memIndex, memSize, endianSwap))
         {
             return false;
         }
@@ -165,7 +217,7 @@ bool /*$ClassName$*/_LoadFromMemory(void* mem, uint32_t memSize, /*$ClassName$*/
     // Verify that the schema hash in the binary data matches the schema hash this file was made for
     {
         uint64_t hash = 0;
-        if (!Read_U64(&hash, mem, &memIndex, memSize, endianSwap) || hash != /*$SchemaHash$*/)
+        if (!/*$ClassName$*/_Read_U64(&hash, mem, &memIndex, memSize, endianSwap) || hash != /*$SchemaHash$*/)
             return false;
     }
 /*$LoadTables$*//*$LoadMemoryEnd$*/

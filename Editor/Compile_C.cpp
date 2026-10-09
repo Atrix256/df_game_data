@@ -96,11 +96,11 @@ static bool MakeC_Global(const DBCompileSettings& compilerSettings, const DBRoot
             "    {\n"
             "        size_t contentStart = 7; // start after the fourcc and the 3 byte version\n"
             "        size_t bytesRemaining = memSize - contentStart;\n"
-            "        uint32_t rng = pcg_hash(0x1337beef);\n"
+            "        uint32_t rng = " << compilerSettings.className << "_pcg_hash(0x1337beef);\n"
             "        uint8_t* data = &((uint8_t*)mem)[contentStart];\n"
             "        while (bytesRemaining > 0)\n"
             "        {\n"
-            "            rng = pcg_hash(rng);\n"
+            "            rng = " << compilerSettings.className << "_pcg_hash(rng);\n"
             "\n"
             "            for (size_t i = 0; i < ((bytesRemaining < 4) ? bytesRemaining : 4); ++i)\n"
             "                data[i] = data[i] ^ ((uint8_t*)&rng)[i];\n"
@@ -139,7 +139,7 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
 
         // The sorted list of table names. Tables are written in sorted order
         if (compilerSettings.includeEntryLUT)
-            privateStorage << indent << "uint64_t m_table_" << parser.GetRootStructName() << "_names; //Ptr64<Ptr64<char>>\n";
+            privateStorage << indent << "uint64_t m_table_" << parser.GetRootStructName() << "_names; // Ptr64<Ptr64<char>>\n";
 
         privateStorage << indent << "uint64_t m_table_" << parser.GetRootStructName() << ";       // Ptr64<" << parser.GetRootStructName() << ">\n";
     }
@@ -155,7 +155,7 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
 
         loadTables << indent << "// " << pair.first << " Table\n";
         loadTables << indent << "{\n";
-        loadTables << indent << "    if (!Read_U32(&db->m_table_" << pair.first << "_count, mem, &memIndex, memSize, endianSwap))\n";
+        loadTables << indent << "    if (!" << compilerSettings.className << "_Read_U32(&db->m_table_" << pair.first << "_count, mem, &memIndex, memSize, endianSwap))\n";
         loadTables << indent << "        return false;\n";
         loadTables << "\n";
         loadTables << indent << "    if (db->m_table_" << pair.first << "_count > 0)\n";
@@ -167,10 +167,9 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
             loadTables << indent << "        if (memSize - memIndex < db->m_table_" << pair.first << "_count * sizeof(uint64_t))\n";
             loadTables << indent << "            return false;\n";
             loadTables << indent << "        db->m_table_" << pair.first << "_names = memIndex;\n";
-            // TODO: this
-            loadTables << indent << "        //DoEndianSwapAndPointerFixup(db->m_table_" << pair.first << "_names, mem, endianSwap);\n";
-            loadTables << indent << "        //for (uint32_t i = 0; i < db->m_table_" << pair.first << "_count; ++i)\n";
-            loadTables << indent << "            //DoEndianSwapAndPointerFixup(db->m_table_" << pair.first << "_names.ptr[i], mem, endianSwap);\n";
+            loadTables << indent << "        " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&db->m_table_" << pair.first << "_names, mem, endianSwap);\n";
+            loadTables << indent << "        for (uint32_t i = 0; i < db->m_table_" << pair.first << "_count; ++i)\n";
+            loadTables << indent << "            " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&((uint64_t*)db->m_table_" << pair.first << "_names)[i], mem, endianSwap);\n";
             loadTables << indent << "        memIndex += db->m_table_" << pair.first << "_count * sizeof(uint64_t);\n";
             loadTables << "\n";
         }
@@ -179,14 +178,12 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
         loadTables << indent << "        if (memSize - memIndex < db->m_table_" << pair.first << "_count * sizeof(" << compilerSettings.className << "_" << pair.first << "))\n";
         loadTables << indent << "            return false;\n";
         loadTables << indent << "        db->m_table_" << pair.first << " = memIndex;\n";
-        // TODO: this
-        loadTables << indent << "        //DoEndianSwapAndPointerFixup(db->m_table_" << pair.first << ", mem, endianSwap);\n";
+        loadTables << indent << "        " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&db->m_table_" << pair.first << ", mem, endianSwap);\n";
         loadTables << indent << "        memIndex += db->m_table_" << pair.first << "_count * sizeof(" << compilerSettings.className << "_" << pair.first << ");\n";
         loadTables << "\n";
         loadTables << indent << "        // Do pointer fixup\n";
-        // TODO: this
-        loadTables << indent << "        //for (uint32_t i = 0; i < db->m_table_" << pair.first << "_count; ++i)\n";
-        loadTables << indent << "            //DoEndianSwapAndPointerFixup(db->m_table_" << pair.first << ".ptr[i], mem, endianSwap);\n";
+        loadTables << indent << "        for (uint32_t i = 0; i < db->m_table_" << pair.first << "_count; ++i)\n";
+        loadTables << indent << "            " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_" << pair.first << "(&((" << compilerSettings.className << "_" << pair.first << "*)db->m_table_" << pair.first << ")[i], mem, endianSwap);\n";
 
         loadTables << indent << "    }\n";
         loadTables << indent << "}\n";
@@ -223,7 +220,7 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
                     enumsAndStructDefs << indent << "};\n\n";
 
                     enumsAndStructDefs <<
-                        indent << "typedef struct\n" <<
+                        indent << "typedef struct " << compilerSettings.className << "_" << s.name << "\n" <<
                         indent << "{\n" <<
                         indent << "    " << s.name << "_type type;\n" <<
                         indent << "    uint64_t ptr; // Ptr64<void>\n"
@@ -257,7 +254,7 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
                 }
                 else
                 {
-                    enumsAndStructDefs << indent << "typedef struct\n" << indent << "{\n";
+                    enumsAndStructDefs << indent << "typedef struct " << compilerSettings.className << "_" << s.name << "\n" << indent << "{\n";
 
                     // Write the fields
                     for (const DefParser::StructField& field : s.fields)
@@ -353,3 +350,7 @@ bool MakeC(const DBCompileSettings& compilerSettings, const DBRoot& dbRoot, cons
 
     return true;
 }
+/*
+TODO:
+DoEndianSwapAndPointerFixup and other global functions need to have class name prefix
+*/

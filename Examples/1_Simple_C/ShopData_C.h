@@ -18,7 +18,7 @@ Do not edit manually, unless you understand the consequences.
 #include <string.h>
 
 #pragma pack(push, 1)
-typedef struct
+typedef struct ShopData_C_Item
 {
     uint64_t name;
     uint32_t sellCost;
@@ -26,12 +26,12 @@ typedef struct
 } ShopData_C_Item;
 #pragma pack(pop)
 
-typedef struct
+typedef struct ShopData_C_Database
 {
     uint8_t* m_ownedMemory;
 
     uint32_t m_table_Item_count;
-    uint64_t m_table_Item_names; //Ptr64<Ptr64<char>>
+    uint64_t m_table_Item_names; // Ptr64<Ptr64<char>>
     uint64_t m_table_Item;       // Ptr64<Item>
 } ShopData_C_Database;
 
@@ -46,19 +46,25 @@ bool ShopData_C_LoadFromFile(const char* fileName, ShopData_C_Database* db);
 
 // From https://jcgt.org/published/0009/03/02/
 // supplemental material uint pcg(uint v)
-uint32_t pcg_hash(uint32_t input)
+uint32_t ShopData_C_pcg_hash(uint32_t input)
 {
     uint32_t state = input * 747796405u + 2891336453u;
     uint32_t word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
     return (word >> 22u) ^ word;
 }
 
-void EndianSwap_U8(uint8_t* value)
+void ShopData_C_EndianSwap_U8(uint8_t* value)
 {
     (void)value;
 }
 
-void EndianSwap_U32(uint32_t* value)
+void ShopData_C_EndianSwap_U16(uint16_t* value)
+{
+    *value = ((*value & 0x00FF) << 8) |
+             ((*value & 0xFF00) >> 8);
+}
+
+void ShopData_C_EndianSwap_U32(uint32_t* value)
 {
     *value = ((*value & 0x000000FF) << 24) |
              ((*value & 0x0000FF00) << 8) |
@@ -66,7 +72,7 @@ void EndianSwap_U32(uint32_t* value)
              ((*value & 0xFF000000) >> 24);
 }
 
-void EndianSwap_U64(uint64_t* value)
+void ShopData_C_EndianSwap_U64(uint64_t* value)
 {
     *value = ((*value & 0x00000000000000FFULL) << 56) |
         ((*value & 0x000000000000FF00ULL) << 40) |
@@ -78,7 +84,7 @@ void EndianSwap_U64(uint64_t* value)
         ((*value & 0xFF00000000000000ULL) >> 56);
 }
 
-bool Read_U8(uint8_t* value, void* mem, uint32_t* memIndex, uint32_t memSize, bool endianSwap)
+bool ShopData_C_Read_U8(uint8_t* value, void* mem, uint32_t* memIndex, uint32_t memSize, bool endianSwap)
 {
     if (memSize - *memIndex < sizeof(*value))
         return false;
@@ -87,12 +93,12 @@ bool Read_U8(uint8_t* value, void* mem, uint32_t* memIndex, uint32_t memSize, bo
     *memIndex += sizeof(*value);
 
     if (endianSwap)
-        EndianSwap_U8(value);
+        ShopData_C_EndianSwap_U8(value);
 
     return true;
 }
 
-bool Read_U32(uint32_t* value, void* mem, uint32_t* memIndex, uint32_t memSize, bool endianSwap)
+bool ShopData_C_Read_U16(uint16_t* value, void* mem, uint32_t* memIndex, uint32_t memSize, bool endianSwap)
 {
     if (memSize - *memIndex < sizeof(*value))
         return false;
@@ -101,12 +107,12 @@ bool Read_U32(uint32_t* value, void* mem, uint32_t* memIndex, uint32_t memSize, 
     *memIndex += sizeof(*value);
 
     if (endianSwap)
-        EndianSwap_U32(value);
+        ShopData_C_EndianSwap_U16(value);
 
     return true;
 }
 
-bool Read_U64(uint64_t* value, void* mem, uint32_t* memIndex, uint32_t memSize, bool endianSwap)
+bool ShopData_C_Read_U32(uint32_t* value, void* mem, uint32_t* memIndex, uint32_t memSize, bool endianSwap)
 {
     if (memSize - *memIndex < sizeof(*value))
         return false;
@@ -115,9 +121,62 @@ bool Read_U64(uint64_t* value, void* mem, uint32_t* memIndex, uint32_t memSize, 
     *memIndex += sizeof(*value);
 
     if (endianSwap)
-        EndianSwap_U64(value);
+        ShopData_C_EndianSwap_U32(value);
 
     return true;
+}
+
+bool ShopData_C_Read_U64(uint64_t* value, void* mem, uint32_t* memIndex, uint32_t memSize, bool endianSwap)
+{
+    if (memSize - *memIndex < sizeof(*value))
+        return false;
+
+    memcpy(value, &((uint8_t*)mem)[*memIndex], sizeof(*value));
+    *memIndex += sizeof(*value);
+
+    if (endianSwap)
+        ShopData_C_EndianSwap_U64(value);
+
+    return true;
+}
+
+void ShopData_C_DoEndianSwapAndPointerFixup_U8(uint8_t* value, void* mem, bool endianSwap)
+{
+    if (endianSwap)
+        ShopData_C_EndianSwap_U8(value);
+}
+
+void ShopData_C_DoEndianSwapAndPointerFixup_U16(uint16_t* value, void* mem, bool endianSwap)
+{
+    if (endianSwap)
+        ShopData_C_EndianSwap_U16(value);
+}
+
+void ShopData_C_DoEndianSwapAndPointerFixup_U32(uint32_t* value, void* mem, bool endianSwap)
+{
+    if (endianSwap)
+        ShopData_C_EndianSwap_U32(value);
+}
+
+void ShopData_C_DoEndianSwapAndPointerFixup_U64(uint64_t* value, void* mem, bool endianSwap)
+{
+    if (endianSwap)
+        ShopData_C_EndianSwap_U64(value);
+}
+
+void ShopData_C_DoEndianSwapAndPointerFixup_Ptr(uint64_t* value, void* mem, bool endianSwap)
+{
+    if (endianSwap)
+        ShopData_C_EndianSwap_U64(value);
+    if (*value != 0)
+        *value += (uint64_t)mem;
+}
+
+void ShopData_C_DoEndianSwapAndPointerFixup_Item(ShopData_C_Item* value, void* mem, bool endianSwap)
+{
+    ShopData_C_DoEndianSwapAndPointerFixup_Ptr(&value->name, mem, endianSwap);
+    ShopData_C_DoEndianSwapAndPointerFixup_U32(&value->sellCost, mem, endianSwap);
+    ShopData_C_DoEndianSwapAndPointerFixup_U32(&value->buyCost, mem, endianSwap);
 }
 
 void ShopData_C_InitDatabase(ShopData_C_Database* db)
@@ -152,7 +211,7 @@ bool ShopData_C_LoadFromMemory(void* mem, uint32_t memSize, ShopData_C_Database*
         static const uint32_t fourcc_swapped = MAKE_FOUR_CC('D', 'G', 'F', 'D');
 
         uint32_t fourcc = 0;
-        if (!Read_U32(&fourcc, mem, &memIndex, memSize, false))
+        if (!ShopData_C_Read_U32(&fourcc, mem, &memIndex, memSize, false))
             return false;
 
         if (fourcc == fourcc_swapped)
@@ -165,9 +224,9 @@ bool ShopData_C_LoadFromMemory(void* mem, uint32_t memSize, ShopData_C_Database*
     // Unused now, but can be used for backwards compatibility etc later.
     {
         uint8_t version[3];
-        if (!Read_U8(&version[0], mem, &memIndex, memSize, endianSwap) ||
-            !Read_U8(&version[1], mem, &memIndex, memSize, endianSwap) ||
-            !Read_U8(&version[2], mem, &memIndex, memSize, endianSwap))
+        if (!ShopData_C_Read_U8(&version[0], mem, &memIndex, memSize, endianSwap) ||
+            !ShopData_C_Read_U8(&version[1], mem, &memIndex, memSize, endianSwap) ||
+            !ShopData_C_Read_U8(&version[2], mem, &memIndex, memSize, endianSwap))
         {
             return false;
         }
@@ -177,11 +236,11 @@ bool ShopData_C_LoadFromMemory(void* mem, uint32_t memSize, ShopData_C_Database*
     {
         size_t contentStart = 7; // start after the fourcc and the 3 byte version
         size_t bytesRemaining = memSize - contentStart;
-        uint32_t rng = pcg_hash(0x1337beef);
+        uint32_t rng = ShopData_C_pcg_hash(0x1337beef);
         uint8_t* data = &((uint8_t*)mem)[contentStart];
         while (bytesRemaining > 0)
         {
-            rng = pcg_hash(rng);
+            rng = ShopData_C_pcg_hash(rng);
 
             for (size_t i = 0; i < ((bytesRemaining < 4) ? bytesRemaining : 4); ++i)
                 data[i] = data[i] ^ ((uint8_t*)&rng)[i];
@@ -198,13 +257,13 @@ bool ShopData_C_LoadFromMemory(void* mem, uint32_t memSize, ShopData_C_Database*
     // Verify that the schema hash in the binary data matches the schema hash this file was made for
     {
         uint64_t hash = 0;
-        if (!Read_U64(&hash, mem, &memIndex, memSize, endianSwap) || hash != 0x8d4eff8cb605d210ULL)
+        if (!ShopData_C_Read_U64(&hash, mem, &memIndex, memSize, endianSwap) || hash != 0x8d4eff8cb605d210ULL)
             return false;
     }
 
     // Item Table
     {
-        if (!Read_U32(&db->m_table_Item_count, mem, &memIndex, memSize, endianSwap))
+        if (!ShopData_C_Read_U32(&db->m_table_Item_count, mem, &memIndex, memSize, endianSwap))
             return false;
 
         if (db->m_table_Item_count > 0)
@@ -213,21 +272,21 @@ bool ShopData_C_LoadFromMemory(void* mem, uint32_t memSize, ShopData_C_Database*
             if (memSize - memIndex < db->m_table_Item_count * sizeof(uint64_t))
                 return false;
             db->m_table_Item_names = memIndex;
-            //DoEndianSwapAndPointerFixup(db->m_table_Item_names, mem, endianSwap);
-            //for (uint32_t i = 0; i < db->m_table_Item_count; ++i)
-                //DoEndianSwapAndPointerFixup(db->m_table_Item_names.ptr[i], mem, endianSwap);
+            ShopData_C_DoEndianSwapAndPointerFixup_Ptr(&db->m_table_Item_names, mem, endianSwap);
+            for (uint32_t i = 0; i < db->m_table_Item_count; ++i)
+                ShopData_C_DoEndianSwapAndPointerFixup_Ptr(&((uint64_t*)db->m_table_Item_names)[i], mem, endianSwap);
             memIndex += db->m_table_Item_count * sizeof(uint64_t);
 
             // Get a pointer to the first entry in the table
             if (memSize - memIndex < db->m_table_Item_count * sizeof(ShopData_C_Item))
                 return false;
             db->m_table_Item = memIndex;
-            //DoEndianSwapAndPointerFixup(db->m_table_Item, mem, endianSwap);
+            ShopData_C_DoEndianSwapAndPointerFixup_Ptr(&db->m_table_Item, mem, endianSwap);
             memIndex += db->m_table_Item_count * sizeof(ShopData_C_Item);
 
             // Do pointer fixup
-            //for (uint32_t i = 0; i < db->m_table_Item_count; ++i)
-                //DoEndianSwapAndPointerFixup(db->m_table_Item.ptr[i], mem, endianSwap);
+            for (uint32_t i = 0; i < db->m_table_Item_count; ++i)
+                ShopData_C_DoEndianSwapAndPointerFixup_Item(&((ShopData_C_Item*)db->m_table_Item)[i], mem, endianSwap);
         }
     }
 
