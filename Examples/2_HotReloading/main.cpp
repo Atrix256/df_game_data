@@ -25,6 +25,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    // Characters
     VERIFY(data.GetCharacterCount() == 3);
 
     Data::CharacterRecord char0 = data.GetCharacter(0);
@@ -47,6 +48,7 @@ int main(int argc, char** argv)
     VERIFY(char2.Get().inventory.ptr[0].ptr != nullptr);
     VERIFY(!strcmp(char2.Get().inventory.ptr[0].ptr->name.ptr, "Father's Sword"));
 
+    // Items
     VERIFY(data.GetItemCount() == 4);
     Data::ItemRecord item0 = data.GetItem(0);
     VERIFY(!strcmp(item0.Get().name.ptr, "6 Fingers"));

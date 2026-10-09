@@ -166,6 +166,18 @@ void /*$ClassName$*/_DoEndianSwapAndPointerFixup_U64(uint64_t* value, void* mem,
         /*$ClassName$*/_EndianSwap_U64(value);
 }
 
+void /*$ClassName$*/_DoEndianSwapAndPointerFixup_float(float* value, void* mem, bool endianSwap)
+{
+    if (endianSwap)
+        /*$ClassName$*/_EndianSwap_U32((uint32_t*)value);
+}
+
+void /*$ClassName$*/_DoEndianSwapAndPointerFixup_double(double* value, void* mem, bool endianSwap)
+{
+    if (endianSwap)
+        /*$ClassName$*/_EndianSwap_U64((uint64_t*)value);
+}
+
 void /*$ClassName$*/_DoEndianSwapAndPointerFixup_Ptr(uint64_t* value, void* mem, bool endianSwap)
 {
     if (endianSwap)

@@ -32,7 +32,7 @@ static bool IsARootStruct(const DBRoot& dbRoot, const char* name)
     return false;
 }
 
-static const bool FieldToCPPType(const DefParser::Struct& s, const DefParser::StructField& field, std::string& typeName)
+static const bool FieldToCType(const DefParser::Struct& s, const DefParser::StructField& field, std::string& typeName)
 {
     switch (field.fieldType)
     {
@@ -250,7 +250,7 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
                             indent << "typedef struct " << compilerSettings.className << "_" << s.name << "\n" <<
                             indent << "{\n" <<
                             indent << "    " << s.name << "_type type;\n" <<
-                            indent << "    uint64_t ptr; // Ptr64<void>\n"
+                            indent << "    uint64_t ptr; // void*\n"
                             "\n"
                             ;
 
@@ -261,7 +261,7 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
                         for (const DefParser::StructField& field : s.fields)
                         {
                             std::string typeName;
-                            if (!FieldToCPPType(s, field, typeName))
+                            if (!FieldToCType(s, field, typeName))
                                 return false;
                             enumsAndStructDefs << indent << "    using " << field.name << "_type = " << typeName << ";\n";
                         }
@@ -288,7 +288,7 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
                         {
                             // Get the C++ name of the type
                             std::string typeName;
-                            if (!FieldToCPPType(s, field, typeName))
+                            if (!FieldToCType(s, field, typeName))
                                 return false;
 
                             bool isUnion = false;
@@ -314,8 +314,8 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
                                 }
                                 else
                                 {
-                                    enumsAndStructDefs << indent << "    uint32_t " << field.name << "_count = 0;\n";
-                                    enumsAndStructDefs << indent << "    uint64_t " << field.name << "; // Ptr64<" << typeName << ">\n";
+                                    enumsAndStructDefs << indent << "    uint32_t " << field.name << "_count;\n";
+                                    enumsAndStructDefs << indent << "    uint64_t " << field.name << "; // " << typeName << "*\n";
                                 }
                                 continue;
                             }
@@ -362,7 +362,26 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
                         const char* endianSwapFuncPostFix = GetEndianSwapPostFix(field);
                         if (endianSwapFuncPostFix == nullptr)
                             return false;
-                        os << "    " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_" << endianSwapFuncPostFix << "(&value->" << field.name << ", mem, endianSwap);\n";
+
+                        // Get the C++ name of the type
+                        std::string typeName;
+                        if (!FieldToCType(s, field, typeName))
+                            return false;
+
+                        if (field.isArray)
+                        {
+                            os << "    " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_U32(&value->" << field.name << "_count, mem, endianSwap);\n";
+                            os << "    " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_U64(&value->" << field.name << ", mem, endianSwap);\n";
+                            os << "    for (uint32_t i = 0; i < value->" << field.name << "_count; ++i)\n";
+                            os << "    {\n";
+                            os << "        " << typeName << "* fieldPtr = &((" << typeName << "*)(value->" << field.name << "))[i];\n";
+                            os << "        " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_" << endianSwapFuncPostFix << "(fieldPtr, mem, endianSwap);\n";
+                            os << "    }\n";
+                        }
+                        else
+                        {
+                            os << "    " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_" << endianSwapFuncPostFix << "(&value->" << field.name << ", mem, endianSwap);\n";
+                        }
                     }
 
                     os << "}\n\n";

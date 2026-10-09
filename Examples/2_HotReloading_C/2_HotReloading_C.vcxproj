@@ -142,6 +142,11 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="main.c" />
+    <ClCompile Include="other.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Data_C.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
