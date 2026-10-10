@@ -285,10 +285,4 @@ bool /*$ClassName$*/_LoadFromFile(const char* fileName, /*$ClassName$*/_Database
     return ret;
 }
 /*$PrivateImplementation$*/#endif
-
-/*
-TODO:
-* document how to use it at the top, like we do the C++ interface
-* document hot reloading: tick returns true, then you need to update anything you cached.
-*/
 )EMBED";

@@ -444,9 +444,3 @@ bool Data_C_Tick(Data_C_Database* db)
     return false;
 }
 #endif
-
-/*
-TODO:
-* document how to use it at the top, like we do the C++ interface
-* document hot reloading: tick returns true, then you need to update anything you cached.
-*/
