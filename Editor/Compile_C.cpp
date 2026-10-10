@@ -79,6 +79,10 @@ static bool MakeC_Global(const DBCompileSettings& compilerSettings, const DBRoot
     s_data.tokenReplacement["/*$LoadFileEnd$*/"] << "";
     s_data.tokenReplacement["/*$LoadMemoryEnd$*/"] << "";
     s_data.tokenReplacement["/*$Obfuscation$*/"] << "";
+    s_data.tokenReplacement["/*$PrivateImplementation$*/"] << "";
+    s_data.tokenReplacement["/*$StructInit$*/"] << "";
+    s_data.tokenReplacement["/*$StructDeinit$*/"] << "";
+    s_data.tokenReplacement["/*$Includes$*/"] << "";
 
     s_data.tokenReplacement["/*$ClassName$*/"] << compilerSettings.className;
 
@@ -398,6 +402,104 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
     return true;
 }
 
+static bool MakeC_HotReload(const DBCompileSettings& compilerSettings, const DBRoot& dbRoot)
+{
+    // If not enabled, just return false
+    if (!compilerSettings.hotReloading)
+    {
+        std::ostringstream& os = s_data.tokenReplacement["/*$PrivateImplementation$*/"];
+        os << "\n"
+            "bool " << compilerSettings.className << "_Tick(" << compilerSettings.className << "_Database* db)\n"
+            "{\n"
+            "    return false;\n"
+            "}\n"
+            ;
+        return true;
+    }
+
+    // Storage
+    {
+        std::ostringstream& os = s_data.tokenReplacement["/*$StructFields$*/"];
+        os <<
+            "\n"
+            "    char* fileName;\n"
+            "    time_t fileTime;\n"
+            ;
+    }
+
+    // Init
+    {
+        std::ostringstream& os = s_data.tokenReplacement["/*$StructInit$*/"];
+        os <<
+            "\n"
+            "    db->fileName = NULL;\n"
+            "    db->fileTime = 0;\n"
+            ;
+    }
+
+    // $StructDeinit$
+    {
+        std::ostringstream& os = s_data.tokenReplacement["/*$StructDeinit$*/"];
+        os <<
+            "\n"
+            "    if (db->fileName)\n"
+            "    {\n"
+            "        free(db->fileName);\n"
+            "        db->fileName = NULL;\n"
+            "    }\n"
+            ;
+    }
+
+    // Load
+    {
+        std::ostringstream& os = s_data.tokenReplacement["/*$LoadFileEnd$*/"];
+
+        os <<
+            "\n"
+            "    // Store the filename for hot reloading\n"
+            "    if (!db->fileName || strcmp(db->fileName, fileName))\n"
+            "    {\n"
+            "        if (db->fileName)\n"
+            "            free(db->fileName);\n"
+            "        db->fileName = malloc(strlen(fileName) + 1);\n"
+            "        strcpy_s(db->fileName, strlen(fileName) + 1, fileName);\n"
+            "    }\n"
+            "\n"
+            "    // Get the file time for hot reloading\n"
+            "    struct stat fileStat;\n"
+            "    if (stat(db->fileName, &fileStat) == 0)\n"
+            "        db->fileTime = fileStat.st_mtime;\n"
+            ;
+    }
+
+    // includes
+    {
+        std::ostringstream& os = s_data.tokenReplacement["/*$Includes$*/"];
+        os << "#include <sys/stat.h>\n";
+    }
+
+    // Tick()
+    {
+        std::ostringstream& os = s_data.tokenReplacement["/*$PrivateImplementation$*/"];
+        os <<
+            "\n"
+            "bool " << compilerSettings.className << "_Tick(" << compilerSettings.className << "_Database* db)\n"
+            "{\n"
+            "    struct stat fileStat;\n"
+            "    if (db->fileName && stat(db->fileName, &fileStat) == 0 && fileStat.st_mtime > db->fileTime)\n"
+            "    {\n"
+            "        db->fileTime = fileStat.st_mtime;\n"
+            "        " << compilerSettings.className << "_LoadFromFile(db->fileName, db);\n"
+            "        return true;\n"
+            "    }\n"
+            "    return false;\n"
+            "}\n"
+            ;
+    }
+
+    return true;
+}
+
 bool MakeC(const DBCompileSettings& compilerSettings, const DBRoot& dbRoot, const char* fileName, uint64_t hash, std::string& error)
 {
     s_data = StaticData();
@@ -411,7 +513,8 @@ bool MakeC(const DBCompileSettings& compilerSettings, const DBRoot& dbRoot, cons
     if (!MakeC_Structs(compilerSettings, dbRoot))
         return false;
 
-    // TODO: implement!
+    if (!MakeC_HotReload(compilerSettings, dbRoot))
+        return false;
 
     // Do token replacement on output.h
     std::string out = c_file_text;

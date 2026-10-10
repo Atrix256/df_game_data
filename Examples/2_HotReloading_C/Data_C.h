@@ -16,6 +16,7 @@ Do not edit manually, unless you understand the consequences.
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #pragma pack(push, 1)
 typedef struct Data_C_Item
@@ -43,6 +44,9 @@ typedef struct Data_C_Database
     uint32_t m_table_Item_count;
     uint64_t m_table_Item_names; // char**
     uint64_t m_table_Item;       // Data_C_Item*
+
+    char* fileName;
+    time_t fileTime;
 } Data_C_Database;
 
 // Public interface
@@ -50,7 +54,7 @@ void Data_C_InitDatabase(Data_C_Database* db);
 void Data_C_DestroyDatabase(Data_C_Database* db);
 bool Data_C_LoadFromMemory(void* mem, uint32_t size, Data_C_Database* db);
 bool Data_C_LoadFromFile(const char* fileName, Data_C_Database* db);
-bool Data_C_Tick(Data_C_Database* db) { return false; }
+bool Data_C_Tick(Data_C_Database* db);
 
 // Private implementation
 #ifdef DF_GAMEDATA_IMPLEMENTATION
@@ -230,6 +234,9 @@ void Data_C_InitDatabase(Data_C_Database* db)
     db->m_ownedMemory = NULL;
     db->m_table_Character_count = 0;
     db->m_table_Item_count = 0;
+
+    db->fileName = NULL;
+    db->fileTime = 0;
 }
 
 void Data_C_DestroyDatabase(Data_C_Database* db)
@@ -238,6 +245,12 @@ void Data_C_DestroyDatabase(Data_C_Database* db)
     {
         free(db->m_ownedMemory);
         db->m_ownedMemory = NULL;
+    }
+
+    if (db->fileName)
+    {
+        free(db->fileName);
+        db->fileName = NULL;
     }
 }
 
@@ -379,6 +392,9 @@ bool Data_C_LoadFromFile(const char* fileName, Data_C_Database* db)
     fseek(file, 0, SEEK_END);
     uint32_t fileSize = (uint32_t)ftell(file);
 
+    if (db->m_ownedMemory)
+        free(db->m_ownedMemory);
+
     db->m_ownedMemory = malloc(fileSize);
     fseek(file, 0, SEEK_SET);
 
@@ -389,7 +405,33 @@ bool Data_C_LoadFromFile(const char* fileName, Data_C_Database* db)
 
     bool ret = Data_C_LoadFromMemory(db->m_ownedMemory, fileSize, db);
 
+    // Store the filename for hot reloading
+    if (!db->fileName || strcmp(db->fileName, fileName))
+    {
+        if (db->fileName)
+            free(db->fileName);
+        db->fileName = malloc(strlen(fileName) + 1);
+        strcpy_s(db->fileName, strlen(fileName) + 1, fileName);
+    }
+
+    // Get the file time for hot reloading
+    struct stat fileStat;
+    if (stat(db->fileName, &fileStat) == 0)
+        db->fileTime = fileStat.st_mtime;
+
     return ret;
+}
+
+bool Data_C_Tick(Data_C_Database* db)
+{
+    struct stat fileStat;
+    if (db->fileName && stat(db->fileName, &fileStat) == 0 && fileStat.st_mtime > db->fileTime)
+    {
+        db->fileTime = fileStat.st_mtime;
+        Data_C_LoadFromFile(db->fileName, db);
+        return true;
+    }
+    return false;
 }
 #endif
 

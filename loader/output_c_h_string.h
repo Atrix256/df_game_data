@@ -16,7 +16,7 @@ Do not edit manually, unless you understand the consequences.
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-
+/*$Includes$*/
 #pragma pack(push, 1)
 /*$EnumAndStructDefs$*/#pragma pack(pop)
 
@@ -30,6 +30,7 @@ void /*$ClassName$*/_InitDatabase(/*$ClassName$*/_Database* db);
 void /*$ClassName$*/_DestroyDatabase(/*$ClassName$*/_Database* db);
 bool /*$ClassName$*/_LoadFromMemory(void* mem, uint32_t size, /*$ClassName$*/_Database* db);
 bool /*$ClassName$*/_LoadFromFile(const char* fileName, /*$ClassName$*/_Database* db);
+bool /*$ClassName$*/_Tick(/*$ClassName$*/_Database* db);
 
 // Private implementation
 #ifdef DF_GAMEDATA_IMPLEMENTATION
@@ -198,7 +199,7 @@ void /*$ClassName$*/_DestroyDatabase(/*$ClassName$*/_Database* db)
         free(db->m_ownedMemory);
         db->m_ownedMemory = NULL;
     }
-}
+/*$StructDeinit$*/}
 
 bool /*$ClassName$*/_LoadFromMemory(void* mem, uint32_t memSize, /*$ClassName$*/_Database* db)
 {
@@ -258,6 +259,9 @@ bool /*$ClassName$*/_LoadFromFile(const char* fileName, /*$ClassName$*/_Database
     fseek(file, 0, SEEK_END);
     uint32_t fileSize = (uint32_t)ftell(file);
 
+    if (db->m_ownedMemory)
+        free(db->m_ownedMemory);
+
     db->m_ownedMemory = malloc(fileSize);
     fseek(file, 0, SEEK_SET);
 
@@ -270,7 +274,7 @@ bool /*$ClassName$*/_LoadFromFile(const char* fileName, /*$ClassName$*/_Database
 /*$LoadFileEnd$*/
     return ret;
 }
-#endif
+/*$PrivateImplementation$*/#endif
 
 /*
 TODO:

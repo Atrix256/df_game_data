@@ -40,6 +40,7 @@ void ShopData_C_InitDatabase(ShopData_C_Database* db);
 void ShopData_C_DestroyDatabase(ShopData_C_Database* db);
 bool ShopData_C_LoadFromMemory(void* mem, uint32_t size, ShopData_C_Database* db);
 bool ShopData_C_LoadFromFile(const char* fileName, ShopData_C_Database* db);
+bool ShopData_C_Tick(ShopData_C_Database* db);
 
 // Private implementation
 #ifdef DF_GAMEDATA_IMPLEMENTATION
@@ -327,6 +328,9 @@ bool ShopData_C_LoadFromFile(const char* fileName, ShopData_C_Database* db)
     fseek(file, 0, SEEK_END);
     uint32_t fileSize = (uint32_t)ftell(file);
 
+    if (db->m_ownedMemory)
+        free(db->m_ownedMemory);
+
     db->m_ownedMemory = malloc(fileSize);
     fseek(file, 0, SEEK_SET);
 
@@ -338,6 +342,11 @@ bool ShopData_C_LoadFromFile(const char* fileName, ShopData_C_Database* db)
     bool ret = ShopData_C_LoadFromMemory(db->m_ownedMemory, fileSize, db);
 
     return ret;
+}
+
+bool ShopData_C_Tick(ShopData_C_Database* db)
+{
+    return false;
 }
 #endif
 
