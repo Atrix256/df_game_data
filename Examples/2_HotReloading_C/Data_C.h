@@ -6,6 +6,15 @@ Do not edit manually, unless you understand the consequences.
         #define DF_GAMEDATA_IMPLEMENTATION
     before you include this file in *one* C or C++ file to create the implementation.
 
+To use:
+
+    InitDatabase()    - Initialize a database object. must be called before loading.
+    DestroyDatabase() - Destroys a database object and frees any internal memory used.
+    LoadFromMemory()  - Loads a database from a bin file in memory.
+    LoadFromFile()    - Loads a database from a bin file on disk.
+    Tick()            - Used for hot reloading. Returns true when hot reload happens, so you can update cached data.
+    StringIndex()     - Returns the index of a record, given a name table and a name.
+
 */
 // Made with df_game_data version 1.0.1
 
@@ -35,15 +44,15 @@ typedef struct Data_C_Character
 
 typedef struct Data_C_Database
 {
-    uint8_t* m_ownedMemory;
+    uint8_t* ownedMemory;
 
-    uint32_t m_table_Character_count;
-    uint64_t m_table_Character_names; // char**
-    uint64_t m_table_Character;       // Data_C_Character*
+    uint32_t table_Character_count;
+    uint64_t table_Character_names; // char**
+    uint64_t table_Character;       // Data_C_Character*
 
-    uint32_t m_table_Item_count;
-    uint64_t m_table_Item_names; // char**
-    uint64_t m_table_Item;       // Data_C_Item*
+    uint32_t table_Item_count;
+    uint64_t table_Item_names; // char**
+    uint64_t table_Item;       // Data_C_Item*
 
     char* fileName;
     time_t fileTime;
@@ -55,6 +64,7 @@ void Data_C_DestroyDatabase(Data_C_Database* db);
 bool Data_C_LoadFromMemory(void* mem, uint32_t size, Data_C_Database* db);
 bool Data_C_LoadFromFile(const char* fileName, Data_C_Database* db);
 bool Data_C_Tick(Data_C_Database* db);
+size_t Data_C_StringIndex(const char** arr, size_t count, const char* key);
 
 // Private implementation
 #ifdef DF_GAMEDATA_IMPLEMENTATION
@@ -231,9 +241,9 @@ void Data_C_DoEndianSwapAndPointerFixup_Character(Data_C_Character* value, void*
 
 void Data_C_InitDatabase(Data_C_Database* db)
 {
-    db->m_ownedMemory = NULL;
-    db->m_table_Character_count = 0;
-    db->m_table_Item_count = 0;
+    db->ownedMemory = NULL;
+    db->table_Character_count = 0;
+    db->table_Item_count = 0;
 
     db->fileName = NULL;
     db->fileTime = 0;
@@ -241,10 +251,10 @@ void Data_C_InitDatabase(Data_C_Database* db)
 
 void Data_C_DestroyDatabase(Data_C_Database* db)
 {
-    if (db->m_ownedMemory)
+    if (db->ownedMemory)
     {
-        free(db->m_ownedMemory);
-        db->m_ownedMemory = NULL;
+        free(db->ownedMemory);
+        db->ownedMemory = NULL;
     }
 
     if (db->fileName)
@@ -323,59 +333,59 @@ bool Data_C_LoadFromMemory(void* mem, uint32_t memSize, Data_C_Database* db)
 
     // Character Table
     {
-        if (!Data_C_Read_U32(&db->m_table_Character_count, mem, &memIndex, memSize, endianSwap))
+        if (!Data_C_Read_U32(&db->table_Character_count, mem, &memIndex, memSize, endianSwap))
             return false;
 
-        if (db->m_table_Character_count > 0)
+        if (db->table_Character_count > 0)
         {
             // get char** to LUT and fixup string pointers
-            if (memSize - memIndex < db->m_table_Character_count * sizeof(uint64_t))
+            if (memSize - memIndex < db->table_Character_count * sizeof(uint64_t))
                 return false;
-            db->m_table_Character_names = memIndex;
-            Data_C_DoEndianSwapAndPointerFixup_Ptr(&db->m_table_Character_names, mem, endianSwap);
-            for (uint32_t i = 0; i < db->m_table_Character_count; ++i)
-                Data_C_DoEndianSwapAndPointerFixup_Ptr(&((uint64_t*)db->m_table_Character_names)[i], mem, endianSwap);
-            memIndex += db->m_table_Character_count * sizeof(uint64_t);
+            db->table_Character_names = memIndex;
+            Data_C_DoEndianSwapAndPointerFixup_Ptr(&db->table_Character_names, mem, endianSwap);
+            for (uint32_t i = 0; i < db->table_Character_count; ++i)
+                Data_C_DoEndianSwapAndPointerFixup_Ptr(&((uint64_t*)db->table_Character_names)[i], mem, endianSwap);
+            memIndex += db->table_Character_count * sizeof(uint64_t);
 
             // Get a pointer to the first entry in the table
-            if (memSize - memIndex < db->m_table_Character_count * sizeof(Data_C_Character))
+            if (memSize - memIndex < db->table_Character_count * sizeof(Data_C_Character))
                 return false;
-            db->m_table_Character = memIndex;
-            Data_C_DoEndianSwapAndPointerFixup_Ptr(&db->m_table_Character, mem, endianSwap);
-            memIndex += db->m_table_Character_count * sizeof(Data_C_Character);
+            db->table_Character = memIndex;
+            Data_C_DoEndianSwapAndPointerFixup_Ptr(&db->table_Character, mem, endianSwap);
+            memIndex += db->table_Character_count * sizeof(Data_C_Character);
 
             // Do pointer fixup
-            for (uint32_t i = 0; i < db->m_table_Character_count; ++i)
-                Data_C_DoEndianSwapAndPointerFixup_Character(&((Data_C_Character*)db->m_table_Character)[i], mem, endianSwap);
+            for (uint32_t i = 0; i < db->table_Character_count; ++i)
+                Data_C_DoEndianSwapAndPointerFixup_Character(&((Data_C_Character*)db->table_Character)[i], mem, endianSwap);
         }
     }
 
     // Item Table
     {
-        if (!Data_C_Read_U32(&db->m_table_Item_count, mem, &memIndex, memSize, endianSwap))
+        if (!Data_C_Read_U32(&db->table_Item_count, mem, &memIndex, memSize, endianSwap))
             return false;
 
-        if (db->m_table_Item_count > 0)
+        if (db->table_Item_count > 0)
         {
             // get char** to LUT and fixup string pointers
-            if (memSize - memIndex < db->m_table_Item_count * sizeof(uint64_t))
+            if (memSize - memIndex < db->table_Item_count * sizeof(uint64_t))
                 return false;
-            db->m_table_Item_names = memIndex;
-            Data_C_DoEndianSwapAndPointerFixup_Ptr(&db->m_table_Item_names, mem, endianSwap);
-            for (uint32_t i = 0; i < db->m_table_Item_count; ++i)
-                Data_C_DoEndianSwapAndPointerFixup_Ptr(&((uint64_t*)db->m_table_Item_names)[i], mem, endianSwap);
-            memIndex += db->m_table_Item_count * sizeof(uint64_t);
+            db->table_Item_names = memIndex;
+            Data_C_DoEndianSwapAndPointerFixup_Ptr(&db->table_Item_names, mem, endianSwap);
+            for (uint32_t i = 0; i < db->table_Item_count; ++i)
+                Data_C_DoEndianSwapAndPointerFixup_Ptr(&((uint64_t*)db->table_Item_names)[i], mem, endianSwap);
+            memIndex += db->table_Item_count * sizeof(uint64_t);
 
             // Get a pointer to the first entry in the table
-            if (memSize - memIndex < db->m_table_Item_count * sizeof(Data_C_Item))
+            if (memSize - memIndex < db->table_Item_count * sizeof(Data_C_Item))
                 return false;
-            db->m_table_Item = memIndex;
-            Data_C_DoEndianSwapAndPointerFixup_Ptr(&db->m_table_Item, mem, endianSwap);
-            memIndex += db->m_table_Item_count * sizeof(Data_C_Item);
+            db->table_Item = memIndex;
+            Data_C_DoEndianSwapAndPointerFixup_Ptr(&db->table_Item, mem, endianSwap);
+            memIndex += db->table_Item_count * sizeof(Data_C_Item);
 
             // Do pointer fixup
-            for (uint32_t i = 0; i < db->m_table_Item_count; ++i)
-                Data_C_DoEndianSwapAndPointerFixup_Item(&((Data_C_Item*)db->m_table_Item)[i], mem, endianSwap);
+            for (uint32_t i = 0; i < db->table_Item_count; ++i)
+                Data_C_DoEndianSwapAndPointerFixup_Item(&((Data_C_Item*)db->table_Item)[i], mem, endianSwap);
         }
     }
 
@@ -392,18 +402,18 @@ bool Data_C_LoadFromFile(const char* fileName, Data_C_Database* db)
     fseek(file, 0, SEEK_END);
     uint32_t fileSize = (uint32_t)ftell(file);
 
-    if (db->m_ownedMemory)
-        free(db->m_ownedMemory);
+    if (db->ownedMemory)
+        free(db->ownedMemory);
 
-    db->m_ownedMemory = malloc(fileSize);
+    db->ownedMemory = malloc(fileSize);
     fseek(file, 0, SEEK_SET);
 
-    if (fread(db->m_ownedMemory, fileSize, 1, file) != 1)
+    if (fread(db->ownedMemory, fileSize, 1, file) != 1)
         return false;
 
     fclose(file);
 
-    bool ret = Data_C_LoadFromMemory(db->m_ownedMemory, fileSize, db);
+    bool ret = Data_C_LoadFromMemory(db->ownedMemory, fileSize, db);
 
     // Store the filename for hot reloading
     if (!db->fileName || strcmp(db->fileName, fileName))
@@ -438,7 +448,5 @@ bool Data_C_Tick(Data_C_Database* db)
 /*
 TODO:
 * document how to use it at the top, like we do the C++ interface
-* impl Hot reloading
-* How to handle records? or don't? tick can return true, but it's up to you to look up all the records again?
-* probably should have a function to get an index by name though, when we have the name table LUT
+* document hot reloading: tick returns true, then you need to update anything you cached.
 */

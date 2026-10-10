@@ -29,8 +29,8 @@ int main(int argc, char** argv)
     }
 
     // Characters
-    VERIFY(data.m_table_Character_count == 3);
-    const Data_C_Character* characters = (Data_C_Character*)data.m_table_Character;
+    VERIFY(data.table_Character_count == 3);
+    const Data_C_Character* characters = (Data_C_Character*)data.table_Character;
 
     const Data_C_Character* char0 = &characters[0];
     VERIFY(!strcmp((const char*)char0->name, "Count Tyrone Rugen"));
@@ -53,8 +53,8 @@ int main(int argc, char** argv)
     VERIFY(!strcmp((const char*)((Data_C_Item**)char2->inventory)[0]->name, "Father's Sword"));
 
     // Items
-    VERIFY(data.m_table_Item_count == 4);
-    const Data_C_Item* items = (Data_C_Item*)data.m_table_Item;
+    VERIFY(data.table_Item_count == 4);
+    const Data_C_Item* items = (Data_C_Item*)data.table_Item;
 
     const Data_C_Item* item0 = &items[0];
     VERIFY(!strcmp((const char*)item0->name, "6 Fingers"));
@@ -101,7 +101,7 @@ int main(int argc, char** argv)
             showData = false;
 
             // Show character data
-            uint32_t characterCount = data.m_table_Character_count;
+            uint32_t characterCount = data.table_Character_count;
             printf("%u Characters:\n", characterCount);
             for (uint32_t i = 0; i < characterCount; ++i)
             {
@@ -119,7 +119,7 @@ int main(int argc, char** argv)
             }
 
             // Show item data
-            uint32_t itemCount = data.m_table_Item_count;
+            uint32_t itemCount = data.table_Item_count;
             printf("%u Items:\n", itemCount);
             for (uint32_t i = 0; i < itemCount; ++i)
             {
@@ -142,9 +142,7 @@ int main(int argc, char** argv)
 
     return 0;
 }
-// TODO: actually make tick() work like it should.
-// TODO: DoEndianSwapAndPointerFixup. Arrays need to do their count, and then do their items in a loop
+
 // TODO: inventory is an array of links.  here it is an array of uint64 in the comments. should fix those comments
-// TODO: take m_ off things for less typing
 // TODO: maybe you should make a union type for each pointer type needed? Better type safety and easier to understand
 // TODO: look for TODOs

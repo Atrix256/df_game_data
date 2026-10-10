@@ -158,18 +158,18 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
 
             const DefParser& parser = pair.second->GetParser();
 
-            init << indent << "db->m_table_" << parser.GetRootStructName() << "_count = 0;\n";
+            init << indent << "db->table_" << parser.GetRootStructName() << "_count = 0;\n";
 
             // Make an extra newline to separate them
             privateStorage << "\n";
 
-            privateStorage << indent << "uint32_t m_table_" << parser.GetRootStructName() << "_count;\n";
+            privateStorage << indent << "uint32_t table_" << parser.GetRootStructName() << "_count;\n";
 
             // The sorted list of table names. Tables are written in sorted order
             if (compilerSettings.includeEntryLUT)
-                privateStorage << indent << "uint64_t m_table_" << parser.GetRootStructName() << "_names; // char**\n";
+                privateStorage << indent << "uint64_t table_" << parser.GetRootStructName() << "_names; // char**\n";
 
-            privateStorage << indent << "uint64_t m_table_" << parser.GetRootStructName() << ";       // " << compilerSettings.className << "_" << parser.GetRootStructName() << "*\n";
+            privateStorage << indent << "uint64_t table_" << parser.GetRootStructName() << ";       // " << compilerSettings.className << "_" << parser.GetRootStructName() << "*\n";
         }
     }
 
@@ -185,35 +185,35 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
 
             loadTables << indent << "// " << pair.first << " Table\n";
             loadTables << indent << "{\n";
-            loadTables << indent << "    if (!" << compilerSettings.className << "_Read_U32(&db->m_table_" << pair.first << "_count, mem, &memIndex, memSize, endianSwap))\n";
+            loadTables << indent << "    if (!" << compilerSettings.className << "_Read_U32(&db->table_" << pair.first << "_count, mem, &memIndex, memSize, endianSwap))\n";
             loadTables << indent << "        return false;\n";
             loadTables << "\n";
-            loadTables << indent << "    if (db->m_table_" << pair.first << "_count > 0)\n";
+            loadTables << indent << "    if (db->table_" << pair.first << "_count > 0)\n";
             loadTables << indent << "    {\n";
 
             if (compilerSettings.includeEntryLUT)
             {
                 loadTables << indent << "        // get char** to LUT and fixup string pointers\n";
-                loadTables << indent << "        if (memSize - memIndex < db->m_table_" << pair.first << "_count * sizeof(uint64_t))\n";
+                loadTables << indent << "        if (memSize - memIndex < db->table_" << pair.first << "_count * sizeof(uint64_t))\n";
                 loadTables << indent << "            return false;\n";
-                loadTables << indent << "        db->m_table_" << pair.first << "_names = memIndex;\n";
-                loadTables << indent << "        " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&db->m_table_" << pair.first << "_names, mem, endianSwap);\n";
-                loadTables << indent << "        for (uint32_t i = 0; i < db->m_table_" << pair.first << "_count; ++i)\n";
-                loadTables << indent << "            " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&((uint64_t*)db->m_table_" << pair.first << "_names)[i], mem, endianSwap);\n";
-                loadTables << indent << "        memIndex += db->m_table_" << pair.first << "_count * sizeof(uint64_t);\n";
+                loadTables << indent << "        db->table_" << pair.first << "_names = memIndex;\n";
+                loadTables << indent << "        " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&db->table_" << pair.first << "_names, mem, endianSwap);\n";
+                loadTables << indent << "        for (uint32_t i = 0; i < db->table_" << pair.first << "_count; ++i)\n";
+                loadTables << indent << "            " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&((uint64_t*)db->table_" << pair.first << "_names)[i], mem, endianSwap);\n";
+                loadTables << indent << "        memIndex += db->table_" << pair.first << "_count * sizeof(uint64_t);\n";
                 loadTables << "\n";
             }
 
             loadTables << indent << "        // Get a pointer to the first entry in the table\n";
-            loadTables << indent << "        if (memSize - memIndex < db->m_table_" << pair.first << "_count * sizeof(" << compilerSettings.className << "_" << pair.first << "))\n";
+            loadTables << indent << "        if (memSize - memIndex < db->table_" << pair.first << "_count * sizeof(" << compilerSettings.className << "_" << pair.first << "))\n";
             loadTables << indent << "            return false;\n";
-            loadTables << indent << "        db->m_table_" << pair.first << " = memIndex;\n";
-            loadTables << indent << "        " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&db->m_table_" << pair.first << ", mem, endianSwap);\n";
-            loadTables << indent << "        memIndex += db->m_table_" << pair.first << "_count * sizeof(" << compilerSettings.className << "_" << pair.first << ");\n";
+            loadTables << indent << "        db->table_" << pair.first << " = memIndex;\n";
+            loadTables << indent << "        " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&db->table_" << pair.first << ", mem, endianSwap);\n";
+            loadTables << indent << "        memIndex += db->table_" << pair.first << "_count * sizeof(" << compilerSettings.className << "_" << pair.first << ");\n";
             loadTables << "\n";
             loadTables << indent << "        // Do pointer fixup\n";
-            loadTables << indent << "        for (uint32_t i = 0; i < db->m_table_" << pair.first << "_count; ++i)\n";
-            loadTables << indent << "            " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_" << pair.first << "(&((" << compilerSettings.className << "_" << pair.first << "*)db->m_table_" << pair.first << ")[i], mem, endianSwap);\n";
+            loadTables << indent << "        for (uint32_t i = 0; i < db->table_" << pair.first << "_count; ++i)\n";
+            loadTables << indent << "            " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_" << pair.first << "(&((" << compilerSettings.className << "_" << pair.first << "*)db->table_" << pair.first << ")[i], mem, endianSwap);\n";
 
             loadTables << indent << "    }\n";
             loadTables << indent << "}\n";

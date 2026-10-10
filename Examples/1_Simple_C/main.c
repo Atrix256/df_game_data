@@ -24,8 +24,8 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    VERIFY(data.m_table_Item_count == 3);
-    ShopData_C_Item* items = (ShopData_C_Item*)data.m_table_Item;
+    VERIFY(data.table_Item_count == 3);
+    ShopData_C_Item* items = (ShopData_C_Item*)data.table_Item;
 
     // test index 0
     {
@@ -53,8 +53,8 @@ int main(int argc, char** argv)
 
     // test getting by name
     {
-        size_t index = ShopData_C_StringIndex((const char**)data.m_table_Item_names, data.m_table_Item_count, "Rusty Dagger");
-        VERIFY(index < data.m_table_Item_count);
+        size_t index = ShopData_C_StringIndex((const char**)data.table_Item_names, data.table_Item_count, "Rusty Dagger");
+        VERIFY(index < data.table_Item_count);
         ShopData_C_Item* item = &items[index];
         VERIFY(!strcmp((const char*)item->name, "Rusty Dagger"));
     }

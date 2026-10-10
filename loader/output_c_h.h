@@ -6,6 +6,15 @@ Do not edit manually, unless you understand the consequences.
         #define DF_GAMEDATA_IMPLEMENTATION
     before you include this file in *one* C or C++ file to create the implementation.
 
+To use:
+
+    InitDatabase()    - Initialize a database object. must be called before loading.
+    DestroyDatabase() - Destroys a database object and frees any internal memory used.
+    LoadFromMemory()  - Loads a database from a bin file in memory.
+    LoadFromFile()    - Loads a database from a bin file on disk.
+    Tick()            - Used for hot reloading. Returns true when hot reload happens, so you can update cached data.
+    StringIndex()     - Returns the index of a record, given a name table and a name.
+
 */
 // Made with df_game_data version /*$Version$*/
 
@@ -22,7 +31,7 @@ Do not edit manually, unless you understand the consequences.
 
 typedef struct /*$ClassName$*/_Database
 {
-    uint8_t* m_ownedMemory;
+    uint8_t* ownedMemory;
 /*$StructFields$*/} /*$ClassName$*/_Database;
 
 // Public interface
@@ -31,6 +40,7 @@ void /*$ClassName$*/_DestroyDatabase(/*$ClassName$*/_Database* db);
 bool /*$ClassName$*/_LoadFromMemory(void* mem, uint32_t size, /*$ClassName$*/_Database* db);
 bool /*$ClassName$*/_LoadFromFile(const char* fileName, /*$ClassName$*/_Database* db);
 bool /*$ClassName$*/_Tick(/*$ClassName$*/_Database* db);
+size_t /*$ClassName$*/_StringIndex(const char** arr, size_t count, const char* key);
 
 // Private implementation
 #ifdef DF_GAMEDATA_IMPLEMENTATION
@@ -189,15 +199,15 @@ void /*$ClassName$*/_DoEndianSwapAndPointerFixup_Ptr(uint64_t* value, void* mem,
 
 /*$DoEndianSwapAndPointerFixups$*/void /*$ClassName$*/_InitDatabase(/*$ClassName$*/_Database* db)
 {
-    db->m_ownedMemory = NULL;
+    db->ownedMemory = NULL;
 /*$StructInit$*/}
 
 void /*$ClassName$*/_DestroyDatabase(/*$ClassName$*/_Database* db)
 {
-    if (db->m_ownedMemory)
+    if (db->ownedMemory)
     {
-        free(db->m_ownedMemory);
-        db->m_ownedMemory = NULL;
+        free(db->ownedMemory);
+        db->ownedMemory = NULL;
     }
 /*$StructDeinit$*/}
 
@@ -259,18 +269,18 @@ bool /*$ClassName$*/_LoadFromFile(const char* fileName, /*$ClassName$*/_Database
     fseek(file, 0, SEEK_END);
     uint32_t fileSize = (uint32_t)ftell(file);
 
-    if (db->m_ownedMemory)
-        free(db->m_ownedMemory);
+    if (db->ownedMemory)
+        free(db->ownedMemory);
 
-    db->m_ownedMemory = malloc(fileSize);
+    db->ownedMemory = malloc(fileSize);
     fseek(file, 0, SEEK_SET);
 
-    if (fread(db->m_ownedMemory, fileSize, 1, file) != 1)
+    if (fread(db->ownedMemory, fileSize, 1, file) != 1)
         return false;
 
     fclose(file);
 
-    bool ret = /*$ClassName$*/_LoadFromMemory(db->m_ownedMemory, fileSize, db);
+    bool ret = /*$ClassName$*/_LoadFromMemory(db->ownedMemory, fileSize, db);
 /*$LoadFileEnd$*/
     return ret;
 }
@@ -279,7 +289,5 @@ bool /*$ClassName$*/_LoadFromFile(const char* fileName, /*$ClassName$*/_Database
 /*
 TODO:
 * document how to use it at the top, like we do the C++ interface
-* impl Hot reloading
-* How to handle records? or don't? tick can return true, but it's up to you to look up all the records again?
-* probably should have a function to get an index by name though, when we have the name table LUT
+* document hot reloading: tick returns true, then you need to update anything you cached.
 */
