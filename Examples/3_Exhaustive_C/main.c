@@ -52,27 +52,29 @@ bool DoTest_Data(const char* fileName)
     VERIFY(entry->entries._UTest.type == Data_C_UTest_type__float);
     VERIFY(*(float*)entry->entries._UTest.ptr == 23.0f);
 
+    // A bunch of types which have default values set in the def file
+    VERIFY(entry->entries_defaults._bool == true);
+    VERIFY(entry->entries_defaults._uint8 == 1);
+    VERIFY(entry->entries_defaults._sint8 == -2);
+    VERIFY(entry->entries_defaults._uint16 == 3);
+    VERIFY(entry->entries_defaults._sint16 == -4);
+    VERIFY(entry->entries_defaults._uint32 == 5);
+    VERIFY(entry->entries_defaults._sint32 == -6);
+    VERIFY(entry->entries_defaults._uint64 == 7);
+    VERIFY(entry->entries_defaults._sint64 == -8);
+    VERIFY(entry->entries_defaults._float == 10000.0f);
+    VERIFY(entry->entries_defaults._double == 1000.0);
+    VERIFY(!strcmp((const char*)entry->entries_defaults._string, "yo!"));
+    VERIFY(entry->entries_defaults._color == Data_C_Color_Hazel);
+    VERIFY((const Data_C_People*)(entry->entries_defaults._people) != NULL);
+    VERIFY(!strcmp((const char*)((const Data_C_People*)(entry->entries_defaults._people))->name, "Larry"));
+
     int ijkl = 0;
 
     // TODO: make all this work
     /*
 
-    // A bunch of types which have default values set in the def file
-    VERIFY(entry.entries_defaults._bool.Get() == true);
-    VERIFY(entry.entries_defaults._uint8 == 1);
-    VERIFY(entry.entries_defaults._sint8 == -2);
-    VERIFY(entry.entries_defaults._uint16 == 3);
-    VERIFY(entry.entries_defaults._sint16 == -4);
-    VERIFY(entry.entries_defaults._uint32 == 5);
-    VERIFY(entry.entries_defaults._sint32 == -6);
-    VERIFY(entry.entries_defaults._uint64 == 7);
-    VERIFY(entry.entries_defaults._sint64 == -8);
-    VERIFY(entry.entries_defaults._float == 10000.0f);
-    VERIFY(entry.entries_defaults._double == 1000.0);
-    VERIFY(!strcmp(entry.entries_defaults._string.ptr, "yo!"));
-    VERIFY(entry.entries_defaults._color == TData::Color::Hazel);
-    VERIFY(entry.entries_defaults._people.ptr != nullptr);
-    VERIFY(!strcmp(entry.entries_defaults._people.ptr->name.ptr, "Larry"));
+
 
     // A bunch of dynamic arrays of types
     VERIFY(entry.entries_dynamic_arrays._bool_count == 3);
