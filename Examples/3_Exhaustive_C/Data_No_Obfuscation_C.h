@@ -62,7 +62,7 @@ typedef struct
 
 typedef struct
 {
-    bool _bool;
+    uint8_t _bool;
     uint8_t _uint8;
     int8_t _sint8;
     uint16_t _uint16;
@@ -82,7 +82,7 @@ typedef struct
 
 typedef struct
 {
-    bool _bool;
+    uint8_t _bool;
     uint8_t _uint8;
     int8_t _sint8;
     uint16_t _uint16;
@@ -101,7 +101,7 @@ typedef struct
 typedef struct
 {
     uint32_t _bool_count;
-    uint64_t _bool; // bool*
+    uint64_t _bool; // uint8_t*
     uint32_t _uint8_count;
     uint64_t _uint8; // uint8_t*
     uint32_t _sint8_count;
@@ -136,7 +136,7 @@ typedef struct
 
 typedef struct
 {
-    bool _bool[2];
+    uint8_t _bool[2];
     uint8_t _uint8[2];
     int8_t _sint8[2];
     uint16_t _uint16[2];
@@ -408,7 +408,7 @@ void Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_EntryArrayDynamic(Data_No
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_bool, mem, endianSwap);
     for (uint32_t i = 0; i < value->_bool_count; ++i)
     {
-        bool* fieldPtr = &((bool*)(value->_bool))[i];
+        uint8_t* fieldPtr = &((uint8_t*)(value->_bool))[i];
         Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U8(fieldPtr, mem, endianSwap);
     }
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U32(&value->_uint8_count, mem, endianSwap);
@@ -522,7 +522,7 @@ void Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_EntryArray2(Data_No_Obfus
 {
     for (uint32_t i = 0; i < 2; ++i)
     {
-        bool* fieldPtr = &((bool*)(value->_bool))[i];
+        uint8_t* fieldPtr = &((uint8_t*)(value->_bool))[i];
         Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U8(fieldPtr, mem, endianSwap);
     }
     for (uint32_t i = 0; i < 2; ++i)

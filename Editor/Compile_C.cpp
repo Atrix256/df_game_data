@@ -36,7 +36,7 @@ static const bool FieldToCType(const DBCompileSettings& compilerSettings, const 
 {
     switch (field.fieldType)
     {
-        case DefParser::FieldType::_bool: typeName = "bool"; break;
+        case DefParser::FieldType::_bool: typeName = "uint8_t"; break;
         case DefParser::FieldType::_uint8: typeName = "uint8_t"; break;
         case DefParser::FieldType::_sint8: typeName = "int8_t"; break;
         case DefParser::FieldType::_uint16: typeName = "uint16_t"; break;
@@ -590,4 +590,5 @@ TODO:
 * we can also declare the enum type in a class so that it's a scoped enum
 * do we need some kind of global interface for unions? or a union that contains a pointer to each type, or maybe just a void* or something?
 * enums fields in structs should have a comment saying what enum they are for
+* arrays don't have a comment next to them about the type they point at. they should.
 */
