@@ -591,4 +591,5 @@ TODO:
 * do we need some kind of global interface for unions? or a union that contains a pointer to each type, or maybe just a void* or something?
 * enums fields in structs should have a comment saying what enum they are for
 * arrays don't have a comment next to them about the type they point at. they should.
+* comments for arrays of strings (and others?) has comments as uint64_t* instead of const char**
 */

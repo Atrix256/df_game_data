@@ -69,65 +69,62 @@ bool DoTest_Data(const char* fileName)
     VERIFY((const Data_C_People*)(entry->entries_defaults._people) != NULL);
     VERIFY(!strcmp((const char*)((const Data_C_People*)(entry->entries_defaults._people))->name, "Larry"));
 
-    int ijkl = 0;
+    // A bunch of dynamic arrays of types
+    VERIFY(entry->entries_dynamic_arrays._bool_count == 3);
+    VERIFY(((uint8_t*)entry->entries_dynamic_arrays._bool)[0] == false);
+    VERIFY(((uint8_t*)entry->entries_dynamic_arrays._bool)[1] == true);
+    VERIFY(((uint8_t*)entry->entries_dynamic_arrays._bool)[2] == false);
+    VERIFY(entry->entries_dynamic_arrays._uint8_count == 1);
+    VERIFY(((uint8_t*)entry->entries_dynamic_arrays._uint8)[0] == 2);
+    VERIFY(entry->entries_dynamic_arrays._sint8_count == 1);
+    VERIFY(((int8_t*)entry->entries_dynamic_arrays._sint8)[0] == 4);
+    VERIFY(entry->entries_dynamic_arrays._uint16_count == 1);
+    VERIFY(((uint16_t*)entry->entries_dynamic_arrays._uint16)[0] == 6);
+    VERIFY(entry->entries_dynamic_arrays._sint16_count == 1);
+    VERIFY(((int16_t*)entry->entries_dynamic_arrays._sint16)[0] == 8);
+    VERIFY(entry->entries_dynamic_arrays._uint32_count == 1);
+    VERIFY(((uint32_t*)entry->entries_dynamic_arrays._uint32)[0] == 10);
+    VERIFY(entry->entries_dynamic_arrays._sint32_count == 1);
+    VERIFY(((int32_t*)entry->entries_dynamic_arrays._sint32)[0] == 12);
+    VERIFY(entry->entries_dynamic_arrays._uint64_count == 1);
+    VERIFY(((uint64_t*)entry->entries_dynamic_arrays._uint64)[0] == 14);
+    VERIFY(entry->entries_dynamic_arrays._sint64_count == 2);
+    VERIFY(((int64_t*)entry->entries_dynamic_arrays._sint64)[0] == 16);
+    VERIFY(((int64_t*)entry->entries_dynamic_arrays._sint64)[1] == 18);
+    VERIFY(entry->entries_dynamic_arrays._float_count == 1);
+    VERIFY(((float*)entry->entries_dynamic_arrays._float)[0] == 20.0f);
+    VERIFY(entry->entries_dynamic_arrays._double_count == 1);
+    VERIFY(((double*)entry->entries_dynamic_arrays._double)[0] == 22.0f);
+    VERIFY(entry->entries_dynamic_arrays._string_count == 3);
+    VERIFY(!strcmp(((const char**)entry->entries_dynamic_arrays._string)[0], "uno"));
+    VERIFY(!strcmp(((const char**)entry->entries_dynamic_arrays._string)[1], ""));
+    VERIFY(!strcmp(((const char**)entry->entries_dynamic_arrays._string)[2], "tres"));
+    VERIFY(entry->entries_dynamic_arrays._color_count == 2);
+    VERIFY(((uint16_t*)entry->entries_dynamic_arrays._color)[0] == Data_C_Color_Blue);
+    VERIFY(((uint16_t*)entry->entries_dynamic_arrays._color)[1] == Data_C_Color_Green);
+    VERIFY(entry->entries_dynamic_arrays._pos_count == 2);
+    VERIFY(((Data_C_Pos*)entry->entries_dynamic_arrays._pos)[0].x == 96.0f);
+    VERIFY(((Data_C_Pos*)entry->entries_dynamic_arrays._pos)[0].y == 48.0f);
+    VERIFY(((Data_C_Pos*)entry->entries_dynamic_arrays._pos)[1].x == 7.0f);
+    VERIFY(((Data_C_Pos*)entry->entries_dynamic_arrays._pos)[1].y == 12.0f);
+    VERIFY(entry->entries_dynamic_arrays._people_count == 3);
+    VERIFY(((const Data_C_People**)entry->entries_dynamic_arrays._people)[0] != NULL);
+    VERIFY(!strcmp((const char*)((const Data_C_People**)entry->entries_dynamic_arrays._people)[0]->name, "Larry"));
+    VERIFY(((const Data_C_People**)entry->entries_dynamic_arrays._people)[1] == NULL);
+    VERIFY(((const Data_C_People**)entry->entries_dynamic_arrays._people)[2] != NULL);
+    VERIFY(!strcmp((const char*)((const Data_C_People**)entry->entries_dynamic_arrays._people)[2]->name, "Moe"));
+    VERIFY(entry->entries_dynamic_arrays._UTest_count == 3);
+    VERIFY((((Data_C_UTest*)entry->entries_dynamic_arrays._UTest)[0]).type == Data_C_UTest_type_None);
+    VERIFY((((Data_C_UTest*)entry->entries_dynamic_arrays._UTest)[1]).type == Data_C_UTest_type__pos);
+    VERIFY(((Data_C_Pos*)((((Data_C_UTest*)entry->entries_dynamic_arrays._UTest)[1]).ptr))->x == 2.0f);
+    VERIFY(((Data_C_Pos*)((((Data_C_UTest*)entry->entries_dynamic_arrays._UTest)[1]).ptr))->y == 3.0f);
+    VERIFY((((Data_C_UTest*)entry->entries_dynamic_arrays._UTest)[2]).type == Data_C_UTest_type__float);
+    VERIFY(*((float*)((((Data_C_UTest*)entry->entries_dynamic_arrays._UTest)[2]).ptr)) == 4.0f);
+
+    int ijklz = 0;
 
     // TODO: make all this work
     /*
-
-
-
-    // A bunch of dynamic arrays of types
-    VERIFY(entry.entries_dynamic_arrays._bool_count == 3);
-    VERIFY(entry.entries_dynamic_arrays._bool.ptr[0].Get() == false);
-    VERIFY(entry.entries_dynamic_arrays._bool.ptr[1].Get() == true);
-    VERIFY(entry.entries_dynamic_arrays._bool.ptr[2].Get() == false);
-    VERIFY(entry.entries_dynamic_arrays._uint8_count == 1);
-    VERIFY(entry.entries_dynamic_arrays._uint8.ptr[0] == 2);
-    VERIFY(entry.entries_dynamic_arrays._sint8_count == 1);
-    VERIFY(entry.entries_dynamic_arrays._sint8.ptr[0] == 4);
-    VERIFY(entry.entries_dynamic_arrays._uint16_count == 1);
-    VERIFY(entry.entries_dynamic_arrays._uint16.ptr[0] == 6);
-    VERIFY(entry.entries_dynamic_arrays._sint16_count == 1);
-    VERIFY(entry.entries_dynamic_arrays._sint16.ptr[0] == 8);
-    VERIFY(entry.entries_dynamic_arrays._uint32_count == 1);
-    VERIFY(entry.entries_dynamic_arrays._uint32.ptr[0] == 10);
-    VERIFY(entry.entries_dynamic_arrays._sint32_count == 1);
-    VERIFY(entry.entries_dynamic_arrays._sint32.ptr[0] == 12);
-    VERIFY(entry.entries_dynamic_arrays._uint64_count == 1);
-    VERIFY(entry.entries_dynamic_arrays._uint64.ptr[0] == 14);
-    VERIFY(entry.entries_dynamic_arrays._sint64_count == 2);
-    VERIFY(entry.entries_dynamic_arrays._sint64.ptr[0] == 16);
-    VERIFY(entry.entries_dynamic_arrays._sint64.ptr[1] == 18);
-    VERIFY(entry.entries_dynamic_arrays._float_count == 1);
-    VERIFY(entry.entries_dynamic_arrays._float.ptr[0] == 20.0f);
-    VERIFY(entry.entries_dynamic_arrays._double_count == 1);
-    VERIFY(entry.entries_dynamic_arrays._double.ptr[0] == 22.0f);
-    VERIFY(entry.entries_dynamic_arrays._string_count == 3);
-    VERIFY(!strcmp(entry.entries_dynamic_arrays._string.ptr[0].ptr, "uno"));
-    VERIFY(!strcmp(entry.entries_dynamic_arrays._string.ptr[1].ptr, ""));
-    VERIFY(!strcmp(entry.entries_dynamic_arrays._string.ptr[2].ptr, "tres"));
-    VERIFY(entry.entries_dynamic_arrays._color_count == 2);
-    VERIFY(entry.entries_dynamic_arrays._color.ptr[0] == TData::Color::Blue);
-    VERIFY(entry.entries_dynamic_arrays._color.ptr[1] == TData::Color::Green);
-    VERIFY(entry.entries_dynamic_arrays._pos_count == 2);
-    VERIFY(entry.entries_dynamic_arrays._pos.ptr[0].x == 96.0f);
-    VERIFY(entry.entries_dynamic_arrays._pos.ptr[0].y == 48.0f);
-    VERIFY(entry.entries_dynamic_arrays._pos.ptr[1].x == 7.0f);
-    VERIFY(entry.entries_dynamic_arrays._pos.ptr[1].y == 12.0f);
-    VERIFY(entry.entries_dynamic_arrays._people_count == 3);
-    VERIFY(entry.entries_dynamic_arrays._people.ptr[0].ptr != nullptr);
-    VERIFY(!strcmp(entry.entries_dynamic_arrays._people.ptr[0].ptr->name.ptr, "Larry"));
-    VERIFY(entry.entries_dynamic_arrays._people.ptr[1].ptr == nullptr);
-    VERIFY(entry.entries_dynamic_arrays._people.ptr[2].ptr != nullptr);
-    VERIFY(!strcmp(entry.entries_dynamic_arrays._people.ptr[2].ptr->name.ptr, "Moe"));
-    VERIFY(entry.entries_dynamic_arrays._UTest_count == 3);
-    VERIFY(entry.entries_dynamic_arrays._UTest.ptr[0].type == TData::UTest_type::None);
-    VERIFY(entry.entries_dynamic_arrays._UTest.ptr[1].type == TData::UTest_type::_pos);
-    VERIFY(entry.entries_dynamic_arrays._UTest.ptr[1]._pos()->x == 2.0f);
-    VERIFY(entry.entries_dynamic_arrays._UTest.ptr[1]._pos()->y == 3.0f);
-    VERIFY(entry.entries_dynamic_arrays._UTest.ptr[2].type == TData::UTest_type::_float);
-    VERIFY(*entry.entries_dynamic_arrays._UTest.ptr[2]._float() == 4.0f);
-
     // A bunch of static arrays of types
     VERIFY(entry.entries_static_arrays._bool_count == 2);
     VERIFY(entry.entries_static_arrays._bool[0].Get() == true);
