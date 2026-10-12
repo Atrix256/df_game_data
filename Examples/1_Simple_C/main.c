@@ -1,14 +1,14 @@
 #define DF_GAMEDATA_IMPLEMENTATION
 #include "ShopData_C.h"
 
-#define VERIFY(x) if (!Verify(x, #x)) return 1;
+#define VERIFY(x) if (!Verify(x, #x, __FILE__, __LINE__)) return 1;
 
-bool Verify(bool value, const char* cond)
+bool Verify(bool value, const char* cond, const char* fileName, int line)
 {
     if (value)
         return true;
 
-    printf("Condition failed: %s\n", cond);
+    printf("Condition failed (%s %i): %s\n", fileName, line, cond);
 
     return false;
 }
@@ -53,7 +53,7 @@ int main(int argc, char** argv)
 
     // test getting by name
     {
-        size_t index = ShopData_C_StringIndex((const char**)data.table_Item_names, data.table_Item_count, "Rusty Dagger");
+        size_t index = ShopData_C_StringIndex(data.table_Item_names, data.table_Item_count, "Rusty Dagger");
         VERIFY(index < data.table_Item_count);
         ShopData_C_Item* item = &items[index];
         VERIFY(!strcmp((const char*)item->name, "Rusty Dagger"));

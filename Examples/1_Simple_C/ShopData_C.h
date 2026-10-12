@@ -40,7 +40,7 @@ typedef struct ShopData_C_Database
     uint8_t* ownedMemory;
 
     uint32_t table_Item_count;
-    uint64_t table_Item_names; // char**
+    uint64_t table_Item_names; // uint64_t*, where the uint64_t is cast as char*
     uint64_t table_Item;       // ShopData_C_Item*
 } ShopData_C_Database;
 
@@ -50,7 +50,7 @@ void ShopData_C_DestroyDatabase(ShopData_C_Database* db);
 bool ShopData_C_LoadFromMemory(void* mem, uint32_t size, ShopData_C_Database* db);
 bool ShopData_C_LoadFromFile(const char* fileName, ShopData_C_Database* db);
 bool ShopData_C_Tick(ShopData_C_Database* db);
-size_t ShopData_C_StringIndex(const char** arr, size_t count, const char* key);
+size_t ShopData_C_StringIndex(uint64_t arr, size_t count, const char* key);
 
 // Private implementation
 #ifdef DF_GAMEDATA_IMPLEMENTATION
@@ -66,14 +66,14 @@ uint32_t ShopData_C_pcg_hash(uint32_t input)
 
 int ShopData_C_CompareKeyToElement(const void* key, const void* elem)
 {
-    return strcmp((const char*)key, *(const char* const*)elem);
+    return strcmp((const char*)key, *(const char**)elem);
 }
 
 // Returns count if not found
-size_t ShopData_C_StringIndex(const char** arr, size_t count, const char* key)
+size_t ShopData_C_StringIndex(uint64_t arr, size_t count, const char* key)
 {
-    char** hit = bsearch(key, arr, count, sizeof(const char*), ShopData_C_CompareKeyToElement);
-    return hit ? (hit - arr) : count;
+    uint64_t* hit = bsearch(key, (uint64_t*)arr, count, sizeof(uint64_t), ShopData_C_CompareKeyToElement);
+    return hit ? (hit - (uint64_t*)arr) : count;
 }
 
 void ShopData_C_EndianSwap_U8(uint8_t* value)

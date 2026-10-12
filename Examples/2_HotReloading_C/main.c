@@ -7,14 +7,14 @@
 #define NOMINMAX
 #include <windows.h>
 
-#define VERIFY(x) if (!Verify(x, #x)) return 1;
+#define VERIFY(x) if (!Verify(x, #x, __FILE__, __LINE__)) return 1;
 
-bool Verify(bool value, const char* cond)
+bool Verify(bool value, const char* cond, const char* fileName, int line)
 {
     if (value)
         return true;
 
-    printf("Condition failed: %s\n", cond);
+    printf("Condition failed (%s %i): %s\n", fileName, line, cond);
 
     return false;
 }
@@ -37,16 +37,16 @@ int main(int argc, char** argv)
     const Data_C_Character* char0 = &characters[0];
     VERIFY(!strcmp((const char*)char0->name, "Count Tyrone Rugen"));
     VERIFY(char0->inventory_count == 1);
-    VERIFY(((Data_C_Item**)char0->inventory)[0] != NULL);
+    VERIFY((Data_C_Item*)(((uint64_t*)char0->inventory)[0]) != NULL);
     VERIFY(!strcmp((const char*)((Data_C_Item**)char0->inventory)[0]->name, "6 Fingers"));
 
     const Data_C_Character* char1 = &characters[1];
     VERIFY(!strcmp((const char*)char1->name, "Dread Pirate Roberts"));
     VERIFY(char1->inventory_count == 2);
-    VERIFY(((Data_C_Item**)char1->inventory)[0] != NULL);
-    VERIFY(((Data_C_Item**)char1->inventory)[1] != NULL);
-    VERIFY(!strcmp((const char*)((Data_C_Item**)char1->inventory)[0]->name, "Black Mask"));
-    VERIFY(!strcmp((const char*)((Data_C_Item**)char1->inventory)[1]->name, "True Love"));
+    VERIFY((Data_C_Item*)(((uint64_t*)char1->inventory)[0]) != NULL);
+    VERIFY((Data_C_Item*)(((uint64_t*)char1->inventory)[1]) != NULL);
+    VERIFY(!strcmp((const char*)((Data_C_Item*)(((uint64_t*)char1->inventory)[0]))->name, "Black Mask"));
+    VERIFY(!strcmp((const char*)((Data_C_Item*)(((uint64_t*)char1->inventory)[1]))->name, "True Love"));
 
     const Data_C_Character* char2 = &characters[2];
     VERIFY(!strcmp((const char*)char2->name, "Inigo Montoya"));

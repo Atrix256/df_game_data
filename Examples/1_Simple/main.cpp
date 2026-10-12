@@ -1,14 +1,14 @@
 
 #include "ShopData.h"
 
-#define VERIFY(x) if (!Verify(x, #x)) return 1;
+#define VERIFY(x) if (!Verify(x, #x, __FILE__, __LINE__)) return 1;
 
-bool Verify(bool value, const char* cond)
+bool Verify(bool value, const char* cond, const char* fileName, int line)
 {
     if (value)
         return true;
 
-    printf("Condition failed: %s\n", cond);
+    printf("Condition failed (%s %i): %s\n", fileName, line, cond);
 
     return false;
 }

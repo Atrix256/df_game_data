@@ -40,7 +40,7 @@ void /*$ClassName$*/_DestroyDatabase(/*$ClassName$*/_Database* db);
 bool /*$ClassName$*/_LoadFromMemory(void* mem, uint32_t size, /*$ClassName$*/_Database* db);
 bool /*$ClassName$*/_LoadFromFile(const char* fileName, /*$ClassName$*/_Database* db);
 bool /*$ClassName$*/_Tick(/*$ClassName$*/_Database* db);
-size_t /*$ClassName$*/_StringIndex(const char** arr, size_t count, const char* key);
+size_t /*$ClassName$*/_StringIndex(uint64_t arr, size_t count, const char* key);
 
 // Private implementation
 #ifdef DF_GAMEDATA_IMPLEMENTATION
@@ -56,14 +56,14 @@ uint32_t /*$ClassName$*/_pcg_hash(uint32_t input)
 
 int /*$ClassName$*/_CompareKeyToElement(const void* key, const void* elem)
 {
-    return strcmp((const char*)key, *(const char* const*)elem);
+    return strcmp((const char*)key, *(const char**)elem);
 }
 
 // Returns count if not found
-size_t /*$ClassName$*/_StringIndex(const char** arr, size_t count, const char* key)
+size_t /*$ClassName$*/_StringIndex(uint64_t arr, size_t count, const char* key)
 {
-    char** hit = bsearch(key, arr, count, sizeof(const char*), /*$ClassName$*/_CompareKeyToElement);
-    return hit ? (hit - arr) : count;
+    uint64_t* hit = bsearch(key, (uint64_t*)arr, count, sizeof(uint64_t), /*$ClassName$*/_CompareKeyToElement);
+    return hit ? (hit - (uint64_t*)arr) : count;
 }
 
 void /*$ClassName$*/_EndianSwap_U8(uint8_t* value)

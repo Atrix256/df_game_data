@@ -167,7 +167,7 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
 
             // The sorted list of table names. Tables are written in sorted order
             if (compilerSettings.includeEntryLUT)
-                privateStorage << indent << "uint64_t table_" << parser.GetRootStructName() << "_names; // char**\n";
+                privateStorage << indent << "uint64_t table_" << parser.GetRootStructName() << "_names; // uint64_t*, where the uint64_t is cast as char*\n";
 
             privateStorage << indent << "uint64_t table_" << parser.GetRootStructName() << ";       // " << compilerSettings.className << "_" << parser.GetRootStructName() << "*\n";
         }

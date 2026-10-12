@@ -168,11 +168,11 @@ typedef struct Data_No_Obfuscation_C_Database
     uint8_t* ownedMemory;
 
     uint32_t table_Entry_count;
-    uint64_t table_Entry_names; // char**
+    uint64_t table_Entry_names; // uint64_t*, where the uint64_t is cast as char*
     uint64_t table_Entry;       // Data_No_Obfuscation_C_Entry*
 
     uint32_t table_People_count;
-    uint64_t table_People_names; // char**
+    uint64_t table_People_names; // uint64_t*, where the uint64_t is cast as char*
     uint64_t table_People;       // Data_No_Obfuscation_C_People*
 
     char* fileName;
@@ -185,7 +185,7 @@ void Data_No_Obfuscation_C_DestroyDatabase(Data_No_Obfuscation_C_Database* db);
 bool Data_No_Obfuscation_C_LoadFromMemory(void* mem, uint32_t size, Data_No_Obfuscation_C_Database* db);
 bool Data_No_Obfuscation_C_LoadFromFile(const char* fileName, Data_No_Obfuscation_C_Database* db);
 bool Data_No_Obfuscation_C_Tick(Data_No_Obfuscation_C_Database* db);
-size_t Data_No_Obfuscation_C_StringIndex(const char** arr, size_t count, const char* key);
+size_t Data_No_Obfuscation_C_StringIndex(uint64_t arr, size_t count, const char* key);
 
 // Private implementation
 #ifdef DF_GAMEDATA_IMPLEMENTATION
@@ -201,14 +201,14 @@ uint32_t Data_No_Obfuscation_C_pcg_hash(uint32_t input)
 
 int Data_No_Obfuscation_C_CompareKeyToElement(const void* key, const void* elem)
 {
-    return strcmp((const char*)key, *(const char* const*)elem);
+    return strcmp((const char*)key, *(const char**)elem);
 }
 
 // Returns count if not found
-size_t Data_No_Obfuscation_C_StringIndex(const char** arr, size_t count, const char* key)
+size_t Data_No_Obfuscation_C_StringIndex(uint64_t arr, size_t count, const char* key)
 {
-    char** hit = bsearch(key, arr, count, sizeof(const char*), Data_No_Obfuscation_C_CompareKeyToElement);
-    return hit ? (hit - arr) : count;
+    uint64_t* hit = bsearch(key, (uint64_t*)arr, count, sizeof(uint64_t), Data_No_Obfuscation_C_CompareKeyToElement);
+    return hit ? (hit - (uint64_t*)arr) : count;
 }
 
 void Data_No_Obfuscation_C_EndianSwap_U8(uint8_t* value)
