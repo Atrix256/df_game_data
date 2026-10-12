@@ -139,7 +139,7 @@ static const char* GetEndianSwapPostFix(const DefParser::StructField& field)
         case DefParser::FieldType::_float: return "float";
         case DefParser::FieldType::_double: return "double";
         case DefParser::FieldType::_string: return "Ptr";
-        case DefParser::FieldType::_enum: return field.enumName.c_str();
+        case DefParser::FieldType::_enum: return "U16"; // field.enumName.c_str();
         case DefParser::FieldType::_struct: return field.structName.c_str();
         case DefParser::FieldType::_link: return "Ptr";
         default: return nullptr;
@@ -371,30 +371,64 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
                         "(" << compilerSettings.className << "_" << s.name << "* value, void* mem, bool endianSwap)\n";
                     os << "{\n";
 
-                    for (const DefParser::StructField& field : s.fields)
+                    if (s.isUnion)
                     {
-                        const char* endianSwapFuncPostFix = GetEndianSwapPostFix(field);
-                        if (endianSwapFuncPostFix == nullptr)
-                            return false;
+                        os << "    " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_U16(&value->type, mem, endianSwap);\n";
+                        os << "    " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&value->ptr, mem, endianSwap);\n";
+                        os << "    switch (value->type)\n";
+                        os << "    {\n";
 
-                        // Get the C++ name of the type
-                        std::string typeName;
-                        if (!FieldToCType(compilerSettings, s, field, typeName))
-                            return false;
-
-                        if (field.isArray)
+                        for (const DefParser::StructField& field : s.fields)
                         {
-                            os << "    " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_U32(&value->" << field.name << "_count, mem, endianSwap);\n";
-                            os << "    " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&value->" << field.name << ", mem, endianSwap);\n";
-                            os << "    for (uint32_t i = 0; i < value->" << field.name << "_count; ++i)\n";
-                            os << "    {\n";
-                            os << "        " << typeName << "* fieldPtr = &((" << typeName << "*)(value->" << field.name << "))[i];\n";
-                            os << "        " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_" << endianSwapFuncPostFix << "(fieldPtr, mem, endianSwap);\n";
-                            os << "    }\n";
+                            const char* endianSwapFuncPostFix = GetEndianSwapPostFix(field);
+                            if (endianSwapFuncPostFix == nullptr)
+                                return false;
+
+                            // Get the C++ name of the type
+                            std::string typeName;
+                            if (!FieldToCType(compilerSettings, s, field, typeName))
+                                return false;
+
+                            os << "        case " << compilerSettings.className << "_" << s.name << "_type_" << field.name << ": ";
+                            os << compilerSettings.className << "_DoEndianSwapAndPointerFixup_" << endianSwapFuncPostFix << "((" << typeName << "*)value->ptr, mem, endianSwap); break;\n";
                         }
-                        else
+
+                        os << "    }\n";
+                    }
+                    else
+                    {
+                        for (const DefParser::StructField& field : s.fields)
                         {
-                            os << "    " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_" << endianSwapFuncPostFix << "(&value->" << field.name << ", mem, endianSwap);\n";
+                            const char* endianSwapFuncPostFix = GetEndianSwapPostFix(field);
+                            if (endianSwapFuncPostFix == nullptr)
+                                return false;
+
+                            // Get the C++ name of the type
+                            std::string typeName;
+                            if (!FieldToCType(compilerSettings, s, field, typeName))
+                                return false;
+
+                            if (field.isArray)
+                            {
+                                if (field.fixedArraySize == 0)
+                                {
+                                    os << "    " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_U32(&value->" << field.name << "_count, mem, endianSwap);\n";
+                                    os << "    " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&value->" << field.name << ", mem, endianSwap);\n";
+                                    os << "    for (uint32_t i = 0; i < value->" << field.name << "_count; ++i)\n";
+                                }
+                                else
+                                {
+                                    os << "    for (uint32_t i = 0; i < " << field.fixedArraySize << "; ++i)\n";
+                                }
+                                os << "    {\n";
+                                os << "        " << typeName << "* fieldPtr = &((" << typeName << "*)(value->" << field.name << "))[i];\n";
+                                os << "        " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_" << endianSwapFuncPostFix << "(fieldPtr, mem, endianSwap);\n";
+                                os << "    }\n";
+                            }
+                            else
+                            {
+                                os << "    " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_" << endianSwapFuncPostFix << "(&value->" << field.name << ", mem, endianSwap);\n";
+                            }
                         }
                     }
 

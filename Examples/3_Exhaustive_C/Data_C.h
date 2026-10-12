@@ -355,8 +355,13 @@ void Data_C_DoEndianSwapAndPointerFixup_People(Data_C_People* value, void* mem, 
 
 void Data_C_DoEndianSwapAndPointerFixup_UTest(Data_C_UTest* value, void* mem, bool endianSwap)
 {
-    Data_C_DoEndianSwapAndPointerFixup_Pos(&value->_pos, mem, endianSwap);
-    Data_C_DoEndianSwapAndPointerFixup_float(&value->_float, mem, endianSwap);
+    Data_C_DoEndianSwapAndPointerFixup_U16(&value->type, mem, endianSwap);
+    Data_C_DoEndianSwapAndPointerFixup_Ptr(&value->ptr, mem, endianSwap);
+    switch (value->type)
+    {
+        case Data_C_UTest_type__pos: Data_C_DoEndianSwapAndPointerFixup_Pos((Data_C_Pos*)value->ptr, mem, endianSwap); break;
+        case Data_C_UTest_type__float: Data_C_DoEndianSwapAndPointerFixup_float((float*)value->ptr, mem, endianSwap); break;
+    }
 }
 
 void Data_C_DoEndianSwapAndPointerFixup_EntryAll(Data_C_EntryAll* value, void* mem, bool endianSwap)
@@ -373,7 +378,7 @@ void Data_C_DoEndianSwapAndPointerFixup_EntryAll(Data_C_EntryAll* value, void* m
     Data_C_DoEndianSwapAndPointerFixup_float(&value->_float, mem, endianSwap);
     Data_C_DoEndianSwapAndPointerFixup_double(&value->_double, mem, endianSwap);
     Data_C_DoEndianSwapAndPointerFixup_Ptr(&value->_string, mem, endianSwap);
-    Data_C_DoEndianSwapAndPointerFixup_Color(&value->_color, mem, endianSwap);
+    Data_C_DoEndianSwapAndPointerFixup_U16(&value->_color, mem, endianSwap);
     Data_C_DoEndianSwapAndPointerFixup_Pos(&value->_pos, mem, endianSwap);
     Data_C_DoEndianSwapAndPointerFixup_Ptr(&value->_people, mem, endianSwap);
     Data_C_DoEndianSwapAndPointerFixup_UTest(&value->_UTest, mem, endianSwap);
@@ -393,7 +398,7 @@ void Data_C_DoEndianSwapAndPointerFixup_EntryDefault(Data_C_EntryDefault* value,
     Data_C_DoEndianSwapAndPointerFixup_float(&value->_float, mem, endianSwap);
     Data_C_DoEndianSwapAndPointerFixup_double(&value->_double, mem, endianSwap);
     Data_C_DoEndianSwapAndPointerFixup_Ptr(&value->_string, mem, endianSwap);
-    Data_C_DoEndianSwapAndPointerFixup_Color(&value->_color, mem, endianSwap);
+    Data_C_DoEndianSwapAndPointerFixup_U16(&value->_color, mem, endianSwap);
     Data_C_DoEndianSwapAndPointerFixup_Ptr(&value->_people, mem, endianSwap);
 }
 
@@ -488,7 +493,7 @@ void Data_C_DoEndianSwapAndPointerFixup_EntryArrayDynamic(Data_C_EntryArrayDynam
     for (uint32_t i = 0; i < value->_color_count; ++i)
     {
         uint16_t* fieldPtr = &((uint16_t*)(value->_color))[i];
-        Data_C_DoEndianSwapAndPointerFixup_Color(fieldPtr, mem, endianSwap);
+        Data_C_DoEndianSwapAndPointerFixup_U16(fieldPtr, mem, endianSwap);
     }
     Data_C_DoEndianSwapAndPointerFixup_U32(&value->_pos_count, mem, endianSwap);
     Data_C_DoEndianSwapAndPointerFixup_Ptr(&value->_pos, mem, endianSwap);
@@ -515,114 +520,82 @@ void Data_C_DoEndianSwapAndPointerFixup_EntryArrayDynamic(Data_C_EntryArrayDynam
 
 void Data_C_DoEndianSwapAndPointerFixup_EntryArray2(Data_C_EntryArray2* value, void* mem, bool endianSwap)
 {
-    Data_C_DoEndianSwapAndPointerFixup_U32(&value->_bool_count, mem, endianSwap);
-    Data_C_DoEndianSwapAndPointerFixup_Ptr(&value->_bool, mem, endianSwap);
-    for (uint32_t i = 0; i < value->_bool_count; ++i)
+    for (uint32_t i = 0; i < 2; ++i)
     {
         bool* fieldPtr = &((bool*)(value->_bool))[i];
         Data_C_DoEndianSwapAndPointerFixup_U8(fieldPtr, mem, endianSwap);
     }
-    Data_C_DoEndianSwapAndPointerFixup_U32(&value->_uint8_count, mem, endianSwap);
-    Data_C_DoEndianSwapAndPointerFixup_Ptr(&value->_uint8, mem, endianSwap);
-    for (uint32_t i = 0; i < value->_uint8_count; ++i)
+    for (uint32_t i = 0; i < 2; ++i)
     {
         uint8_t* fieldPtr = &((uint8_t*)(value->_uint8))[i];
         Data_C_DoEndianSwapAndPointerFixup_U8(fieldPtr, mem, endianSwap);
     }
-    Data_C_DoEndianSwapAndPointerFixup_U32(&value->_sint8_count, mem, endianSwap);
-    Data_C_DoEndianSwapAndPointerFixup_Ptr(&value->_sint8, mem, endianSwap);
-    for (uint32_t i = 0; i < value->_sint8_count; ++i)
+    for (uint32_t i = 0; i < 2; ++i)
     {
         int8_t* fieldPtr = &((int8_t*)(value->_sint8))[i];
         Data_C_DoEndianSwapAndPointerFixup_U8(fieldPtr, mem, endianSwap);
     }
-    Data_C_DoEndianSwapAndPointerFixup_U32(&value->_uint16_count, mem, endianSwap);
-    Data_C_DoEndianSwapAndPointerFixup_Ptr(&value->_uint16, mem, endianSwap);
-    for (uint32_t i = 0; i < value->_uint16_count; ++i)
+    for (uint32_t i = 0; i < 2; ++i)
     {
         uint16_t* fieldPtr = &((uint16_t*)(value->_uint16))[i];
         Data_C_DoEndianSwapAndPointerFixup_U16(fieldPtr, mem, endianSwap);
     }
-    Data_C_DoEndianSwapAndPointerFixup_U32(&value->_sint16_count, mem, endianSwap);
-    Data_C_DoEndianSwapAndPointerFixup_Ptr(&value->_sint16, mem, endianSwap);
-    for (uint32_t i = 0; i < value->_sint16_count; ++i)
+    for (uint32_t i = 0; i < 2; ++i)
     {
         int16_t* fieldPtr = &((int16_t*)(value->_sint16))[i];
         Data_C_DoEndianSwapAndPointerFixup_U16(fieldPtr, mem, endianSwap);
     }
-    Data_C_DoEndianSwapAndPointerFixup_U32(&value->_uint32_count, mem, endianSwap);
-    Data_C_DoEndianSwapAndPointerFixup_Ptr(&value->_uint32, mem, endianSwap);
-    for (uint32_t i = 0; i < value->_uint32_count; ++i)
+    for (uint32_t i = 0; i < 2; ++i)
     {
         uint32_t* fieldPtr = &((uint32_t*)(value->_uint32))[i];
         Data_C_DoEndianSwapAndPointerFixup_U32(fieldPtr, mem, endianSwap);
     }
-    Data_C_DoEndianSwapAndPointerFixup_U32(&value->_sint32_count, mem, endianSwap);
-    Data_C_DoEndianSwapAndPointerFixup_Ptr(&value->_sint32, mem, endianSwap);
-    for (uint32_t i = 0; i < value->_sint32_count; ++i)
+    for (uint32_t i = 0; i < 2; ++i)
     {
         int32_t* fieldPtr = &((int32_t*)(value->_sint32))[i];
         Data_C_DoEndianSwapAndPointerFixup_U32(fieldPtr, mem, endianSwap);
     }
-    Data_C_DoEndianSwapAndPointerFixup_U32(&value->_uint64_count, mem, endianSwap);
-    Data_C_DoEndianSwapAndPointerFixup_Ptr(&value->_uint64, mem, endianSwap);
-    for (uint32_t i = 0; i < value->_uint64_count; ++i)
+    for (uint32_t i = 0; i < 2; ++i)
     {
         uint64_t* fieldPtr = &((uint64_t*)(value->_uint64))[i];
         Data_C_DoEndianSwapAndPointerFixup_U64(fieldPtr, mem, endianSwap);
     }
-    Data_C_DoEndianSwapAndPointerFixup_U32(&value->_sint64_count, mem, endianSwap);
-    Data_C_DoEndianSwapAndPointerFixup_Ptr(&value->_sint64, mem, endianSwap);
-    for (uint32_t i = 0; i < value->_sint64_count; ++i)
+    for (uint32_t i = 0; i < 2; ++i)
     {
         int64_t* fieldPtr = &((int64_t*)(value->_sint64))[i];
         Data_C_DoEndianSwapAndPointerFixup_U64(fieldPtr, mem, endianSwap);
     }
-    Data_C_DoEndianSwapAndPointerFixup_U32(&value->_float_count, mem, endianSwap);
-    Data_C_DoEndianSwapAndPointerFixup_Ptr(&value->_float, mem, endianSwap);
-    for (uint32_t i = 0; i < value->_float_count; ++i)
+    for (uint32_t i = 0; i < 2; ++i)
     {
         float* fieldPtr = &((float*)(value->_float))[i];
         Data_C_DoEndianSwapAndPointerFixup_float(fieldPtr, mem, endianSwap);
     }
-    Data_C_DoEndianSwapAndPointerFixup_U32(&value->_double_count, mem, endianSwap);
-    Data_C_DoEndianSwapAndPointerFixup_Ptr(&value->_double, mem, endianSwap);
-    for (uint32_t i = 0; i < value->_double_count; ++i)
+    for (uint32_t i = 0; i < 2; ++i)
     {
         double* fieldPtr = &((double*)(value->_double))[i];
         Data_C_DoEndianSwapAndPointerFixup_double(fieldPtr, mem, endianSwap);
     }
-    Data_C_DoEndianSwapAndPointerFixup_U32(&value->_string_count, mem, endianSwap);
-    Data_C_DoEndianSwapAndPointerFixup_Ptr(&value->_string, mem, endianSwap);
-    for (uint32_t i = 0; i < value->_string_count; ++i)
+    for (uint32_t i = 0; i < 2; ++i)
     {
         uint64_t* fieldPtr = &((uint64_t*)(value->_string))[i];
         Data_C_DoEndianSwapAndPointerFixup_Ptr(fieldPtr, mem, endianSwap);
     }
-    Data_C_DoEndianSwapAndPointerFixup_U32(&value->_color_count, mem, endianSwap);
-    Data_C_DoEndianSwapAndPointerFixup_Ptr(&value->_color, mem, endianSwap);
-    for (uint32_t i = 0; i < value->_color_count; ++i)
+    for (uint32_t i = 0; i < 2; ++i)
     {
         uint16_t* fieldPtr = &((uint16_t*)(value->_color))[i];
-        Data_C_DoEndianSwapAndPointerFixup_Color(fieldPtr, mem, endianSwap);
+        Data_C_DoEndianSwapAndPointerFixup_U16(fieldPtr, mem, endianSwap);
     }
-    Data_C_DoEndianSwapAndPointerFixup_U32(&value->_pos_count, mem, endianSwap);
-    Data_C_DoEndianSwapAndPointerFixup_Ptr(&value->_pos, mem, endianSwap);
-    for (uint32_t i = 0; i < value->_pos_count; ++i)
+    for (uint32_t i = 0; i < 2; ++i)
     {
         Data_C_Pos* fieldPtr = &((Data_C_Pos*)(value->_pos))[i];
         Data_C_DoEndianSwapAndPointerFixup_Pos(fieldPtr, mem, endianSwap);
     }
-    Data_C_DoEndianSwapAndPointerFixup_U32(&value->_people_count, mem, endianSwap);
-    Data_C_DoEndianSwapAndPointerFixup_Ptr(&value->_people, mem, endianSwap);
-    for (uint32_t i = 0; i < value->_people_count; ++i)
+    for (uint32_t i = 0; i < 2; ++i)
     {
         uint64_t* fieldPtr = &((uint64_t*)(value->_people))[i];
         Data_C_DoEndianSwapAndPointerFixup_Ptr(fieldPtr, mem, endianSwap);
     }
-    Data_C_DoEndianSwapAndPointerFixup_U32(&value->_UTest_count, mem, endianSwap);
-    Data_C_DoEndianSwapAndPointerFixup_Ptr(&value->_UTest, mem, endianSwap);
-    for (uint32_t i = 0; i < value->_UTest_count; ++i)
+    for (uint32_t i = 0; i < 2; ++i)
     {
         Data_C_UTest* fieldPtr = &((Data_C_UTest*)(value->_UTest))[i];
         Data_C_DoEndianSwapAndPointerFixup_UTest(fieldPtr, mem, endianSwap);
