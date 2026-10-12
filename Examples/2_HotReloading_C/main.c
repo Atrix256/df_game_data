@@ -2,8 +2,10 @@
 #include "Data_C.h"
 
 #include <conio.h>
-#include <time.h>
-#include <threads.h>
+
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
 
 #define VERIFY(x) if (!Verify(x, #x)) return 1;
 
@@ -130,10 +132,7 @@ int main(int argc, char** argv)
 
         // Make this thread sleep for 250 milliseconds.
         // Hot reloading checks for changes 4 times a second.
-        struct timespec ts;
-        ts.tv_sec = 0;
-        ts.tv_nsec = 250 * 1000 * 1000; // 250 milliseconds in nanoseconds
-        thrd_sleep(&ts, NULL);
+        Sleep(250);
     }
 
     printf("\nAs you wish!\n");
