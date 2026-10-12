@@ -141,7 +141,3 @@ int main(int argc, char** argv)
 
     return 0;
 }
-
-// TODO: inventory is an array of links.  here it is an array of uint64 in the comments. should fix those comments
-// TODO: maybe you should make a union type for each pointer type needed? Better type safety and easier to understand
-// TODO: look for TODOs

@@ -163,13 +163,13 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
             // Make an extra newline to separate them
             privateStorage << "\n";
 
-            privateStorage << indent << "uint32_t table_" << parser.GetRootStructName() << "_count;\n";
+            privateStorage << indent << "uint32_t  table_" << parser.GetRootStructName() << "_count;\n";
 
             // The sorted list of table names. Tables are written in sorted order
             if (compilerSettings.includeEntryLUT)
-                privateStorage << indent << "uint64_t table_" << parser.GetRootStructName() << "_names; // uint64_t*, where the uint64_t is cast as char*\n";
+                privateStorage << indent << "uint64_t* table_" << parser.GetRootStructName() << "_names; // cast uint64_t to char*\n";
 
-            privateStorage << indent << "uint64_t table_" << parser.GetRootStructName() << ";       // " << compilerSettings.className << "_" << parser.GetRootStructName() << "*\n";
+            privateStorage << indent << "uint64_t  table_" << parser.GetRootStructName() << ";       // cast to " << compilerSettings.className << "_" << parser.GetRootStructName() << "*\n";
         }
     }
 
@@ -193,13 +193,14 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
 
             if (compilerSettings.includeEntryLUT)
             {
-                loadTables << indent << "        // get char** to LUT and fixup string pointers\n";
+                loadTables << indent << "        // get name LUT and fixup string pointers\n";
                 loadTables << indent << "        if (memSize - memIndex < db->table_" << pair.first << "_count * sizeof(uint64_t))\n";
                 loadTables << indent << "            return false;\n";
-                loadTables << indent << "        db->table_" << pair.first << "_names = memIndex;\n";
-                loadTables << indent << "        " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&db->table_" << pair.first << "_names, mem, endianSwap);\n";
+                loadTables << indent << "        uint64_t table_names = memIndex;\n";
+                loadTables << indent << "        " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&table_names, mem, endianSwap);\n";
+                loadTables << indent << "        db->table_" << pair.first << "_names = (uint64_t*)table_names;\n";
                 loadTables << indent << "        for (uint32_t i = 0; i < db->table_" << pair.first << "_count; ++i)\n";
-                loadTables << indent << "            " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&((uint64_t*)db->table_" << pair.first << "_names)[i], mem, endianSwap);\n";
+                loadTables << indent << "            " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&db->table_" << pair.first << "_names[i], mem, endianSwap);\n";
                 loadTables << indent << "        memIndex += db->table_" << pair.first << "_count * sizeof(uint64_t);\n";
                 loadTables << "\n";
             }
@@ -339,10 +340,6 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
 
                         enumsAndStructDefs << indent << "} " << compilerSettings.className << "_" << s.name << ";\n";
                     }
-
-                    // TODO: record interface?
-                    //if (IsARootStruct(dbRoot, s.name.c_str()))
-                        //enumsAndStructDefs << "\n" << indent << "using " << s.name << "Record = Record<" << s.name << ">;\n";
 
                     return true;
                 }
@@ -584,12 +581,12 @@ bool MakeC(const DBCompileSettings& compilerSettings, const DBRoot& dbRoot, cons
 }
 /*
 TODO:
-* look for todos
-* make a union for pointer types so there can be a .ptr for them.
-* can't make a union for enums, but we can make a comment at the u16 that they are a specific enum type
-* we can also declare the enum type in a class so that it's a scoped enum
-* do we need some kind of global interface for unions? or a union that contains a pointer to each type, or maybe just a void* or something?
 * enums fields in structs should have a comment saying what enum they are for
 * arrays don't have a comment next to them about the type they point at. they should.
-* comments for arrays of strings (and others?) has comments as uint64_t* instead of const char**
+* comments for arrays of strings (and others?) has comments as uint64_t* instead of const char**.
+ * well it is uint64_t, but the uint64_t is a char*
+* review generated code (structs) and make sure they make sense and fields that should have comments do have comments
 */
+
+// TODO: inventory is an array of links.  here it is an array of uint64 in the comments. should fix those comments.
+// * well, it is an array of uint64, but the uint64 should be cast to the type

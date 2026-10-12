@@ -167,13 +167,13 @@ typedef struct Data_C_Database
 {
     uint8_t* ownedMemory;
 
-    uint32_t table_Entry_count;
-    uint64_t table_Entry_names; // uint64_t*, where the uint64_t is cast as char*
-    uint64_t table_Entry;       // Data_C_Entry*
+    uint32_t  table_Entry_count;
+    uint64_t* table_Entry_names; // cast uint64_t to char*
+    uint64_t  table_Entry;       // cast to Data_C_Entry*
 
-    uint32_t table_People_count;
-    uint64_t table_People_names; // uint64_t*, where the uint64_t is cast as char*
-    uint64_t table_People;       // Data_C_People*
+    uint32_t  table_People_count;
+    uint64_t* table_People_names; // cast uint64_t to char*
+    uint64_t  table_People;       // cast to Data_C_People*
 
     char* fileName;
     time_t fileTime;
@@ -185,7 +185,7 @@ void Data_C_DestroyDatabase(Data_C_Database* db);
 bool Data_C_LoadFromMemory(void* mem, uint32_t size, Data_C_Database* db);
 bool Data_C_LoadFromFile(const char* fileName, Data_C_Database* db);
 bool Data_C_Tick(Data_C_Database* db);
-size_t Data_C_StringIndex(uint64_t arr, size_t count, const char* key);
+size_t Data_C_StringIndex(uint64_t* arr, size_t count, const char* key);
 
 // Private implementation
 #ifdef DF_GAMEDATA_IMPLEMENTATION
@@ -205,10 +205,10 @@ int Data_C_CompareKeyToElement(const void* key, const void* elem)
 }
 
 // Returns count if not found
-size_t Data_C_StringIndex(uint64_t arr, size_t count, const char* key)
+size_t Data_C_StringIndex(uint64_t* arr, size_t count, const char* key)
 {
-    uint64_t* hit = bsearch(key, (uint64_t*)arr, count, sizeof(uint64_t), Data_C_CompareKeyToElement);
-    return hit ? (hit - (uint64_t*)arr) : count;
+    uint64_t* hit = bsearch(key, arr, count, sizeof(uint64_t), Data_C_CompareKeyToElement);
+    return hit ? (hit - arr) : count;
 }
 
 void Data_C_EndianSwap_U8(uint8_t* value)
@@ -709,13 +709,14 @@ bool Data_C_LoadFromMemory(void* mem, uint32_t memSize, Data_C_Database* db)
 
         if (db->table_Entry_count > 0)
         {
-            // get char** to LUT and fixup string pointers
+            // get name LUT and fixup string pointers
             if (memSize - memIndex < db->table_Entry_count * sizeof(uint64_t))
                 return false;
-            db->table_Entry_names = memIndex;
-            Data_C_DoEndianSwapAndPointerFixup_Ptr(&db->table_Entry_names, mem, endianSwap);
+            uint64_t table_names = memIndex;
+            Data_C_DoEndianSwapAndPointerFixup_Ptr(&table_names, mem, endianSwap);
+            db->table_Entry_names = (uint64_t*)table_names;
             for (uint32_t i = 0; i < db->table_Entry_count; ++i)
-                Data_C_DoEndianSwapAndPointerFixup_Ptr(&((uint64_t*)db->table_Entry_names)[i], mem, endianSwap);
+                Data_C_DoEndianSwapAndPointerFixup_Ptr(&db->table_Entry_names[i], mem, endianSwap);
             memIndex += db->table_Entry_count * sizeof(uint64_t);
 
             // Get a pointer to the first entry in the table
@@ -738,13 +739,14 @@ bool Data_C_LoadFromMemory(void* mem, uint32_t memSize, Data_C_Database* db)
 
         if (db->table_People_count > 0)
         {
-            // get char** to LUT and fixup string pointers
+            // get name LUT and fixup string pointers
             if (memSize - memIndex < db->table_People_count * sizeof(uint64_t))
                 return false;
-            db->table_People_names = memIndex;
-            Data_C_DoEndianSwapAndPointerFixup_Ptr(&db->table_People_names, mem, endianSwap);
+            uint64_t table_names = memIndex;
+            Data_C_DoEndianSwapAndPointerFixup_Ptr(&table_names, mem, endianSwap);
+            db->table_People_names = (uint64_t*)table_names;
             for (uint32_t i = 0; i < db->table_People_count; ++i)
-                Data_C_DoEndianSwapAndPointerFixup_Ptr(&((uint64_t*)db->table_People_names)[i], mem, endianSwap);
+                Data_C_DoEndianSwapAndPointerFixup_Ptr(&db->table_People_names[i], mem, endianSwap);
             memIndex += db->table_People_count * sizeof(uint64_t);
 
             // Get a pointer to the first entry in the table

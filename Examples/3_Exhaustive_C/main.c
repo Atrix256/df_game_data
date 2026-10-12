@@ -327,7 +327,3 @@ int main(int argc, char** argv)
     printf("All checks passed!\n");
     return 0;
 }
-/*
-TODO:
-* test both types of objects
-*/
