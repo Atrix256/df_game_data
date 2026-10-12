@@ -28,13 +28,13 @@ To use:
 #include <sys/stat.h>
 
 #pragma pack(push, 1)
-typedef struct Data_C_Item
+typedef struct
 {
     uint64_t name;
     float value;
 } Data_C_Item;
 
-typedef struct Data_C_Character
+typedef struct
 {
     uint64_t name;
     uint32_t inventory_count;

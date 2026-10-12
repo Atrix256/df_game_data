@@ -32,7 +32,7 @@ static bool IsARootStruct(const DBRoot& dbRoot, const char* name)
     return false;
 }
 
-static const bool FieldToCType(const DefParser::Struct& s, const DefParser::StructField& field, std::string& typeName)
+static const bool FieldToCType(const DBCompileSettings& compilerSettings, const DefParser::Struct& s, const DefParser::StructField& field, std::string& typeName)
 {
     switch (field.fieldType)
     {
@@ -48,8 +48,8 @@ static const bool FieldToCType(const DefParser::Struct& s, const DefParser::Stru
         case DefParser::FieldType::_float: typeName = "float"; break;
         case DefParser::FieldType::_double: typeName = "double"; break;
         case DefParser::FieldType::_string: typeName = "uint64_t"; break; // Ptr64<char>
-        case DefParser::FieldType::_enum: typeName = field.enumName; break;
-        case DefParser::FieldType::_struct: typeName = field.structName; break;
+        case DefParser::FieldType::_enum: typeName = "uint16_t"; break; // field.enumName
+        case DefParser::FieldType::_struct: typeName = compilerSettings.className + "_" + field.structName; break;
         case DefParser::FieldType::_link: typeName = "uint64_t"; break; // Ptr64<" + field.linkName + ">
         default:
         {
@@ -220,6 +220,41 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
         }
     }
 
+    // Make enum defs
+    {
+        std::ostringstream& enumsAndStructDefs = s_data.tokenReplacement["/*$EnumAndStructDefs$*/"];
+        std::unordered_set<std::string> enumsWritten;
+        for (const auto& pair : dbRoot.m_tables)
+        {
+            const DefParser& parser = pair.second->GetParser();
+
+            bool ret = parser.ForEachEnum(
+                [&enumsAndStructDefs, &enumsWritten, &parser, &dbRoot, &compilerSettings](const DefParser::Enum& e)
+                {
+                    // only write the same type once
+                    if (enumsWritten.contains(e.name))
+                        return true;
+                    enumsWritten.insert(e.name);
+
+                    // If this isn't the first item written, make an extra newline to separate them
+                    if (!enumsAndStructDefs.view().empty())
+                        enumsAndStructDefs << "\n";
+
+                    std::string indent = "";
+
+                    enumsAndStructDefs << indent << "typedef enum\n" << indent << "{\n";
+                    for (const std::string& label : e.labels)
+                        enumsAndStructDefs << indent << "    " << compilerSettings.className << "_" << e.name << "_" << label << ",\n";
+                    enumsAndStructDefs << indent << "} " << compilerSettings.className << "_" << e.name << ";\n";
+
+                    return true;
+                }
+            );
+            if (!ret)
+                return false;
+        }
+    }
+
     {
         // Make struct defs
         std::ostringstream& enumsAndStructDefs = s_data.tokenReplacement["/*$EnumAndStructDefs$*/"];
@@ -244,55 +279,30 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
 
                     if (s.isUnion)
                     {
-                        enumsAndStructDefs << indent << "enum class " << s.name << "_type : uint16_t\n" << indent << "{\n";
-                        enumsAndStructDefs << indent << "    None,\n";
+                        enumsAndStructDefs << indent << "typedef enum\n" << indent << "{\n";
+                        enumsAndStructDefs << indent << "    " << compilerSettings.className << "_" << s.name << "_type_None,\n";
                         for (const DefParser::StructField& field : s.fields)
-                            enumsAndStructDefs << indent << "    " << field.name << ",\n";
-                        enumsAndStructDefs << indent << "};\n\n";
+                            enumsAndStructDefs << indent << "    " << compilerSettings.className << "_" << s.name << "_type_" << field.name << ",\n";
+                        enumsAndStructDefs << indent << "} " << compilerSettings.className << "_" << s.name << "_type;\n\n";
 
                         enumsAndStructDefs <<
-                            indent << "typedef struct " << compilerSettings.className << "_" << s.name << "\n" <<
+                            indent << "typedef struct\n" <<
                             indent << "{\n" <<
-                            indent << "    " << s.name << "_type type;\n" <<
-                            indent << "    uint64_t ptr; // void*\n"
-                            "\n"
-                            ;
-
-                        // TODO: union interface for C? maybe global functions?
-
-                        /*
-                        // make type aliases
-                        for (const DefParser::StructField& field : s.fields)
-                        {
-                            std::string typeName;
-                            if (!FieldToCType(s, field, typeName))
-                                return false;
-                            enumsAndStructDefs << indent << "    using " << field.name << "_type = " << typeName << ";\n";
-                        }
-
-                        // accessor functions
-                        for (const DefParser::StructField& field : s.fields)
-                        {
-                            enumsAndStructDefs << "\n";
-                            enumsAndStructDefs << indent << "    " << field.name << "_type* " << field.name << "() { return type == " << s.name << "_type::" << field.name << " ? reinterpret_cast<" << field.name << "_type*>(ptr.ptr) : nullptr; }\n";
-                            enumsAndStructDefs << indent << "    const " << field.name << "_type* " << field.name << "() const { return type == " << s.name << "_type::" << field.name << " ? reinterpret_cast<const " << field.name << "_type*>(ptr.ptr) : nullptr; }\n";
-                        }
-                        */
-
-                        enumsAndStructDefs <<
+                            indent << "    uint16_t type; // " << compilerSettings.className << "_" << s.name << "_type\n" <<
+                            indent << "    uint64_t ptr;  // void*\n" <<
                             indent << "} " << compilerSettings.className << "_" << s.name << ";\n"
                             ;
                     }
                     else
                     {
-                        enumsAndStructDefs << indent << "typedef struct " << compilerSettings.className << "_" << s.name << "\n" << indent << "{\n";
+                        enumsAndStructDefs << indent << "typedef struct\n" << indent << "{\n";
 
                         // Write the fields
                         for (const DefParser::StructField& field : s.fields)
                         {
                             // Get the C++ name of the type
                             std::string typeName;
-                            if (!FieldToCType(s, field, typeName))
+                            if (!FieldToCType(compilerSettings, s, field, typeName))
                                 return false;
 
                             bool isUnion = false;
@@ -313,7 +323,7 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
                             {
                                 if (field.fixedArraySize > 0)
                                 {
-                                    enumsAndStructDefs << indent << "    static const uint32_t " << field.name << "_count = " << field.fixedArraySize << ";\n";
+                                    //enumsAndStructDefs << indent << "    const uint32_t " << field.name << "_count = " << field.fixedArraySize << ";\n";
                                     enumsAndStructDefs << indent << "    " << typeName << " " << field.name << "[" << field.fixedArraySize << "];\n";
                                 }
                                 else
@@ -369,7 +379,7 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
 
                         // Get the C++ name of the type
                         std::string typeName;
-                        if (!FieldToCType(s, field, typeName))
+                        if (!FieldToCType(compilerSettings, s, field, typeName))
                             return false;
 
                         if (field.isArray)
@@ -540,5 +550,10 @@ bool MakeC(const DBCompileSettings& compilerSettings, const DBRoot& dbRoot, cons
 }
 /*
 TODO:
-DoEndianSwapAndPointerFixup and other global functions need to have class name prefix
+* look for todos
+* make a union for pointer types so there can be a .ptr for them.
+* can't make a union for enums, but we can make a comment at the u16 that they are a specific enum type
+* we can also declare the enum type in a class so that it's a scoped enum
+* do we need some kind of global interface for unions? or a union that contains a pointer to each type, or maybe just a void* or something?
+* enums fields in structs should have a comment saying what enum they are for
 */

@@ -27,7 +27,7 @@ To use:
 #include <string.h>
 
 #pragma pack(push, 1)
-typedef struct ShopData_C_Item
+typedef struct
 {
     uint64_t name;
     uint32_t sellCost;
