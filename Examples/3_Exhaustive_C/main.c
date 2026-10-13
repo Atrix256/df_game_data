@@ -28,7 +28,7 @@ bool DoTest_Data(const char* fileName)
     printf("%s\n", fileName);
 
     VERIFY(data.table_Entry_count == 1);
-    const Data_C_Entry* entries = (const Data_C_Entry*)data.table_Entry;
+    const Data_C_Entry* entries = data.table_Entry;
 
     const Data_C_Entry* entry = &entries[0];
 
@@ -178,7 +178,7 @@ bool DoTest_Data_No_Obfuscation(const char* fileName)
     printf("%s\n", fileName);
 
     VERIFY(data.table_Entry_count == 1);
-    const Data_No_Obfuscation_C_Entry* entries = (const Data_No_Obfuscation_C_Entry*)data.table_Entry;
+    const Data_No_Obfuscation_C_Entry* entries = data.table_Entry;
 
     const Data_No_Obfuscation_C_Entry* entry = &entries[0];
 

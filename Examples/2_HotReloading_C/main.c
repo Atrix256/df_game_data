@@ -32,7 +32,7 @@ int main(int argc, char** argv)
 
     // Characters
     VERIFY(data.table_Character_count == 3);
-    const Data_C_Character* characters = (Data_C_Character*)data.table_Character;
+    const Data_C_Character* characters = data.table_Character;
 
     const Data_C_Character* char0 = &characters[0];
     VERIFY(!strcmp((const char*)char0->name, "Count Tyrone Rugen"));
@@ -56,7 +56,7 @@ int main(int argc, char** argv)
 
     // Items
     VERIFY(data.table_Item_count == 4);
-    const Data_C_Item* items = (Data_C_Item*)data.table_Item;
+    const Data_C_Item* items = data.table_Item;
 
     const Data_C_Item* item0 = &items[0];
     VERIFY(!strcmp((const char*)item0->name, "6 Fingers"));

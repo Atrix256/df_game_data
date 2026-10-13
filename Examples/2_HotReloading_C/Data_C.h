@@ -30,15 +30,15 @@ To use:
 #pragma pack(push, 1)
 typedef struct
 {
-    uint64_t name;
+    uint64_t name; // cast uint64_t to char*
     float value;
 } Data_C_Item;
 
 typedef struct
 {
-    uint64_t name;
+    uint64_t name; // cast uint64_t to char*
     uint32_t inventory_count;
-    uint64_t inventory; // uint64_t*
+    uint64_t inventory; // cast to uint64_t*, cast uint64_t to Data_C_Item*
 } Data_C_Character;
 #pragma pack(pop)
 
@@ -46,13 +46,13 @@ typedef struct Data_C_Database
 {
     uint8_t* ownedMemory;
 
-    uint32_t  table_Character_count;
+    uint32_t table_Character_count;
     uint64_t* table_Character_names; // cast uint64_t to char*
-    uint64_t  table_Character;       // cast to Data_C_Character*
+    Data_C_Character* table_Character;
 
-    uint32_t  table_Item_count;
+    uint32_t table_Item_count;
     uint64_t* table_Item_names; // cast uint64_t to char*
-    uint64_t  table_Item;       // cast to Data_C_Item*
+    Data_C_Item* table_Item;
 
     char* fileName;
     time_t fileTime;
@@ -351,13 +351,14 @@ bool Data_C_LoadFromMemory(void* mem, uint32_t memSize, Data_C_Database* db)
             // Get a pointer to the first entry in the table
             if (memSize - memIndex < db->table_Character_count * sizeof(Data_C_Character))
                 return false;
-            db->table_Character = memIndex;
-            Data_C_DoEndianSwapAndPointerFixup_Ptr(&db->table_Character, mem, endianSwap);
+            uint64_t table = memIndex;
+            Data_C_DoEndianSwapAndPointerFixup_Ptr(&table, mem, endianSwap);
+            db->table_Character = (Data_C_Character*)table;
             memIndex += db->table_Character_count * sizeof(Data_C_Character);
 
             // Do pointer fixup
             for (uint32_t i = 0; i < db->table_Character_count; ++i)
-                Data_C_DoEndianSwapAndPointerFixup_Character(&((Data_C_Character*)db->table_Character)[i], mem, endianSwap);
+                Data_C_DoEndianSwapAndPointerFixup_Character(&db->table_Character[i], mem, endianSwap);
         }
     }
 
@@ -381,13 +382,14 @@ bool Data_C_LoadFromMemory(void* mem, uint32_t memSize, Data_C_Database* db)
             // Get a pointer to the first entry in the table
             if (memSize - memIndex < db->table_Item_count * sizeof(Data_C_Item))
                 return false;
-            db->table_Item = memIndex;
-            Data_C_DoEndianSwapAndPointerFixup_Ptr(&db->table_Item, mem, endianSwap);
+            uint64_t table = memIndex;
+            Data_C_DoEndianSwapAndPointerFixup_Ptr(&table, mem, endianSwap);
+            db->table_Item = (Data_C_Item*)table;
             memIndex += db->table_Item_count * sizeof(Data_C_Item);
 
             // Do pointer fixup
             for (uint32_t i = 0; i < db->table_Item_count; ++i)
-                Data_C_DoEndianSwapAndPointerFixup_Item(&((Data_C_Item*)db->table_Item)[i], mem, endianSwap);
+                Data_C_DoEndianSwapAndPointerFixup_Item(&db->table_Item[i], mem, endianSwap);
         }
     }
 

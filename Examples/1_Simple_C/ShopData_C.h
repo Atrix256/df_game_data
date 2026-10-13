@@ -29,7 +29,7 @@ To use:
 #pragma pack(push, 1)
 typedef struct
 {
-    uint64_t name;
+    uint64_t name; // cast uint64_t to char*
     uint32_t sellCost;
     uint32_t buyCost;
 } ShopData_C_Item;
@@ -39,9 +39,9 @@ typedef struct ShopData_C_Database
 {
     uint8_t* ownedMemory;
 
-    uint32_t  table_Item_count;
+    uint32_t table_Item_count;
     uint64_t* table_Item_names; // cast uint64_t to char*
-    uint64_t  table_Item;       // cast to ShopData_C_Item*
+    ShopData_C_Item* table_Item;
 } ShopData_C_Database;
 
 // Public interface
@@ -316,13 +316,14 @@ bool ShopData_C_LoadFromMemory(void* mem, uint32_t memSize, ShopData_C_Database*
             // Get a pointer to the first entry in the table
             if (memSize - memIndex < db->table_Item_count * sizeof(ShopData_C_Item))
                 return false;
-            db->table_Item = memIndex;
-            ShopData_C_DoEndianSwapAndPointerFixup_Ptr(&db->table_Item, mem, endianSwap);
+            uint64_t table = memIndex;
+            ShopData_C_DoEndianSwapAndPointerFixup_Ptr(&table, mem, endianSwap);
+            db->table_Item = (ShopData_C_Item*)table;
             memIndex += db->table_Item_count * sizeof(ShopData_C_Item);
 
             // Do pointer fixup
             for (uint32_t i = 0; i < db->table_Item_count; ++i)
-                ShopData_C_DoEndianSwapAndPointerFixup_Item(&((ShopData_C_Item*)db->table_Item)[i], mem, endianSwap);
+                ShopData_C_DoEndianSwapAndPointerFixup_Item(&db->table_Item[i], mem, endianSwap);
         }
     }
 

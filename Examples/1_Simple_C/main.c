@@ -25,7 +25,7 @@ int main(int argc, char** argv)
     }
 
     VERIFY(data.table_Item_count == 3);
-    ShopData_C_Item* items = (ShopData_C_Item*)data.table_Item;
+    ShopData_C_Item* items = data.table_Item;
 
     // test index 0
     {

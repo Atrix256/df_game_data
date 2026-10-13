@@ -32,11 +32,11 @@ static bool IsARootStruct(const DBRoot& dbRoot, const char* name)
     return false;
 }
 
-static const bool FieldToCType(const DBCompileSettings& compilerSettings, const DefParser::Struct& s, const DefParser::StructField& field, std::string& typeName)
+static const bool FieldToCType(const DBCompileSettings& compilerSettings, const DefParser::Struct& s, const DefParser::StructField& field, std::string& typeName, std::string& arrayComment, std::string& scalarComment)
 {
     switch (field.fieldType)
     {
-        case DefParser::FieldType::_bool: typeName = "uint8_t"; break;
+        case DefParser::FieldType::_bool: typeName = "uint8_t"; arrayComment = "cast to bool*"; scalarComment = "bool"; break;
         case DefParser::FieldType::_uint8: typeName = "uint8_t"; break;
         case DefParser::FieldType::_sint8: typeName = "int8_t"; break;
         case DefParser::FieldType::_uint16: typeName = "uint16_t"; break;
@@ -47,10 +47,10 @@ static const bool FieldToCType(const DBCompileSettings& compilerSettings, const 
         case DefParser::FieldType::_sint64: typeName = "int64_t"; break;
         case DefParser::FieldType::_float: typeName = "float"; break;
         case DefParser::FieldType::_double: typeName = "double"; break;
-        case DefParser::FieldType::_string: typeName = "uint64_t"; break; // Ptr64<char>
-        case DefParser::FieldType::_enum: typeName = "uint16_t"; break; // field.enumName
+        case DefParser::FieldType::_string: typeName = "uint64_t"; arrayComment = "cast to uint64_t*, cast uint64_t to char*"; scalarComment = "cast uint64_t to char*"; break;
+        case DefParser::FieldType::_enum: typeName = "uint16_t"; arrayComment = std::string("cast to uint16_t*, uint16_t is enum ") + compilerSettings.className + "_" + field.enumName; scalarComment = std::string("enum ") + compilerSettings.className + "_" + field.enumName; break;
         case DefParser::FieldType::_struct: typeName = compilerSettings.className + "_" + field.structName; break;
-        case DefParser::FieldType::_link: typeName = "uint64_t"; break; // Ptr64<" + field.linkName + ">
+        case DefParser::FieldType::_link: typeName = "uint64_t"; arrayComment = std::string("cast to uint64_t*, cast uint64_t to ") + compilerSettings.className + "_" + field.linkName + "*"; scalarComment = std::string("cast uint64_t to ") + compilerSettings.className + "_" + field.linkName + "*"; break;
         default:
         {
             s_data.error << "Unhandled field type for " << s.name << "." << field.name;
@@ -163,13 +163,13 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
             // Make an extra newline to separate them
             privateStorage << "\n";
 
-            privateStorage << indent << "uint32_t  table_" << parser.GetRootStructName() << "_count;\n";
+            privateStorage << indent << "uint32_t table_" << parser.GetRootStructName() << "_count;\n";
 
             // The sorted list of table names. Tables are written in sorted order
             if (compilerSettings.includeEntryLUT)
                 privateStorage << indent << "uint64_t* table_" << parser.GetRootStructName() << "_names; // cast uint64_t to char*\n";
 
-            privateStorage << indent << "uint64_t  table_" << parser.GetRootStructName() << ";       // cast to " << compilerSettings.className << "_" << parser.GetRootStructName() << "*\n";
+            privateStorage << indent << "" << compilerSettings.className << "_" << parser.GetRootStructName() << "* table_" << parser.GetRootStructName() << ";\n";
         }
     }
 
@@ -208,13 +208,14 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
             loadTables << indent << "        // Get a pointer to the first entry in the table\n";
             loadTables << indent << "        if (memSize - memIndex < db->table_" << pair.first << "_count * sizeof(" << compilerSettings.className << "_" << pair.first << "))\n";
             loadTables << indent << "            return false;\n";
-            loadTables << indent << "        db->table_" << pair.first << " = memIndex;\n";
-            loadTables << indent << "        " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&db->table_" << pair.first << ", mem, endianSwap);\n";
+            loadTables << indent << "        uint64_t table = memIndex;\n";
+            loadTables << indent << "        " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&table, mem, endianSwap);\n";
+            loadTables << indent << "        db->table_" << pair.first << " = (" << compilerSettings.className << "_" << pair.first << "*)table;\n";
             loadTables << indent << "        memIndex += db->table_" << pair.first << "_count * sizeof(" << compilerSettings.className << "_" << pair.first << ");\n";
             loadTables << "\n";
             loadTables << indent << "        // Do pointer fixup\n";
             loadTables << indent << "        for (uint32_t i = 0; i < db->table_" << pair.first << "_count; ++i)\n";
-            loadTables << indent << "            " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_" << pair.first << "(&((" << compilerSettings.className << "_" << pair.first << "*)db->table_" << pair.first << ")[i], mem, endianSwap);\n";
+            loadTables << indent << "            " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_" << pair.first << "(&db->table_" << pair.first << "[i], mem, endianSwap);\n";
 
             loadTables << indent << "    }\n";
             loadTables << indent << "}\n";
@@ -290,7 +291,7 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
                             indent << "typedef struct\n" <<
                             indent << "{\n" <<
                             indent << "    uint16_t type; // " << compilerSettings.className << "_" << s.name << "_type\n" <<
-                            indent << "    uint64_t ptr;  // void*\n" <<
+                            indent << "    uint64_t ptr;  // Cast to pointer type of the field specified in type.\n" <<
                             indent << "} " << compilerSettings.className << "_" << s.name << ";\n"
                             ;
                     }
@@ -303,7 +304,8 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
                         {
                             // Get the C++ name of the type
                             std::string typeName;
-                            if (!FieldToCType(compilerSettings, s, field, typeName))
+                            std::string arrayComment, scalarComment;
+                            if (!FieldToCType(compilerSettings, s, field, typeName, arrayComment, scalarComment))
                                 return false;
 
                             bool isUnion = false;
@@ -325,17 +327,30 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
                                 if (field.fixedArraySize > 0)
                                 {
                                     //enumsAndStructDefs << indent << "    const uint32_t " << field.name << "_count = " << field.fixedArraySize << ";\n";
-                                    enumsAndStructDefs << indent << "    " << typeName << " " << field.name << "[" << field.fixedArraySize << "];\n";
+                                    enumsAndStructDefs << indent << "    " << typeName << " " << field.name << "[" << field.fixedArraySize << "];";
+
+                                    if (!scalarComment.empty())
+                                        enumsAndStructDefs << " // " << scalarComment;
+                                    enumsAndStructDefs << "\n";
                                 }
                                 else
                                 {
                                     enumsAndStructDefs << indent << "    uint32_t " << field.name << "_count;\n";
-                                    enumsAndStructDefs << indent << "    uint64_t " << field.name << "; // " << typeName << "*\n";
+                                    enumsAndStructDefs << indent << "    uint64_t " << field.name << ";";
+                                    if (!arrayComment.empty())
+                                        enumsAndStructDefs << " // " << arrayComment;
+                                    else
+                                        enumsAndStructDefs << " // cast to " << typeName << "*";
+                                    enumsAndStructDefs << "\n";
                                 }
                                 continue;
                             }
 
-                            enumsAndStructDefs << indent << "    " << typeName << " " << field.name << ";\n";
+                            enumsAndStructDefs << indent << "    " << typeName << " " << field.name << ";";
+
+                            if (!scalarComment.empty())
+                                enumsAndStructDefs << " // " << scalarComment;
+                            enumsAndStructDefs << "\n";
                         }
 
                         enumsAndStructDefs << indent << "} " << compilerSettings.className << "_" << s.name << ";\n";
@@ -383,7 +398,8 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
 
                             // Get the C++ name of the type
                             std::string typeName;
-                            if (!FieldToCType(compilerSettings, s, field, typeName))
+                            std::string arrayComment, scalarComment;
+                            if (!FieldToCType(compilerSettings, s, field, typeName, arrayComment, scalarComment))
                                 return false;
 
                             os << "        case " << compilerSettings.className << "_" << s.name << "_type_" << field.name << ": ";
@@ -402,7 +418,8 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
 
                             // Get the C++ name of the type
                             std::string typeName;
-                            if (!FieldToCType(compilerSettings, s, field, typeName))
+                            std::string arrayComment, scalarComment;
+                            if (!FieldToCType(compilerSettings, s, field, typeName, arrayComment, scalarComment))
                                 return false;
 
                             if (field.isArray)
@@ -579,14 +596,3 @@ bool MakeC(const DBCompileSettings& compilerSettings, const DBRoot& dbRoot, cons
 
     return true;
 }
-/*
-TODO:
-* enums fields in structs should have a comment saying what enum they are for
-* arrays don't have a comment next to them about the type they point at. they should.
-* comments for arrays of strings (and others?) has comments as uint64_t* instead of const char**.
- * well it is uint64_t, but the uint64_t is a char*
-* review generated code (structs) and make sure they make sense and fields that should have comments do have comments
-*/
-
-// TODO: inventory is an array of links.  here it is an array of uint64 in the comments. should fix those comments.
-// * well, it is an array of uint64, but the uint64 should be cast to the type

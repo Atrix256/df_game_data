@@ -44,7 +44,7 @@ typedef struct
 
 typedef struct
 {
-    uint64_t name;
+    uint64_t name; // cast uint64_t to char*
 } Data_C_People;
 
 typedef enum
@@ -57,12 +57,12 @@ typedef enum
 typedef struct
 {
     uint16_t type; // Data_C_UTest_type
-    uint64_t ptr;  // void*
+    uint64_t ptr;  // Cast to pointer type of the field specified in type.
 } Data_C_UTest;
 
 typedef struct
 {
-    uint8_t _bool;
+    uint8_t _bool; // bool
     uint8_t _uint8;
     int8_t _sint8;
     uint16_t _uint16;
@@ -73,16 +73,16 @@ typedef struct
     int64_t _sint64;
     float _float;
     double _double;
-    uint64_t _string;
-    uint16_t _color;
+    uint64_t _string; // cast uint64_t to char*
+    uint16_t _color; // enum Data_C_Color
     Data_C_Pos _pos;
-    uint64_t _people;
+    uint64_t _people; // cast uint64_t to Data_C_People*
     Data_C_UTest _UTest;
 } Data_C_EntryAll;
 
 typedef struct
 {
-    uint8_t _bool;
+    uint8_t _bool; // bool
     uint8_t _uint8;
     int8_t _sint8;
     uint16_t _uint16;
@@ -93,50 +93,50 @@ typedef struct
     int64_t _sint64;
     float _float;
     double _double;
-    uint64_t _string;
-    uint16_t _color;
-    uint64_t _people;
+    uint64_t _string; // cast uint64_t to char*
+    uint16_t _color; // enum Data_C_Color
+    uint64_t _people; // cast uint64_t to Data_C_People*
 } Data_C_EntryDefault;
 
 typedef struct
 {
     uint32_t _bool_count;
-    uint64_t _bool; // uint8_t*
+    uint64_t _bool; // cast to bool*
     uint32_t _uint8_count;
-    uint64_t _uint8; // uint8_t*
+    uint64_t _uint8; // cast to uint8_t*
     uint32_t _sint8_count;
-    uint64_t _sint8; // int8_t*
+    uint64_t _sint8; // cast to int8_t*
     uint32_t _uint16_count;
-    uint64_t _uint16; // uint16_t*
+    uint64_t _uint16; // cast to uint16_t*
     uint32_t _sint16_count;
-    uint64_t _sint16; // int16_t*
+    uint64_t _sint16; // cast to int16_t*
     uint32_t _uint32_count;
-    uint64_t _uint32; // uint32_t*
+    uint64_t _uint32; // cast to uint32_t*
     uint32_t _sint32_count;
-    uint64_t _sint32; // int32_t*
+    uint64_t _sint32; // cast to int32_t*
     uint32_t _uint64_count;
-    uint64_t _uint64; // uint64_t*
+    uint64_t _uint64; // cast to uint64_t*
     uint32_t _sint64_count;
-    uint64_t _sint64; // int64_t*
+    uint64_t _sint64; // cast to int64_t*
     uint32_t _float_count;
-    uint64_t _float; // float*
+    uint64_t _float; // cast to float*
     uint32_t _double_count;
-    uint64_t _double; // double*
+    uint64_t _double; // cast to double*
     uint32_t _string_count;
-    uint64_t _string; // uint64_t*
+    uint64_t _string; // cast to uint64_t*, cast uint64_t to char*
     uint32_t _color_count;
-    uint64_t _color; // uint16_t*
+    uint64_t _color; // cast to uint16_t*, uint16_t is enum Data_C_Color
     uint32_t _pos_count;
-    uint64_t _pos; // Data_C_Pos*
+    uint64_t _pos; // cast to Data_C_Pos*
     uint32_t _people_count;
-    uint64_t _people; // uint64_t*
+    uint64_t _people; // cast to uint64_t*, cast uint64_t to Data_C_People*
     uint32_t _UTest_count;
-    uint64_t _UTest; // Data_C_UTest*
+    uint64_t _UTest; // cast to Data_C_UTest*
 } Data_C_EntryArrayDynamic;
 
 typedef struct
 {
-    uint8_t _bool[2];
+    uint8_t _bool[2]; // bool
     uint8_t _uint8[2];
     int8_t _sint8[2];
     uint16_t _uint16[2];
@@ -147,10 +147,10 @@ typedef struct
     int64_t _sint64[2];
     float _float[2];
     double _double[2];
-    uint64_t _string[2];
-    uint16_t _color[2];
+    uint64_t _string[2]; // cast uint64_t to char*
+    uint16_t _color[2]; // enum Data_C_Color
     Data_C_Pos _pos[2];
-    uint64_t _people[2];
+    uint64_t _people[2]; // cast uint64_t to Data_C_People*
     Data_C_UTest _UTest[2];
 } Data_C_EntryArray2;
 
@@ -167,13 +167,13 @@ typedef struct Data_C_Database
 {
     uint8_t* ownedMemory;
 
-    uint32_t  table_Entry_count;
+    uint32_t table_Entry_count;
     uint64_t* table_Entry_names; // cast uint64_t to char*
-    uint64_t  table_Entry;       // cast to Data_C_Entry*
+    Data_C_Entry* table_Entry;
 
-    uint32_t  table_People_count;
+    uint32_t table_People_count;
     uint64_t* table_People_names; // cast uint64_t to char*
-    uint64_t  table_People;       // cast to Data_C_People*
+    Data_C_People* table_People;
 
     char* fileName;
     time_t fileTime;
@@ -722,13 +722,14 @@ bool Data_C_LoadFromMemory(void* mem, uint32_t memSize, Data_C_Database* db)
             // Get a pointer to the first entry in the table
             if (memSize - memIndex < db->table_Entry_count * sizeof(Data_C_Entry))
                 return false;
-            db->table_Entry = memIndex;
-            Data_C_DoEndianSwapAndPointerFixup_Ptr(&db->table_Entry, mem, endianSwap);
+            uint64_t table = memIndex;
+            Data_C_DoEndianSwapAndPointerFixup_Ptr(&table, mem, endianSwap);
+            db->table_Entry = (Data_C_Entry*)table;
             memIndex += db->table_Entry_count * sizeof(Data_C_Entry);
 
             // Do pointer fixup
             for (uint32_t i = 0; i < db->table_Entry_count; ++i)
-                Data_C_DoEndianSwapAndPointerFixup_Entry(&((Data_C_Entry*)db->table_Entry)[i], mem, endianSwap);
+                Data_C_DoEndianSwapAndPointerFixup_Entry(&db->table_Entry[i], mem, endianSwap);
         }
     }
 
@@ -752,13 +753,14 @@ bool Data_C_LoadFromMemory(void* mem, uint32_t memSize, Data_C_Database* db)
             // Get a pointer to the first entry in the table
             if (memSize - memIndex < db->table_People_count * sizeof(Data_C_People))
                 return false;
-            db->table_People = memIndex;
-            Data_C_DoEndianSwapAndPointerFixup_Ptr(&db->table_People, mem, endianSwap);
+            uint64_t table = memIndex;
+            Data_C_DoEndianSwapAndPointerFixup_Ptr(&table, mem, endianSwap);
+            db->table_People = (Data_C_People*)table;
             memIndex += db->table_People_count * sizeof(Data_C_People);
 
             // Do pointer fixup
             for (uint32_t i = 0; i < db->table_People_count; ++i)
-                Data_C_DoEndianSwapAndPointerFixup_People(&((Data_C_People*)db->table_People)[i], mem, endianSwap);
+                Data_C_DoEndianSwapAndPointerFixup_People(&db->table_People[i], mem, endianSwap);
         }
     }
 
