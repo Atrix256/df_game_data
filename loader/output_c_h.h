@@ -27,6 +27,12 @@ To use:
 #include <string.h>
 /*$Includes$*/
 #pragma pack(push, 1)
+typedef union
+{
+    uint64_t u64;
+    const char* ptr;
+} /*$ClassName$*/_Ptr64_string;
+
 /*$EnumAndStructDefs$*/#pragma pack(pop)
 
 typedef struct /*$ClassName$*/_Database
@@ -40,7 +46,7 @@ void /*$ClassName$*/_DestroyDatabase(/*$ClassName$*/_Database* db);
 bool /*$ClassName$*/_LoadFromMemory(void* mem, uint32_t size, /*$ClassName$*/_Database* db);
 bool /*$ClassName$*/_LoadFromFile(const char* fileName, /*$ClassName$*/_Database* db);
 bool /*$ClassName$*/_Tick(/*$ClassName$*/_Database* db);
-size_t /*$ClassName$*/_StringIndex(uint64_t* arr, size_t count, const char* key);
+size_t /*$ClassName$*/_StringIndex(/*$ClassName$*/_Ptr64_string* arr, size_t count, const char* key);
 
 // Private implementation
 #ifdef DF_GAMEDATA_IMPLEMENTATION
@@ -60,9 +66,9 @@ int /*$ClassName$*/_CompareKeyToElement(const void* key, const void* elem)
 }
 
 // Returns count if not found
-size_t /*$ClassName$*/_StringIndex(uint64_t* arr, size_t count, const char* key)
+size_t /*$ClassName$*/_StringIndex(/*$ClassName$*/_Ptr64_string* arr, size_t count, const char* key)
 {
-    uint64_t* hit = bsearch(key, arr, count, sizeof(uint64_t), /*$ClassName$*/_CompareKeyToElement);
+    /*$ClassName$*/_Ptr64_string* hit = bsearch(key, arr, count, sizeof(uint64_t), /*$ClassName$*/_CompareKeyToElement);
     return hit ? (hit - arr) : count;
 }
 

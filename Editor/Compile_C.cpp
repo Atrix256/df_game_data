@@ -47,7 +47,7 @@ static const bool FieldToCType(const DBCompileSettings& compilerSettings, const 
         case DefParser::FieldType::_sint64: typeName = "int64_t"; break;
         case DefParser::FieldType::_float: typeName = "float"; break;
         case DefParser::FieldType::_double: typeName = "double"; break;
-        case DefParser::FieldType::_string: typeName = "uint64_t"; arrayComment = "cast to uint64_t*, cast uint64_t to char*"; scalarComment = "cast uint64_t to char*"; break;
+        case DefParser::FieldType::_string: typeName = compilerSettings.className + "_Ptr64_string"; break;
         case DefParser::FieldType::_enum: typeName = "uint16_t"; arrayComment = std::string("cast to uint16_t*, uint16_t is enum ") + compilerSettings.className + "_" + field.enumName; scalarComment = std::string("enum ") + compilerSettings.className + "_" + field.enumName; break;
         case DefParser::FieldType::_struct: typeName = compilerSettings.className + "_" + field.structName; break;
         case DefParser::FieldType::_link: typeName = "uint64_t"; arrayComment = std::string("cast to uint64_t*, cast uint64_t to ") + compilerSettings.className + "_" + field.linkName + "*"; scalarComment = std::string("cast uint64_t to ") + compilerSettings.className + "_" + field.linkName + "*"; break;
@@ -123,7 +123,7 @@ static bool MakeC_Global(const DBCompileSettings& compilerSettings, const DBRoot
     return true;
 }
 
-static const char* GetEndianSwapPostFix(const DefParser::StructField& field)
+static const char* GetEndianSwapPostFix(const DefParser::StructField& field, std::string& fieldSuffix)
 {
     switch (field.fieldType)
     {
@@ -138,7 +138,7 @@ static const char* GetEndianSwapPostFix(const DefParser::StructField& field)
         case DefParser::FieldType::_sint64: return "U64";
         case DefParser::FieldType::_float: return "float";
         case DefParser::FieldType::_double: return "double";
-        case DefParser::FieldType::_string: return "Ptr";
+        case DefParser::FieldType::_string: fieldSuffix = ".u64"; return "Ptr";
         case DefParser::FieldType::_enum: return "U16"; // field.enumName.c_str();
         case DefParser::FieldType::_struct: return field.structName.c_str();
         case DefParser::FieldType::_link: return "Ptr";
@@ -167,7 +167,7 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
 
             // The sorted list of table names. Tables are written in sorted order
             if (compilerSettings.includeEntryLUT)
-                privateStorage << indent << "uint64_t* table_" << parser.GetRootStructName() << "_names; // cast uint64_t to char*\n";
+                privateStorage << indent << compilerSettings.className << "_Ptr64_string* table_" << parser.GetRootStructName() << "_names;\n";
 
             privateStorage << indent << "" << compilerSettings.className << "_" << parser.GetRootStructName() << "* table_" << parser.GetRootStructName() << ";\n";
         }
@@ -198,9 +198,9 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
                 loadTables << indent << "            return false;\n";
                 loadTables << indent << "        uint64_t table_names = memIndex;\n";
                 loadTables << indent << "        " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&table_names, mem, endianSwap);\n";
-                loadTables << indent << "        db->table_" << pair.first << "_names = (uint64_t*)table_names;\n";
+                loadTables << indent << "        db->table_" << pair.first << "_names = (" << compilerSettings.className << "_Ptr64_string*)table_names;\n";
                 loadTables << indent << "        for (uint32_t i = 0; i < db->table_" << pair.first << "_count; ++i)\n";
-                loadTables << indent << "            " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&db->table_" << pair.first << "_names[i], mem, endianSwap);\n";
+                loadTables << indent << "            " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&db->table_" << pair.first << "_names[i].u64, mem, endianSwap);\n";
                 loadTables << indent << "        memIndex += db->table_" << pair.first << "_count * sizeof(uint64_t);\n";
                 loadTables << "\n";
             }
@@ -392,7 +392,8 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
 
                         for (const DefParser::StructField& field : s.fields)
                         {
-                            const char* endianSwapFuncPostFix = GetEndianSwapPostFix(field);
+                            std::string fieldSuffix;
+                            const char* endianSwapFuncPostFix = GetEndianSwapPostFix(field, fieldSuffix);
                             if (endianSwapFuncPostFix == nullptr)
                                 return false;
 
@@ -412,7 +413,8 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
                     {
                         for (const DefParser::StructField& field : s.fields)
                         {
-                            const char* endianSwapFuncPostFix = GetEndianSwapPostFix(field);
+                            std::string fieldSuffix;
+                            const char* endianSwapFuncPostFix = GetEndianSwapPostFix(field, fieldSuffix);
                             if (endianSwapFuncPostFix == nullptr)
                                 return false;
 
@@ -441,7 +443,7 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
                             }
                             else
                             {
-                                os << "    " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_" << endianSwapFuncPostFix << "(&value->" << field.name << ", mem, endianSwap);\n";
+                                os << "    " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_" << endianSwapFuncPostFix << "(&value->" << field.name << fieldSuffix << ", mem, endianSwap);\n";
                             }
                         }
                     }

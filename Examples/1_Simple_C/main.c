@@ -30,7 +30,7 @@ int main(int argc, char** argv)
     // test index 0
     {
         ShopData_C_Item* item = &items[0];
-        VERIFY(!strcmp((const char*)item->name, "Gladius"));
+        VERIFY(!strcmp(item->name.ptr, "Gladius"));
         VERIFY(item->sellCost == 2);
         VERIFY(item->buyCost == 20);
     }
@@ -38,7 +38,7 @@ int main(int argc, char** argv)
     // test index 1
     {
         ShopData_C_Item* item = &items[1];
-        VERIFY(!strcmp((const char*)item->name, "Long Sword"));
+        VERIFY(!strcmp(item->name.ptr, "Long Sword"));
         VERIFY(item->sellCost == 5);
         VERIFY(item->buyCost == 50);
     }
@@ -46,7 +46,7 @@ int main(int argc, char** argv)
     // test index 2
     {
         ShopData_C_Item* item = &items[2];
-        VERIFY(!strcmp((const char*)item->name, "Rusty Dagger"));
+        VERIFY(!strcmp(item->name.ptr, "Rusty Dagger"));
         VERIFY(item->sellCost == 1);
         VERIFY(item->buyCost == 10);
     }
@@ -56,7 +56,7 @@ int main(int argc, char** argv)
         size_t index = ShopData_C_StringIndex(data.table_Item_names, data.table_Item_count, "Rusty Dagger");
         VERIFY(index < data.table_Item_count);
         ShopData_C_Item* item = &items[index];
-        VERIFY(!strcmp((const char*)item->name, "Rusty Dagger"));
+        VERIFY(!strcmp(item->name.ptr, "Rusty Dagger"));
     }
 
     printf("All checks passed!\n");

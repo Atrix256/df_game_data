@@ -27,9 +27,15 @@ To use:
 #include <string.h>
 
 #pragma pack(push, 1)
+typedef union
+{
+    uint64_t u64;
+    const char* ptr;
+} ShopData_C_Ptr64_string;
+
 typedef struct
 {
-    uint64_t name; // cast uint64_t to char*
+    ShopData_C_Ptr64_string name;
     uint32_t sellCost;
     uint32_t buyCost;
 } ShopData_C_Item;
@@ -40,7 +46,7 @@ typedef struct ShopData_C_Database
     uint8_t* ownedMemory;
 
     uint32_t table_Item_count;
-    uint64_t* table_Item_names; // cast uint64_t to char*
+    ShopData_C_Ptr64_string* table_Item_names;
     ShopData_C_Item* table_Item;
 } ShopData_C_Database;
 
@@ -50,7 +56,7 @@ void ShopData_C_DestroyDatabase(ShopData_C_Database* db);
 bool ShopData_C_LoadFromMemory(void* mem, uint32_t size, ShopData_C_Database* db);
 bool ShopData_C_LoadFromFile(const char* fileName, ShopData_C_Database* db);
 bool ShopData_C_Tick(ShopData_C_Database* db);
-size_t ShopData_C_StringIndex(uint64_t* arr, size_t count, const char* key);
+size_t ShopData_C_StringIndex(ShopData_C_Ptr64_string* arr, size_t count, const char* key);
 
 // Private implementation
 #ifdef DF_GAMEDATA_IMPLEMENTATION
@@ -70,9 +76,9 @@ int ShopData_C_CompareKeyToElement(const void* key, const void* elem)
 }
 
 // Returns count if not found
-size_t ShopData_C_StringIndex(uint64_t* arr, size_t count, const char* key)
+size_t ShopData_C_StringIndex(ShopData_C_Ptr64_string* arr, size_t count, const char* key)
 {
-    uint64_t* hit = bsearch(key, arr, count, sizeof(uint64_t), ShopData_C_CompareKeyToElement);
+    ShopData_C_Ptr64_string* hit = bsearch(key, arr, count, sizeof(uint64_t), ShopData_C_CompareKeyToElement);
     return hit ? (hit - arr) : count;
 }
 
@@ -209,7 +215,7 @@ void ShopData_C_DoEndianSwapAndPointerFixup_Ptr(uint64_t* value, void* mem, bool
 
 void ShopData_C_DoEndianSwapAndPointerFixup_Item(ShopData_C_Item* value, void* mem, bool endianSwap)
 {
-    ShopData_C_DoEndianSwapAndPointerFixup_Ptr(&value->name, mem, endianSwap);
+    ShopData_C_DoEndianSwapAndPointerFixup_Ptr(&value->name.u64, mem, endianSwap);
     ShopData_C_DoEndianSwapAndPointerFixup_U32(&value->sellCost, mem, endianSwap);
     ShopData_C_DoEndianSwapAndPointerFixup_U32(&value->buyCost, mem, endianSwap);
 }
@@ -308,9 +314,9 @@ bool ShopData_C_LoadFromMemory(void* mem, uint32_t memSize, ShopData_C_Database*
                 return false;
             uint64_t table_names = memIndex;
             ShopData_C_DoEndianSwapAndPointerFixup_Ptr(&table_names, mem, endianSwap);
-            db->table_Item_names = (uint64_t*)table_names;
+            db->table_Item_names = (ShopData_C_Ptr64_string*)table_names;
             for (uint32_t i = 0; i < db->table_Item_count; ++i)
-                ShopData_C_DoEndianSwapAndPointerFixup_Ptr(&db->table_Item_names[i], mem, endianSwap);
+                ShopData_C_DoEndianSwapAndPointerFixup_Ptr(&db->table_Item_names[i].u64, mem, endianSwap);
             memIndex += db->table_Item_count * sizeof(uint64_t);
 
             // Get a pointer to the first entry in the table
