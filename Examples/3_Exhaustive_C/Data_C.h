@@ -101,7 +101,7 @@ typedef struct
 typedef struct
 {
     uint32_t _bool_count;
-    uint64_t _bool; // cast to bool*
+    uint64_t _bool; // cast to uint8_t*, and interpret uint8_t as a bool
     uint32_t _uint8_count;
     uint64_t _uint8; // cast to uint8_t*
     uint32_t _sint8_count;

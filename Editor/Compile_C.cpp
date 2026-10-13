@@ -36,7 +36,7 @@ static const bool FieldToCType(const DBCompileSettings& compilerSettings, const 
 {
     switch (field.fieldType)
     {
-        case DefParser::FieldType::_bool: typeName = "uint8_t"; arrayComment = "cast to bool*"; scalarComment = "bool"; break;
+        case DefParser::FieldType::_bool: typeName = "uint8_t"; arrayComment = "cast to uint8_t*, and interpret uint8_t as a bool"; scalarComment = "bool"; break;
         case DefParser::FieldType::_uint8: typeName = "uint8_t"; break;
         case DefParser::FieldType::_sint8: typeName = "int8_t"; break;
         case DefParser::FieldType::_uint16: typeName = "uint16_t"; break;
