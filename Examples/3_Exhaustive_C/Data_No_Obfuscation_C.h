@@ -28,6 +28,84 @@ To use:
 #include <sys/stat.h>
 
 #pragma pack(push, 1)
+typedef union
+{
+    uint64_t u64;
+    uint8_t* ptr;
+} Data_No_Obfuscation_C_Ptr64_bool;
+
+typedef union
+{
+    uint64_t u64;
+    uint8_t* ptr;
+} Data_No_Obfuscation_C_Ptr64_uint8;
+
+typedef union
+{
+    uint64_t u64;
+    int8_t* ptr;
+} Data_No_Obfuscation_C_Ptr64_int8;
+
+typedef union
+{
+    uint64_t u64;
+    uint16_t* ptr;
+} Data_No_Obfuscation_C_Ptr64_uint16;
+
+typedef union
+{
+    uint64_t u64;
+    int16_t* ptr;
+} Data_No_Obfuscation_C_Ptr64_int16;
+
+typedef union
+{
+    uint64_t u64;
+    uint32_t* ptr;
+} Data_No_Obfuscation_C_Ptr64_uint32;
+
+typedef union
+{
+    uint64_t u64;
+    int32_t* ptr;
+} Data_No_Obfuscation_C_Ptr64_int32;
+
+typedef union
+{
+    uint64_t u64;
+    uint64_t* ptr;
+} Data_No_Obfuscation_C_Ptr64_uint64;
+
+typedef union
+{
+    uint64_t u64;
+    int64_t* ptr;
+} Data_No_Obfuscation_C_Ptr64_int64;
+
+typedef union
+{
+    uint64_t u64;
+    float* ptr;
+} Data_No_Obfuscation_C_Ptr64_float;
+
+typedef union
+{
+    uint64_t u64;
+    double* ptr;
+} Data_No_Obfuscation_C_Ptr64_double;
+
+typedef union
+{
+    uint64_t u64;
+    const char* ptr;
+} Data_No_Obfuscation_C_Ptr64_string;
+
+typedef union
+{
+    uint64_t u64;
+    Data_No_Obfuscation_C_Ptr64_string* ptr;
+} Data_No_Obfuscation_C_Ptr64_Ptr64_string;
+
 typedef enum
 {
     Data_No_Obfuscation_C_Color_Brown,
@@ -42,10 +120,34 @@ typedef struct
     float y;
 } Data_No_Obfuscation_C_Pos;
 
+typedef union
+{
+    uint64_t u64;
+    Data_No_Obfuscation_C_Pos* ptr;
+} Data_No_Obfuscation_C_Ptr64_Pos;
+
+typedef union
+{
+    uint64_t u64;
+    Data_No_Obfuscation_C_Ptr64_Pos* ptr;
+} Data_No_Obfuscation_C_Ptr64_Ptr64_Pos;
+
 typedef struct
 {
-    uint64_t name; // cast uint64_t to char*
+    Data_No_Obfuscation_C_Ptr64_string name;
 } Data_No_Obfuscation_C_People;
+
+typedef union
+{
+    uint64_t u64;
+    Data_No_Obfuscation_C_People* ptr;
+} Data_No_Obfuscation_C_Ptr64_People;
+
+typedef union
+{
+    uint64_t u64;
+    Data_No_Obfuscation_C_Ptr64_People* ptr;
+} Data_No_Obfuscation_C_Ptr64_Ptr64_People;
 
 typedef enum
 {
@@ -73,12 +175,24 @@ typedef struct
     int64_t _sint64;
     float _float;
     double _double;
-    uint64_t _string; // cast uint64_t to char*
+    Data_No_Obfuscation_C_Ptr64_string _string;
     uint16_t _color; // enum Data_No_Obfuscation_C_Color
     Data_No_Obfuscation_C_Pos _pos;
-    uint64_t _people; // cast uint64_t to Data_No_Obfuscation_C_People*
+    Data_No_Obfuscation_C_Ptr64_People _people;
     Data_No_Obfuscation_C_UTest _UTest;
 } Data_No_Obfuscation_C_EntryAll;
+
+typedef union
+{
+    uint64_t u64;
+    Data_No_Obfuscation_C_EntryAll* ptr;
+} Data_No_Obfuscation_C_Ptr64_EntryAll;
+
+typedef union
+{
+    uint64_t u64;
+    Data_No_Obfuscation_C_Ptr64_EntryAll* ptr;
+} Data_No_Obfuscation_C_Ptr64_Ptr64_EntryAll;
 
 typedef struct
 {
@@ -93,46 +207,70 @@ typedef struct
     int64_t _sint64;
     float _float;
     double _double;
-    uint64_t _string; // cast uint64_t to char*
+    Data_No_Obfuscation_C_Ptr64_string _string;
     uint16_t _color; // enum Data_No_Obfuscation_C_Color
-    uint64_t _people; // cast uint64_t to Data_No_Obfuscation_C_People*
+    Data_No_Obfuscation_C_Ptr64_People _people;
 } Data_No_Obfuscation_C_EntryDefault;
+
+typedef union
+{
+    uint64_t u64;
+    Data_No_Obfuscation_C_EntryDefault* ptr;
+} Data_No_Obfuscation_C_Ptr64_EntryDefault;
+
+typedef union
+{
+    uint64_t u64;
+    Data_No_Obfuscation_C_Ptr64_EntryDefault* ptr;
+} Data_No_Obfuscation_C_Ptr64_Ptr64_EntryDefault;
 
 typedef struct
 {
     uint32_t _bool_count;
-    uint64_t _bool; // cast to uint8_t*, and interpret uint8_t as a bool
+    Data_No_Obfuscation_C_Ptr64_uint8 _bool;
     uint32_t _uint8_count;
-    uint64_t _uint8; // cast to uint8_t*
+    Data_No_Obfuscation_C_Ptr64_uint8 _uint8;
     uint32_t _sint8_count;
-    uint64_t _sint8; // cast to int8_t*
+    Data_No_Obfuscation_C_Ptr64_int8 _sint8;
     uint32_t _uint16_count;
-    uint64_t _uint16; // cast to uint16_t*
+    Data_No_Obfuscation_C_Ptr64_uint16 _uint16;
     uint32_t _sint16_count;
-    uint64_t _sint16; // cast to int16_t*
+    Data_No_Obfuscation_C_Ptr64_int16 _sint16;
     uint32_t _uint32_count;
-    uint64_t _uint32; // cast to uint32_t*
+    Data_No_Obfuscation_C_Ptr64_uint32 _uint32;
     uint32_t _sint32_count;
-    uint64_t _sint32; // cast to int32_t*
+    Data_No_Obfuscation_C_Ptr64_int32 _sint32;
     uint32_t _uint64_count;
-    uint64_t _uint64; // cast to uint64_t*
+    Data_No_Obfuscation_C_Ptr64_uint64 _uint64;
     uint32_t _sint64_count;
-    uint64_t _sint64; // cast to int64_t*
+    Data_No_Obfuscation_C_Ptr64_int64 _sint64;
     uint32_t _float_count;
-    uint64_t _float; // cast to float*
+    Data_No_Obfuscation_C_Ptr64_float _float;
     uint32_t _double_count;
-    uint64_t _double; // cast to double*
+    Data_No_Obfuscation_C_Ptr64_double _double;
     uint32_t _string_count;
-    uint64_t _string; // cast to uint64_t*, cast uint64_t to char*
+    Data_No_Obfuscation_C_Ptr64_Ptr64_string _string;
     uint32_t _color_count;
-    uint64_t _color; // cast to uint16_t*, uint16_t is enum Data_No_Obfuscation_C_Color
+    Data_No_Obfuscation_C_Ptr64_uint16 _color;
     uint32_t _pos_count;
-    uint64_t _pos; // cast to Data_No_Obfuscation_C_Pos*
+    Data_No_Obfuscation_C_Ptr64_Pos _pos;
     uint32_t _people_count;
-    uint64_t _people; // cast to uint64_t*, cast uint64_t to Data_No_Obfuscation_C_People*
+    Data_No_Obfuscation_C_Ptr64_Ptr64_People _people;
     uint32_t _UTest_count;
-    uint64_t _UTest; // cast to Data_No_Obfuscation_C_UTest*
+    Data_No_Obfuscation_C_Ptr64_UTest _UTest;
 } Data_No_Obfuscation_C_EntryArrayDynamic;
+
+typedef union
+{
+    uint64_t u64;
+    Data_No_Obfuscation_C_EntryArrayDynamic* ptr;
+} Data_No_Obfuscation_C_Ptr64_EntryArrayDynamic;
+
+typedef union
+{
+    uint64_t u64;
+    Data_No_Obfuscation_C_Ptr64_EntryArrayDynamic* ptr;
+} Data_No_Obfuscation_C_Ptr64_Ptr64_EntryArrayDynamic;
 
 typedef struct
 {
@@ -147,12 +285,24 @@ typedef struct
     int64_t _sint64[2];
     float _float[2];
     double _double[2];
-    uint64_t _string[2]; // cast uint64_t to char*
+    Data_No_Obfuscation_C_Ptr64_string _string[2];
     uint16_t _color[2]; // enum Data_No_Obfuscation_C_Color
     Data_No_Obfuscation_C_Pos _pos[2];
-    uint64_t _people[2]; // cast uint64_t to Data_No_Obfuscation_C_People*
+    Data_No_Obfuscation_C_Ptr64_People _people[2];
     Data_No_Obfuscation_C_UTest _UTest[2];
 } Data_No_Obfuscation_C_EntryArray2;
+
+typedef union
+{
+    uint64_t u64;
+    Data_No_Obfuscation_C_EntryArray2* ptr;
+} Data_No_Obfuscation_C_Ptr64_EntryArray2;
+
+typedef union
+{
+    uint64_t u64;
+    Data_No_Obfuscation_C_Ptr64_EntryArray2* ptr;
+} Data_No_Obfuscation_C_Ptr64_Ptr64_EntryArray2;
 
 typedef struct
 {
@@ -161,6 +311,18 @@ typedef struct
     Data_No_Obfuscation_C_EntryArrayDynamic entries_dynamic_arrays;
     Data_No_Obfuscation_C_EntryArray2 entries_static_arrays;
 } Data_No_Obfuscation_C_Entry;
+
+typedef union
+{
+    uint64_t u64;
+    Data_No_Obfuscation_C_Entry* ptr;
+} Data_No_Obfuscation_C_Ptr64_Entry;
+
+typedef union
+{
+    uint64_t u64;
+    Data_No_Obfuscation_C_Ptr64_Entry* ptr;
+} Data_No_Obfuscation_C_Ptr64_Ptr64_Entry;
 #pragma pack(pop)
 
 typedef struct Data_No_Obfuscation_C_Database
@@ -168,11 +330,11 @@ typedef struct Data_No_Obfuscation_C_Database
     uint8_t* ownedMemory;
 
     uint32_t table_Entry_count;
-    uint64_t* table_Entry_names; // cast uint64_t to char*
+    Data_No_Obfuscation_C_Ptr64_string* table_Entry_names;
     Data_No_Obfuscation_C_Entry* table_Entry;
 
     uint32_t table_People_count;
-    uint64_t* table_People_names; // cast uint64_t to char*
+    Data_No_Obfuscation_C_Ptr64_string* table_People_names;
     Data_No_Obfuscation_C_People* table_People;
 
     char* fileName;
@@ -185,7 +347,7 @@ void Data_No_Obfuscation_C_DestroyDatabase(Data_No_Obfuscation_C_Database* db);
 bool Data_No_Obfuscation_C_LoadFromMemory(void* mem, uint32_t size, Data_No_Obfuscation_C_Database* db);
 bool Data_No_Obfuscation_C_LoadFromFile(const char* fileName, Data_No_Obfuscation_C_Database* db);
 bool Data_No_Obfuscation_C_Tick(Data_No_Obfuscation_C_Database* db);
-size_t Data_No_Obfuscation_C_StringIndex(uint64_t* arr, size_t count, const char* key);
+size_t Data_No_Obfuscation_C_StringIndex(Data_No_Obfuscation_C_Ptr64_string* arr, size_t count, const char* key);
 
 // Private implementation
 #ifdef DF_GAMEDATA_IMPLEMENTATION
@@ -205,9 +367,9 @@ int Data_No_Obfuscation_C_CompareKeyToElement(const void* key, const void* elem)
 }
 
 // Returns count if not found
-size_t Data_No_Obfuscation_C_StringIndex(uint64_t* arr, size_t count, const char* key)
+size_t Data_No_Obfuscation_C_StringIndex(Data_No_Obfuscation_C_Ptr64_string* arr, size_t count, const char* key)
 {
-    uint64_t* hit = bsearch(key, arr, count, sizeof(uint64_t), Data_No_Obfuscation_C_CompareKeyToElement);
+    Data_No_Obfuscation_C_Ptr64_string* hit = bsearch(key, arr, count, sizeof(uint64_t), Data_No_Obfuscation_C_CompareKeyToElement);
     return hit ? (hit - arr) : count;
 }
 
@@ -350,7 +512,7 @@ void Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Pos(Data_No_Obfuscation_C
 
 void Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_People(Data_No_Obfuscation_C_People* value, void* mem, bool endianSwap)
 {
-    Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->name, mem, endianSwap);
+    Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->name.u64, mem, endianSwap);
 }
 
 void Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_UTest(Data_No_Obfuscation_C_UTest* value, void* mem, bool endianSwap)
@@ -359,8 +521,8 @@ void Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_UTest(Data_No_Obfuscation
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->ptr, mem, endianSwap);
     switch (value->type)
     {
-        case Data_No_Obfuscation_C_UTest_type__pos: Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Pos((Data_No_Obfuscation_C_Pos*)value->ptr, mem, endianSwap); break;
-        case Data_No_Obfuscation_C_UTest_type__float: Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_float((float*)value->ptr, mem, endianSwap); break;
+        case Data_No_Obfuscation_C_UTest_type__pos: Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Pos((Data_No_Obfuscation_C_Pos*)value, mem, endianSwap); break;
+        case Data_No_Obfuscation_C_UTest_type__float: Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_float((float*)value, mem, endianSwap); break;
     }
 }
 
@@ -377,10 +539,10 @@ void Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_EntryAll(Data_No_Obfuscat
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U64(&value->_sint64, mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_float(&value->_float, mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_double(&value->_double, mem, endianSwap);
-    Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_string, mem, endianSwap);
+    Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_string.u64, mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U16(&value->_color, mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Pos(&value->_pos, mem, endianSwap);
-    Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_people, mem, endianSwap);
+    Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_people.u64, mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_UTest(&value->_UTest, mem, endianSwap);
 }
 
@@ -397,9 +559,9 @@ void Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_EntryDefault(Data_No_Obfu
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U64(&value->_sint64, mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_float(&value->_float, mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_double(&value->_double, mem, endianSwap);
-    Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_string, mem, endianSwap);
+    Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_string.u64, mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U16(&value->_color, mem, endianSwap);
-    Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_people, mem, endianSwap);
+    Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_people.u64, mem, endianSwap);
 }
 
 void Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_EntryArrayDynamic(Data_No_Obfuscation_C_EntryArrayDynamic* value, void* mem, bool endianSwap)
@@ -407,199 +569,103 @@ void Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_EntryArrayDynamic(Data_No
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U32(&value->_bool_count, mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_bool, mem, endianSwap);
     for (uint32_t i = 0; i < value->_bool_count; ++i)
-    {
-        uint8_t* fieldPtr = &((uint8_t*)(value->_bool))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U8(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U8(&value->_bool.ptr[i], mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U32(&value->_uint8_count, mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_uint8, mem, endianSwap);
     for (uint32_t i = 0; i < value->_uint8_count; ++i)
-    {
-        uint8_t* fieldPtr = &((uint8_t*)(value->_uint8))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U8(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U8(&value->_uint8.ptr[i], mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U32(&value->_sint8_count, mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_sint8, mem, endianSwap);
     for (uint32_t i = 0; i < value->_sint8_count; ++i)
-    {
-        int8_t* fieldPtr = &((int8_t*)(value->_sint8))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U8(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U8(&value->_sint8.ptr[i], mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U32(&value->_uint16_count, mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_uint16, mem, endianSwap);
     for (uint32_t i = 0; i < value->_uint16_count; ++i)
-    {
-        uint16_t* fieldPtr = &((uint16_t*)(value->_uint16))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U16(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U16(&value->_uint16.ptr[i], mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U32(&value->_sint16_count, mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_sint16, mem, endianSwap);
     for (uint32_t i = 0; i < value->_sint16_count; ++i)
-    {
-        int16_t* fieldPtr = &((int16_t*)(value->_sint16))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U16(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U16(&value->_sint16.ptr[i], mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U32(&value->_uint32_count, mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_uint32, mem, endianSwap);
     for (uint32_t i = 0; i < value->_uint32_count; ++i)
-    {
-        uint32_t* fieldPtr = &((uint32_t*)(value->_uint32))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U32(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U32(&value->_uint32.ptr[i], mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U32(&value->_sint32_count, mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_sint32, mem, endianSwap);
     for (uint32_t i = 0; i < value->_sint32_count; ++i)
-    {
-        int32_t* fieldPtr = &((int32_t*)(value->_sint32))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U32(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U32(&value->_sint32.ptr[i], mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U32(&value->_uint64_count, mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_uint64, mem, endianSwap);
     for (uint32_t i = 0; i < value->_uint64_count; ++i)
-    {
-        uint64_t* fieldPtr = &((uint64_t*)(value->_uint64))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U64(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U64(&value->_uint64.ptr[i], mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U32(&value->_sint64_count, mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_sint64, mem, endianSwap);
     for (uint32_t i = 0; i < value->_sint64_count; ++i)
-    {
-        int64_t* fieldPtr = &((int64_t*)(value->_sint64))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U64(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U64(&value->_sint64.ptr[i], mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U32(&value->_float_count, mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_float, mem, endianSwap);
     for (uint32_t i = 0; i < value->_float_count; ++i)
-    {
-        float* fieldPtr = &((float*)(value->_float))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_float(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_float(&value->_float.ptr[i], mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U32(&value->_double_count, mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_double, mem, endianSwap);
     for (uint32_t i = 0; i < value->_double_count; ++i)
-    {
-        double* fieldPtr = &((double*)(value->_double))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_double(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_double(&value->_double.ptr[i], mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U32(&value->_string_count, mem, endianSwap);
-    Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_string, mem, endianSwap);
+    Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_string.u64, mem, endianSwap);
     for (uint32_t i = 0; i < value->_string_count; ++i)
-    {
-        uint64_t* fieldPtr = &((uint64_t*)(value->_string))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_string.ptr[i].u64, mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U32(&value->_color_count, mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_color, mem, endianSwap);
     for (uint32_t i = 0; i < value->_color_count; ++i)
-    {
-        uint16_t* fieldPtr = &((uint16_t*)(value->_color))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U16(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U16(&value->_color.ptr[i], mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U32(&value->_pos_count, mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_pos, mem, endianSwap);
     for (uint32_t i = 0; i < value->_pos_count; ++i)
-    {
-        Data_No_Obfuscation_C_Pos* fieldPtr = &((Data_No_Obfuscation_C_Pos*)(value->_pos))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Pos(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Pos(&value->_pos.ptr[i], mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U32(&value->_people_count, mem, endianSwap);
-    Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_people, mem, endianSwap);
+    Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_people.u64, mem, endianSwap);
     for (uint32_t i = 0; i < value->_people_count; ++i)
-    {
-        uint64_t* fieldPtr = &((uint64_t*)(value->_people))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_people.ptr[i].u64, mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U32(&value->_UTest_count, mem, endianSwap);
     Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_UTest, mem, endianSwap);
     for (uint32_t i = 0; i < value->_UTest_count; ++i)
-    {
-        Data_No_Obfuscation_C_UTest* fieldPtr = &((Data_No_Obfuscation_C_UTest*)(value->_UTest))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_UTest(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_UTest(&value->_UTest.ptr[i], mem, endianSwap);
 }
 
 void Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_EntryArray2(Data_No_Obfuscation_C_EntryArray2* value, void* mem, bool endianSwap)
 {
     for (uint32_t i = 0; i < 2; ++i)
-    {
-        uint8_t* fieldPtr = &((uint8_t*)(value->_bool))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U8(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U8(&value->_bool.ptr[i], mem, endianSwap);
     for (uint32_t i = 0; i < 2; ++i)
-    {
-        uint8_t* fieldPtr = &((uint8_t*)(value->_uint8))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U8(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U8(&value->_uint8.ptr[i], mem, endianSwap);
     for (uint32_t i = 0; i < 2; ++i)
-    {
-        int8_t* fieldPtr = &((int8_t*)(value->_sint8))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U8(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U8(&value->_sint8.ptr[i], mem, endianSwap);
     for (uint32_t i = 0; i < 2; ++i)
-    {
-        uint16_t* fieldPtr = &((uint16_t*)(value->_uint16))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U16(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U16(&value->_uint16.ptr[i], mem, endianSwap);
     for (uint32_t i = 0; i < 2; ++i)
-    {
-        int16_t* fieldPtr = &((int16_t*)(value->_sint16))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U16(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U16(&value->_sint16.ptr[i], mem, endianSwap);
     for (uint32_t i = 0; i < 2; ++i)
-    {
-        uint32_t* fieldPtr = &((uint32_t*)(value->_uint32))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U32(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U32(&value->_uint32.ptr[i], mem, endianSwap);
     for (uint32_t i = 0; i < 2; ++i)
-    {
-        int32_t* fieldPtr = &((int32_t*)(value->_sint32))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U32(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U32(&value->_sint32.ptr[i], mem, endianSwap);
     for (uint32_t i = 0; i < 2; ++i)
-    {
-        uint64_t* fieldPtr = &((uint64_t*)(value->_uint64))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U64(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U64(&value->_uint64.ptr[i], mem, endianSwap);
     for (uint32_t i = 0; i < 2; ++i)
-    {
-        int64_t* fieldPtr = &((int64_t*)(value->_sint64))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U64(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U64(&value->_sint64.ptr[i], mem, endianSwap);
     for (uint32_t i = 0; i < 2; ++i)
-    {
-        float* fieldPtr = &((float*)(value->_float))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_float(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_float(&value->_float.ptr[i], mem, endianSwap);
     for (uint32_t i = 0; i < 2; ++i)
-    {
-        double* fieldPtr = &((double*)(value->_double))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_double(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_double(&value->_double.ptr[i], mem, endianSwap);
     for (uint32_t i = 0; i < 2; ++i)
-    {
-        uint64_t* fieldPtr = &((uint64_t*)(value->_string))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_string.ptr[i].u64, mem, endianSwap);
     for (uint32_t i = 0; i < 2; ++i)
-    {
-        uint16_t* fieldPtr = &((uint16_t*)(value->_color))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U16(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_U16(&value->_color.ptr[i], mem, endianSwap);
     for (uint32_t i = 0; i < 2; ++i)
-    {
-        Data_No_Obfuscation_C_Pos* fieldPtr = &((Data_No_Obfuscation_C_Pos*)(value->_pos))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Pos(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Pos(&value->_pos.ptr[i], mem, endianSwap);
     for (uint32_t i = 0; i < 2; ++i)
-    {
-        uint64_t* fieldPtr = &((uint64_t*)(value->_people))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&value->_people.ptr[i].u64, mem, endianSwap);
     for (uint32_t i = 0; i < 2; ++i)
-    {
-        Data_No_Obfuscation_C_UTest* fieldPtr = &((Data_No_Obfuscation_C_UTest*)(value->_UTest))[i];
-        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_UTest(fieldPtr, mem, endianSwap);
-    }
+        Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_UTest(&value->_UTest.ptr[i], mem, endianSwap);
 }
 
 void Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Entry(Data_No_Obfuscation_C_Entry* value, void* mem, bool endianSwap)
@@ -714,9 +780,9 @@ bool Data_No_Obfuscation_C_LoadFromMemory(void* mem, uint32_t memSize, Data_No_O
                 return false;
             uint64_t table_names = memIndex;
             Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&table_names, mem, endianSwap);
-            db->table_Entry_names = (uint64_t*)table_names;
+            db->table_Entry_names = (Data_No_Obfuscation_C_Ptr64_string*)table_names;
             for (uint32_t i = 0; i < db->table_Entry_count; ++i)
-                Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&db->table_Entry_names[i], mem, endianSwap);
+                Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&db->table_Entry_names[i].u64, mem, endianSwap);
             memIndex += db->table_Entry_count * sizeof(uint64_t);
 
             // Get a pointer to the first entry in the table
@@ -745,9 +811,9 @@ bool Data_No_Obfuscation_C_LoadFromMemory(void* mem, uint32_t memSize, Data_No_O
                 return false;
             uint64_t table_names = memIndex;
             Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&table_names, mem, endianSwap);
-            db->table_People_names = (uint64_t*)table_names;
+            db->table_People_names = (Data_No_Obfuscation_C_Ptr64_string*)table_names;
             for (uint32_t i = 0; i < db->table_People_count; ++i)
-                Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&db->table_People_names[i], mem, endianSwap);
+                Data_No_Obfuscation_C_DoEndianSwapAndPointerFixup_Ptr(&db->table_People_names[i].u64, mem, endianSwap);
             memIndex += db->table_People_count * sizeof(uint64_t);
 
             // Get a pointer to the first entry in the table

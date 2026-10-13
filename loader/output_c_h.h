@@ -30,8 +30,80 @@ To use:
 typedef union
 {
     uint64_t u64;
+    uint8_t* ptr;
+} /*$ClassName$*/_Ptr64_bool;
+
+typedef union
+{
+    uint64_t u64;
+    uint8_t* ptr;
+} /*$ClassName$*/_Ptr64_uint8;
+
+typedef union
+{
+    uint64_t u64;
+    int8_t* ptr;
+} /*$ClassName$*/_Ptr64_int8;
+
+typedef union
+{
+    uint64_t u64;
+    uint16_t* ptr;
+} /*$ClassName$*/_Ptr64_uint16;
+
+typedef union
+{
+    uint64_t u64;
+    int16_t* ptr;
+} /*$ClassName$*/_Ptr64_int16;
+
+typedef union
+{
+    uint64_t u64;
+    uint32_t* ptr;
+} /*$ClassName$*/_Ptr64_uint32;
+
+typedef union
+{
+    uint64_t u64;
+    int32_t* ptr;
+} /*$ClassName$*/_Ptr64_int32;
+
+typedef union
+{
+    uint64_t u64;
+    uint64_t* ptr;
+} /*$ClassName$*/_Ptr64_uint64;
+
+typedef union
+{
+    uint64_t u64;
+    int64_t* ptr;
+} /*$ClassName$*/_Ptr64_int64;
+
+typedef union
+{
+    uint64_t u64;
+    float* ptr;
+} /*$ClassName$*/_Ptr64_float;
+
+typedef union
+{
+    uint64_t u64;
+    double* ptr;
+} /*$ClassName$*/_Ptr64_double;
+
+typedef union
+{
+    uint64_t u64;
     const char* ptr;
 } /*$ClassName$*/_Ptr64_string;
+
+typedef union
+{
+    uint64_t u64;
+    /*$ClassName$*/_Ptr64_string* ptr;
+} /*$ClassName$*/_Ptr64_Ptr64_string;
 
 /*$EnumAndStructDefs$*/#pragma pack(pop)
 

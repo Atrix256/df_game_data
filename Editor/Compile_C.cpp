@@ -32,25 +32,25 @@ static bool IsARootStruct(const DBRoot& dbRoot, const char* name)
     return false;
 }
 
-static const bool FieldToCType(const DBCompileSettings& compilerSettings, const DefParser::Struct& s, const DefParser::StructField& field, std::string& typeName, std::string& arrayComment, std::string& scalarComment)
+static const bool FieldToCType(const DBCompileSettings& compilerSettings, const DefParser::Struct& s, const DefParser::StructField& field, std::string& typeName, std::string& ptrTypeName, std::string& arrayComment, std::string& scalarComment)
 {
     switch (field.fieldType)
     {
-        case DefParser::FieldType::_bool: typeName = "uint8_t"; arrayComment = "cast to uint8_t*, and interpret uint8_t as a bool"; scalarComment = "bool"; break;
-        case DefParser::FieldType::_uint8: typeName = "uint8_t"; break;
-        case DefParser::FieldType::_sint8: typeName = "int8_t"; break;
-        case DefParser::FieldType::_uint16: typeName = "uint16_t"; break;
-        case DefParser::FieldType::_sint16: typeName = "int16_t"; break;
-        case DefParser::FieldType::_uint32: typeName = "uint32_t"; break;
-        case DefParser::FieldType::_sint32: typeName = "int32_t"; break;
-        case DefParser::FieldType::_uint64: typeName = "uint64_t"; break;
-        case DefParser::FieldType::_sint64: typeName = "int64_t"; break;
-        case DefParser::FieldType::_float: typeName = "float"; break;
-        case DefParser::FieldType::_double: typeName = "double"; break;
-        case DefParser::FieldType::_string: typeName = compilerSettings.className + "_Ptr64_string"; break;
-        case DefParser::FieldType::_enum: typeName = "uint16_t"; arrayComment = std::string("cast to uint16_t*, uint16_t is enum ") + compilerSettings.className + "_" + field.enumName; scalarComment = std::string("enum ") + compilerSettings.className + "_" + field.enumName; break;
-        case DefParser::FieldType::_struct: typeName = compilerSettings.className + "_" + field.structName; break;
-        case DefParser::FieldType::_link: typeName = "uint64_t"; arrayComment = std::string("cast to uint64_t*, cast uint64_t to ") + compilerSettings.className + "_" + field.linkName + "*"; scalarComment = std::string("cast uint64_t to ") + compilerSettings.className + "_" + field.linkName + "*"; break;
+        case DefParser::FieldType::_bool: typeName = "uint8_t"; ptrTypeName = compilerSettings.className + "_Ptr64_uint8"; arrayComment = "cast to uint8_t*, and interpret uint8_t as a bool"; scalarComment = "bool"; break;
+        case DefParser::FieldType::_uint8: typeName = "uint8_t"; ptrTypeName = compilerSettings.className + "_Ptr64_uint8"; break;
+        case DefParser::FieldType::_sint8: typeName = "int8_t"; ptrTypeName = compilerSettings.className + "_Ptr64_int8"; break;
+        case DefParser::FieldType::_uint16: typeName = "uint16_t"; ptrTypeName = compilerSettings.className + "_Ptr64_uint16"; break;
+        case DefParser::FieldType::_sint16: typeName = "int16_t"; ptrTypeName = compilerSettings.className + "_Ptr64_int16"; break;
+        case DefParser::FieldType::_uint32: typeName = "uint32_t"; ptrTypeName = compilerSettings.className + "_Ptr64_uint32"; break;
+        case DefParser::FieldType::_sint32: typeName = "int32_t"; ptrTypeName = compilerSettings.className + "_Ptr64_int32"; break;
+        case DefParser::FieldType::_uint64: typeName = "uint64_t"; ptrTypeName = compilerSettings.className + "_Ptr64_uint64"; break;
+        case DefParser::FieldType::_sint64: typeName = "int64_t"; ptrTypeName = compilerSettings.className + "_Ptr64_int64"; break;
+        case DefParser::FieldType::_float: typeName = "float"; ptrTypeName = compilerSettings.className + "_Ptr64_float"; break;
+        case DefParser::FieldType::_double: typeName = "double"; ptrTypeName = compilerSettings.className + "_Ptr64_double"; break;
+        case DefParser::FieldType::_string: typeName = compilerSettings.className + "_Ptr64_string"; ptrTypeName = compilerSettings.className + "_Ptr64_Ptr64_string"; break;
+        case DefParser::FieldType::_enum: typeName = "uint16_t"; ptrTypeName = compilerSettings.className + "_Ptr64_uint16"; arrayComment = std::string("cast to uint16_t*, uint16_t is enum ") + compilerSettings.className + "_" + field.enumName; scalarComment = std::string("enum ") + compilerSettings.className + "_" + field.enumName; break;
+        case DefParser::FieldType::_struct: typeName = compilerSettings.className + "_" + field.structName; ptrTypeName = compilerSettings.className + "_Ptr64_" + field.structName; break;
+        case DefParser::FieldType::_link: typeName = compilerSettings.className + "_Ptr64_" + field.linkName; ptrTypeName = compilerSettings.className + "_Ptr64_Ptr64_" + field.linkName; break;
         default:
         {
             s_data.error << "Unhandled field type for " << s.name << "." << field.name;
@@ -141,7 +141,7 @@ static const char* GetEndianSwapPostFix(const DefParser::StructField& field, std
         case DefParser::FieldType::_string: fieldSuffix = ".u64"; return "Ptr";
         case DefParser::FieldType::_enum: return "U16"; // field.enumName.c_str();
         case DefParser::FieldType::_struct: return field.structName.c_str();
-        case DefParser::FieldType::_link: return "Ptr";
+        case DefParser::FieldType::_link: fieldSuffix = ".u64"; return "Ptr";
         default: return nullptr;
     }
 }
@@ -303,9 +303,9 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
                         for (const DefParser::StructField& field : s.fields)
                         {
                             // Get the C++ name of the type
-                            std::string typeName;
+                            std::string typeName, ptrTypeName;
                             std::string arrayComment, scalarComment;
-                            if (!FieldToCType(compilerSettings, s, field, typeName, arrayComment, scalarComment))
+                            if (!FieldToCType(compilerSettings, s, field, typeName, ptrTypeName, arrayComment, scalarComment))
                                 return false;
 
                             bool isUnion = false;
@@ -336,11 +336,7 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
                                 else
                                 {
                                     enumsAndStructDefs << indent << "    uint32_t " << field.name << "_count;\n";
-                                    enumsAndStructDefs << indent << "    uint64_t " << field.name << ";";
-                                    if (!arrayComment.empty())
-                                        enumsAndStructDefs << " // " << arrayComment;
-                                    else
-                                        enumsAndStructDefs << " // cast to " << typeName << "*";
+                                    enumsAndStructDefs << indent << "    " << ptrTypeName << " " << field.name << ";";
                                     enumsAndStructDefs << "\n";
                                 }
                                 continue;
@@ -353,7 +349,19 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
                             enumsAndStructDefs << "\n";
                         }
 
-                        enumsAndStructDefs << indent << "} " << compilerSettings.className << "_" << s.name << ";\n";
+                        enumsAndStructDefs << indent << "} " << compilerSettings.className << "_" << s.name << ";\n\n";
+
+                        enumsAndStructDefs << indent << "typedef union\n";
+                        enumsAndStructDefs << indent << "{\n";
+                        enumsAndStructDefs << indent << "    uint64_t u64;\n";
+                        enumsAndStructDefs << indent << "    " << compilerSettings.className << "_" << s.name << "* ptr;\n";
+                        enumsAndStructDefs << indent << "} " << compilerSettings.className << "_Ptr64_" << s.name << ";\n\n";
+
+                        enumsAndStructDefs << indent << "typedef union\n";
+                        enumsAndStructDefs << indent << "{\n";
+                        enumsAndStructDefs << indent << "    uint64_t u64;\n";
+                        enumsAndStructDefs << indent << "    " << compilerSettings.className << "_Ptr64_" << s.name << "* ptr;\n";
+                        enumsAndStructDefs << indent << "} " << compilerSettings.className << "_Ptr64_Ptr64_" << s.name << ";\n";
                     }
 
                     return true;
@@ -398,13 +406,13 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
                                 return false;
 
                             // Get the C++ name of the type
-                            std::string typeName;
+                            std::string typeName, ptrTypeName;
                             std::string arrayComment, scalarComment;
-                            if (!FieldToCType(compilerSettings, s, field, typeName, arrayComment, scalarComment))
+                            if (!FieldToCType(compilerSettings, s, field, typeName, ptrTypeName, arrayComment, scalarComment))
                                 return false;
 
                             os << "        case " << compilerSettings.className << "_" << s.name << "_type_" << field.name << ": ";
-                            os << compilerSettings.className << "_DoEndianSwapAndPointerFixup_" << endianSwapFuncPostFix << "((" << typeName << "*)value->ptr, mem, endianSwap); break;\n";
+                            os << compilerSettings.className << "_DoEndianSwapAndPointerFixup_" << endianSwapFuncPostFix << "((" << typeName << "*)value" << fieldSuffix << ", mem, endianSwap); break;\n";
                         }
 
                         os << "    }\n";
@@ -419,9 +427,9 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
                                 return false;
 
                             // Get the C++ name of the type
-                            std::string typeName;
+                            std::string typeName, ptrTypeName;
                             std::string arrayComment, scalarComment;
-                            if (!FieldToCType(compilerSettings, s, field, typeName, arrayComment, scalarComment))
+                            if (!FieldToCType(compilerSettings, s, field, typeName, ptrTypeName, arrayComment, scalarComment))
                                 return false;
 
                             if (field.isArray)
@@ -429,17 +437,14 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
                                 if (field.fixedArraySize == 0)
                                 {
                                     os << "    " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_U32(&value->" << field.name << "_count, mem, endianSwap);\n";
-                                    os << "    " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&value->" << field.name << ", mem, endianSwap);\n";
+                                    os << "    " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&value->" << field.name << fieldSuffix << ", mem, endianSwap);\n";
                                     os << "    for (uint32_t i = 0; i < value->" << field.name << "_count; ++i)\n";
                                 }
                                 else
                                 {
                                     os << "    for (uint32_t i = 0; i < " << field.fixedArraySize << "; ++i)\n";
                                 }
-                                os << "    {\n";
-                                os << "        " << typeName << "* fieldPtr = &((" << typeName << "*)(value->" << field.name << "))[i];\n";
-                                os << "        " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_" << endianSwapFuncPostFix << "(fieldPtr, mem, endianSwap);\n";
-                                os << "    }\n";
+                                os << "        " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_" << endianSwapFuncPostFix << "(&value->" << field.name << ".ptr[i]" << fieldSuffix << ", mem, endianSwap);\n";
                             }
                             else
                             {

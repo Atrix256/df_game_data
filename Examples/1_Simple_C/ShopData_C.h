@@ -30,8 +30,80 @@ To use:
 typedef union
 {
     uint64_t u64;
+    uint8_t* ptr;
+} ShopData_C_Ptr64_bool;
+
+typedef union
+{
+    uint64_t u64;
+    uint8_t* ptr;
+} ShopData_C_Ptr64_uint8;
+
+typedef union
+{
+    uint64_t u64;
+    int8_t* ptr;
+} ShopData_C_Ptr64_int8;
+
+typedef union
+{
+    uint64_t u64;
+    uint16_t* ptr;
+} ShopData_C_Ptr64_uint16;
+
+typedef union
+{
+    uint64_t u64;
+    int16_t* ptr;
+} ShopData_C_Ptr64_int16;
+
+typedef union
+{
+    uint64_t u64;
+    uint32_t* ptr;
+} ShopData_C_Ptr64_uint32;
+
+typedef union
+{
+    uint64_t u64;
+    int32_t* ptr;
+} ShopData_C_Ptr64_int32;
+
+typedef union
+{
+    uint64_t u64;
+    uint64_t* ptr;
+} ShopData_C_Ptr64_uint64;
+
+typedef union
+{
+    uint64_t u64;
+    int64_t* ptr;
+} ShopData_C_Ptr64_int64;
+
+typedef union
+{
+    uint64_t u64;
+    float* ptr;
+} ShopData_C_Ptr64_float;
+
+typedef union
+{
+    uint64_t u64;
+    double* ptr;
+} ShopData_C_Ptr64_double;
+
+typedef union
+{
+    uint64_t u64;
     const char* ptr;
 } ShopData_C_Ptr64_string;
+
+typedef union
+{
+    uint64_t u64;
+    ShopData_C_Ptr64_string* ptr;
+} ShopData_C_Ptr64_Ptr64_string;
 
 typedef struct
 {
@@ -39,6 +111,18 @@ typedef struct
     uint32_t sellCost;
     uint32_t buyCost;
 } ShopData_C_Item;
+
+typedef union
+{
+    uint64_t u64;
+    ShopData_C_Item* ptr;
+} ShopData_C_Ptr64_Item;
+
+typedef union
+{
+    uint64_t u64;
+    ShopData_C_Ptr64_Item* ptr;
+} ShopData_C_Ptr64_Ptr64_Item;
 #pragma pack(pop)
 
 typedef struct ShopData_C_Database

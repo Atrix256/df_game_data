@@ -28,18 +28,120 @@ To use:
 #include <sys/stat.h>
 
 #pragma pack(push, 1)
-typedef struct
+typedef union
 {
-    uint64_t name; // cast uint64_t to char*
-    float value;
-} Data_C_Item;
+    uint64_t u64;
+    uint8_t* ptr;
+} Data_C_Ptr64_bool;
+
+typedef union
+{
+    uint64_t u64;
+    uint8_t* ptr;
+} Data_C_Ptr64_uint8;
+
+typedef union
+{
+    uint64_t u64;
+    int8_t* ptr;
+} Data_C_Ptr64_int8;
+
+typedef union
+{
+    uint64_t u64;
+    uint16_t* ptr;
+} Data_C_Ptr64_uint16;
+
+typedef union
+{
+    uint64_t u64;
+    int16_t* ptr;
+} Data_C_Ptr64_int16;
+
+typedef union
+{
+    uint64_t u64;
+    uint32_t* ptr;
+} Data_C_Ptr64_uint32;
+
+typedef union
+{
+    uint64_t u64;
+    int32_t* ptr;
+} Data_C_Ptr64_int32;
+
+typedef union
+{
+    uint64_t u64;
+    uint64_t* ptr;
+} Data_C_Ptr64_uint64;
+
+typedef union
+{
+    uint64_t u64;
+    int64_t* ptr;
+} Data_C_Ptr64_int64;
+
+typedef union
+{
+    uint64_t u64;
+    float* ptr;
+} Data_C_Ptr64_float;
+
+typedef union
+{
+    uint64_t u64;
+    double* ptr;
+} Data_C_Ptr64_double;
+
+typedef union
+{
+    uint64_t u64;
+    const char* ptr;
+} Data_C_Ptr64_string;
+
+typedef union
+{
+    uint64_t u64;
+    Data_C_Ptr64_string* ptr;
+} Data_C_Ptr64_Ptr64_string;
 
 typedef struct
 {
-    uint64_t name; // cast uint64_t to char*
+    Data_C_Ptr64_string name;
+    float value;
+} Data_C_Item;
+
+typedef union
+{
+    uint64_t u64;
+    Data_C_Item* ptr;
+} Data_C_Ptr64_Item;
+
+typedef union
+{
+    uint64_t u64;
+    Data_C_Ptr64_Item* ptr;
+} Data_C_Ptr64_Ptr64_Item;
+
+typedef struct
+{
+    Data_C_Ptr64_string name;
     uint32_t inventory_count;
-    uint64_t inventory; // cast to uint64_t*, cast uint64_t to Data_C_Item*
+    Data_C_Ptr64_Ptr64_Item inventory;
 } Data_C_Character;
+
+typedef union
+{
+    uint64_t u64;
+    Data_C_Character* ptr;
+} Data_C_Ptr64_Character;
+
+typedef union
+{
+    uint64_t u64;
+    Data_C_Ptr64_Character* ptr;
+} Data_C_Ptr64_Ptr64_Character;
 #pragma pack(pop)
 
 typedef struct Data_C_Database
@@ -47,11 +149,11 @@ typedef struct Data_C_Database
     uint8_t* ownedMemory;
 
     uint32_t table_Character_count;
-    uint64_t* table_Character_names; // cast uint64_t to char*
+    Data_C_Ptr64_string* table_Character_names;
     Data_C_Character* table_Character;
 
     uint32_t table_Item_count;
-    uint64_t* table_Item_names; // cast uint64_t to char*
+    Data_C_Ptr64_string* table_Item_names;
     Data_C_Item* table_Item;
 
     char* fileName;
@@ -64,7 +166,7 @@ void Data_C_DestroyDatabase(Data_C_Database* db);
 bool Data_C_LoadFromMemory(void* mem, uint32_t size, Data_C_Database* db);
 bool Data_C_LoadFromFile(const char* fileName, Data_C_Database* db);
 bool Data_C_Tick(Data_C_Database* db);
-size_t Data_C_StringIndex(uint64_t* arr, size_t count, const char* key);
+size_t Data_C_StringIndex(Data_C_Ptr64_string* arr, size_t count, const char* key);
 
 // Private implementation
 #ifdef DF_GAMEDATA_IMPLEMENTATION
@@ -84,9 +186,9 @@ int Data_C_CompareKeyToElement(const void* key, const void* elem)
 }
 
 // Returns count if not found
-size_t Data_C_StringIndex(uint64_t* arr, size_t count, const char* key)
+size_t Data_C_StringIndex(Data_C_Ptr64_string* arr, size_t count, const char* key)
 {
-    uint64_t* hit = bsearch(key, arr, count, sizeof(uint64_t), Data_C_CompareKeyToElement);
+    Data_C_Ptr64_string* hit = bsearch(key, arr, count, sizeof(uint64_t), Data_C_CompareKeyToElement);
     return hit ? (hit - arr) : count;
 }
 
@@ -223,20 +325,17 @@ void Data_C_DoEndianSwapAndPointerFixup_Ptr(uint64_t* value, void* mem, bool end
 
 void Data_C_DoEndianSwapAndPointerFixup_Item(Data_C_Item* value, void* mem, bool endianSwap)
 {
-    Data_C_DoEndianSwapAndPointerFixup_Ptr(&value->name, mem, endianSwap);
+    Data_C_DoEndianSwapAndPointerFixup_Ptr(&value->name.u64, mem, endianSwap);
     Data_C_DoEndianSwapAndPointerFixup_float(&value->value, mem, endianSwap);
 }
 
 void Data_C_DoEndianSwapAndPointerFixup_Character(Data_C_Character* value, void* mem, bool endianSwap)
 {
-    Data_C_DoEndianSwapAndPointerFixup_Ptr(&value->name, mem, endianSwap);
+    Data_C_DoEndianSwapAndPointerFixup_Ptr(&value->name.u64, mem, endianSwap);
     Data_C_DoEndianSwapAndPointerFixup_U32(&value->inventory_count, mem, endianSwap);
-    Data_C_DoEndianSwapAndPointerFixup_Ptr(&value->inventory, mem, endianSwap);
+    Data_C_DoEndianSwapAndPointerFixup_Ptr(&value->inventory.u64, mem, endianSwap);
     for (uint32_t i = 0; i < value->inventory_count; ++i)
-    {
-        uint64_t* fieldPtr = &((uint64_t*)(value->inventory))[i];
-        Data_C_DoEndianSwapAndPointerFixup_Ptr(fieldPtr, mem, endianSwap);
-    }
+        Data_C_DoEndianSwapAndPointerFixup_Ptr(&value->inventory.ptr[i].u64, mem, endianSwap);
 }
 
 void Data_C_InitDatabase(Data_C_Database* db)
@@ -343,9 +442,9 @@ bool Data_C_LoadFromMemory(void* mem, uint32_t memSize, Data_C_Database* db)
                 return false;
             uint64_t table_names = memIndex;
             Data_C_DoEndianSwapAndPointerFixup_Ptr(&table_names, mem, endianSwap);
-            db->table_Character_names = (uint64_t*)table_names;
+            db->table_Character_names = (Data_C_Ptr64_string*)table_names;
             for (uint32_t i = 0; i < db->table_Character_count; ++i)
-                Data_C_DoEndianSwapAndPointerFixup_Ptr(&db->table_Character_names[i], mem, endianSwap);
+                Data_C_DoEndianSwapAndPointerFixup_Ptr(&db->table_Character_names[i].u64, mem, endianSwap);
             memIndex += db->table_Character_count * sizeof(uint64_t);
 
             // Get a pointer to the first entry in the table
@@ -374,9 +473,9 @@ bool Data_C_LoadFromMemory(void* mem, uint32_t memSize, Data_C_Database* db)
                 return false;
             uint64_t table_names = memIndex;
             Data_C_DoEndianSwapAndPointerFixup_Ptr(&table_names, mem, endianSwap);
-            db->table_Item_names = (uint64_t*)table_names;
+            db->table_Item_names = (Data_C_Ptr64_string*)table_names;
             for (uint32_t i = 0; i < db->table_Item_count; ++i)
-                Data_C_DoEndianSwapAndPointerFixup_Ptr(&db->table_Item_names[i], mem, endianSwap);
+                Data_C_DoEndianSwapAndPointerFixup_Ptr(&db->table_Item_names[i].u64, mem, endianSwap);
             memIndex += db->table_Item_count * sizeof(uint64_t);
 
             // Get a pointer to the first entry in the table
