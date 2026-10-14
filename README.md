@@ -128,9 +128,9 @@ You can compile the database using the **Compile** menu, or by pressing CTRL+C.
 
 Compilation creates a .bin file which is the binary representation of all entries in all tables in your .dbroot file.
 
-It also creates a .h file.  This is a standalone header file which you include in your code to load the .bin file and read data from it.
+It also creates a .h file either for use in C or in C++.  This is a standalone header file which you include in your code to load the .bin file and read data from it.
 
-Here is some code showing how to use the compiled output .bin and .h files:
+Here is some code showing how to use the compiled output .bin and .h files in C++:
 
 ```cpp
 // main.cpp
@@ -180,6 +180,8 @@ The `Examples` folder has three examples in it that you can run using the `Examp
 1. [Simple](Examples/1_Simple/main.cpp) - This shows how to load a compiled bin file and read data from it.
 2. [HotReloading](Examples/2_HotReloading/main.cpp) - This shows how hot reloading works.
 3. [Exhaustive](Examples/3_Exhaustive/main.cpp) - This exercises every feature available, and shows how to read the data for each.
+
+The examples are available in both C and C++.
 
 ## Building
 

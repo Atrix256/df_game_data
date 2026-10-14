@@ -12,7 +12,7 @@ You can also compile the data through the editor's command line interface.  Comp
 
 ## Compilation Output
 
-When data is compiled, it generates a .bin file and a .h file.
+When data is compiled, it generates a .bin file and a .h file.  The .h file can be for either C or C++. You choose the target language in the settings.
 
 The .bin file is the binary representation of your data, written in such a way that it is read in with a single fread, and pointers are converted from file offsets to actual memory pointers.
 
@@ -22,7 +22,19 @@ The loading process also uses a fourcc to know if it needs to do endian swapping
 
 The header file made can be thought of as a "header only library" which loads the binary file.  Changing the schema will change this file, but modifying data (including adding or removing data records) will not change this file.
 
-## Header File Interface
+## Anti Cheat
+
+There is one anti cheat feature for the data files: Obfuscation.
+
+If you turn that on, it XORs the data in the file by a one time pad on save, and again on load.
+
+This helps prevent read and write hacks of the bin file itself.
+
+The file does eventually need to be un obfuscated in memory, so true security of the file isn't really possible. This just aims to make it harder to use the bin file to cheat.
+
+Turning off the name look up table, and losing the ability to look up records by name, is also a good idea if you are concerned about cheating.  If you leave record names in, they give names to data records, which can help a cheater find what they are looking for a lot more easily.
+
+## C++ Header File Interface
 
 ### Loading
 There are two functions for loading a .bin database file:
@@ -212,3 +224,19 @@ struct Bool
     }
 };
 ```
+
+## C Header File Interface
+
+The C interface is similar to the C++ interface. Below is an overview, but see the examples for more details.
+
+* InitDatabase() - Initializes a database object
+* DestroyDatabase() - Destroys a database object and frees any resources it is holding internally.
+* LoadFromMemory() / LoadFromFile() - loads a database
+* StringIndex() - This allows you to look up a database table index by name, using the LUT.
+* Tick() - Does logic for hot reloading and returns true when hot reloading happens so that you can update any cached data.
+
+Unlike the C++ interface, it does not do any data record look ups in response to hot reloading.  It's completely up to you to respond to Tick() returning true, signifying that hot reloading has happened.
+
+In the C interface, all enums are just uint16_ts. There is no type safety for enum types, unlike in C++. It's a limitation of C.
+
+In the C interface, insteda of lookup up records by index or name, the database object gives you direct access to the pointers of where the table entries start.  It's up to you to index into that array to get the data entry you want, or to use StringIndex() to turn a record name into an index and use that index.
