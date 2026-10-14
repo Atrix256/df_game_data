@@ -349,20 +349,22 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
                             enumsAndStructDefs << "\n";
                         }
 
-                        enumsAndStructDefs << indent << "} " << compilerSettings.className << "_" << s.name << ";\n\n";
-
-                        enumsAndStructDefs << indent << "typedef union\n";
-                        enumsAndStructDefs << indent << "{\n";
-                        enumsAndStructDefs << indent << "    uint64_t u64;\n";
-                        enumsAndStructDefs << indent << "    " << compilerSettings.className << "_" << s.name << "* ptr;\n";
-                        enumsAndStructDefs << indent << "} " << compilerSettings.className << "_Ptr64_" << s.name << ";\n\n";
-
-                        enumsAndStructDefs << indent << "typedef union\n";
-                        enumsAndStructDefs << indent << "{\n";
-                        enumsAndStructDefs << indent << "    uint64_t u64;\n";
-                        enumsAndStructDefs << indent << "    " << compilerSettings.className << "_Ptr64_" << s.name << "* ptr;\n";
-                        enumsAndStructDefs << indent << "} " << compilerSettings.className << "_Ptr64_Ptr64_" << s.name << ";\n";
+                        enumsAndStructDefs << indent << "} " << compilerSettings.className << "_" << s.name << ";\n";
                     }
+
+                    enumsAndStructDefs << "\n";
+                    enumsAndStructDefs << indent << "typedef union\n";
+                    enumsAndStructDefs << indent << "{\n";
+                    enumsAndStructDefs << indent << "    uint64_t u64;\n";
+                    enumsAndStructDefs << indent << "    " << compilerSettings.className << "_" << s.name << "* ptr;\n";
+                    enumsAndStructDefs << indent << "} " << compilerSettings.className << "_Ptr64_" << s.name << ";\n";
+
+                    enumsAndStructDefs << "\n";
+                    enumsAndStructDefs << indent << "typedef union\n";
+                    enumsAndStructDefs << indent << "{\n";
+                    enumsAndStructDefs << indent << "    uint64_t u64;\n";
+                    enumsAndStructDefs << indent << "    " << compilerSettings.className << "_Ptr64_" << s.name << "* ptr;\n";
+                    enumsAndStructDefs << indent << "} " << compilerSettings.className << "_Ptr64_Ptr64_" << s.name << ";\n";
 
                     return true;
                 }
@@ -437,14 +439,15 @@ static bool MakeC_Structs(const DBCompileSettings& compilerSettings, const DBRoo
                                 if (field.fixedArraySize == 0)
                                 {
                                     os << "    " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_U32(&value->" << field.name << "_count, mem, endianSwap);\n";
-                                    os << "    " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&value->" << field.name << fieldSuffix << ", mem, endianSwap);\n";
+                                    os << "    " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_Ptr(&value->" << field.name << ".u64, mem, endianSwap);\n";
                                     os << "    for (uint32_t i = 0; i < value->" << field.name << "_count; ++i)\n";
+                                    os << "        " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_" << endianSwapFuncPostFix << "(&value->" << field.name << ".ptr[i]" << fieldSuffix << ", mem, endianSwap);\n";
                                 }
                                 else
                                 {
                                     os << "    for (uint32_t i = 0; i < " << field.fixedArraySize << "; ++i)\n";
+                                    os << "        " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_" << endianSwapFuncPostFix << "(&value->" << field.name << "[i]" << fieldSuffix << ", mem, endianSwap);\n";
                                 }
-                                os << "        " << compilerSettings.className << "_DoEndianSwapAndPointerFixup_" << endianSwapFuncPostFix << "(&value->" << field.name << ".ptr[i]" << fieldSuffix << ", mem, endianSwap);\n";
                             }
                             else
                             {
