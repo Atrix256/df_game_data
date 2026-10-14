@@ -20,6 +20,7 @@
     <ClCompile Include="Platform.cpp" />
     <ClCompile Include="Compile_Bin.cpp" />
     <ClCompile Include="Compile_CPP.cpp" />
+    <ClCompile Include="Compile_C.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Editor.h" />
@@ -37,6 +38,9 @@
     <ClInclude Include="Compile.h" />
     <ClInclude Include="Platform.h" />
     <ClInclude Include="..\Version.h" />
+    <ClInclude Include="Compile_Bin.h" />
+    <ClInclude Include="Compile_CPP.h" />
+    <ClInclude Include="Compile_C.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

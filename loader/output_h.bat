@@ -1,2 +1,4 @@
 @echo off
-copy /b "%~dp0output_h_prefix.txt" + "%~dp0output.h" + "%~dp0output_h_suffix.txt" "%~dp0output_string.h" >nul
+for %%F in (output_cpp_h output_c_h) do (
+    copy /b "%~dp0output_h_prefix.txt" + "%~dp0%%F.h" + "%~dp0output_h_suffix.txt" "%~dp0%%F_string.h" >nul
+)

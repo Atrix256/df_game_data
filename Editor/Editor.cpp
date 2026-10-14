@@ -913,6 +913,17 @@ void HandleSettingsWindow()
             ImGui::Checkbox("Obfuscation", &s.obfuscation);
             ShowToolTip("Xors the data of the file by a one time pad generated using pcg32. Harder for players to read/write the bin file.");
 
+            // Code Gen Language
+            if (ImGui::BeginCombo("Code Gen Language", CodeGenLanguageToString(s.codeGenLanguage)))
+            {
+                for (int i = (int)CodeGenLanguage::First; i < (int)CodeGenLanguage::Count; ++i)
+                {
+                    if (ImGui::Selectable(CodeGenLanguageToString((CodeGenLanguage)i), s.codeGenLanguage == (CodeGenLanguage)i))
+                        s.codeGenLanguage = (CodeGenLanguage)i;
+                }
+                ImGui::EndCombo();
+            }
+
             ImGui::TreePop();
         }
 
@@ -1111,3 +1122,8 @@ bool EditorOnAppLaunch(int argc, char** argv, int &returnCode)
 
     return !wantsCompile;
 }
+
+/*
+TODO:
+* binary serialization blog post after a week or so?
+*/

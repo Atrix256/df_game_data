@@ -5,7 +5,18 @@
             "compiledBinFileName": "../Packed/ShopData.bin",
             "className": "ShopData",
             "includeEntryLUT": true,
-            "hotReloading": false
+            "hotReloading": false,
+            "obfuscation": true,
+            "codeGenLanguage": "cpp"
+        },
+        {
+            "compiledHeaderFileName": "../../1_Simple_C/ShopData_C.h",
+            "compiledBinFileName": "../../1_Simple_C/Packed/ShopData.bin",
+            "className": "ShopData_C",
+            "includeEntryLUT": true,
+            "hotReloading": false,
+            "obfuscation": true,
+            "codeGenLanguage": "c"
         }
     ],
     "tables": [

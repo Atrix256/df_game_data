@@ -452,7 +452,7 @@ inline bool Data::LoadFromMemory(void* mem, uint32_t memSize)
     // Verify that the schema hash in the binary data matches the schema hash this file was made for
     {
         uint64_t hash = 0;
-        if (!Read(hash, mem, memIndex, memSize, endianSwap) || hash != 0xf5b91463cd875894ULL)
+        if (!Read(hash, mem, memIndex, memSize, endianSwap) || hash != 0xb7e7eb453c315328ULL)
             return false;
     }
 

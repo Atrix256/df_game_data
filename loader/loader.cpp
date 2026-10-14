@@ -133,6 +133,9 @@ void DBRoot::LoadSettings(json& data)
 
         if (data.contains(indexPtr / "obfuscation"))
             m_compileSettings[index].obfuscation = data.at(indexPtr / "obfuscation");
+
+        if (data.contains(indexPtr / "codeGenLanguage"))
+            m_compileSettings[index].codeGenLanguage = CodeGenLanguageFromString(data.at(indexPtr / "codeGenLanguage").get<std::string>().c_str());
     }
 }
 
@@ -161,6 +164,7 @@ void DBRoot::SaveDBRoot()
             compilerSettingObject["includeEntryLUT"] = setting.includeEntryLUT;
             compilerSettingObject["hotReloading"] = setting.hotReloading;
             compilerSettingObject["obfuscation"] = setting.obfuscation;
+            compilerSettingObject["codeGenLanguage"] = CodeGenLanguageToString(setting.codeGenLanguage);
 
             compilerSettingsArray.push_back(compilerSettingObject);
         }

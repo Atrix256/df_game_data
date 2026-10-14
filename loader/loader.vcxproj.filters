@@ -11,11 +11,13 @@
     <ClInclude Include="JSON.h" />
     <ClInclude Include="DefParser.h" />
     <ClInclude Include="hash.h" />
-    <ClInclude Include="output_string.h" />
     <ClInclude Include="..\Version.h" />
     <ClInclude Include="..\Utils.h" />
+    <ClInclude Include="output_c_h_string.h" />
+    <ClInclude Include="output_cpp_h_string.h" />
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="output.h" />
+    <CustomBuild Include="output_c_h.h" />
+    <CustomBuild Include="output_cpp_h.h" />
   </ItemGroup>
 </Project>

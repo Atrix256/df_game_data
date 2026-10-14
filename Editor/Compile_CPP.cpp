@@ -1,7 +1,9 @@
+#include "Compile_CPP.h"
+
 #include "../loader/loader.h"
 #include "../Version.h"
 #include "../Utils.h"
-#include "../loader/output_string.h"
+#include "../loader/output_cpp_h_string.h"
 
 #include <unordered_set>
 
@@ -786,7 +788,7 @@ bool MakeCPP(const DBCompileSettings& compilerSettings, const DBRoot& dbRoot, co
         return false;
 
     // Do token replacement on output.h
-    std::string out = c_output_h;
+    std::string out = c_file_text;
     for (const auto& pair : s_data.tokenReplacement)
         StringReplaceAll(out, pair.first, pair.second.str());
 

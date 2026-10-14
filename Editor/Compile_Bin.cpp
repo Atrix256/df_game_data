@@ -1,3 +1,5 @@
+#include "Compile_Bin.h"
+
 #include "../loader/loader.h"
 #include "../Version.h"
 #include "../Utils.h"
