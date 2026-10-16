@@ -64,13 +64,13 @@ rmdir /s /q "%STAGE%"
 
 rem --- Copy the font and its licenses from the source tree into release\FontAwesome ---
 for %%f in (fontawesome-webfont.ttf licence.txt LICENSE.txt) do (
-    if not exist "Editor\FontAwesome\%%f" (
-        echo ERROR: Editor\FontAwesome\%%f not found
+    if not exist "FontAwesome\%%f" (
+        echo ERROR: FontAwesome\%%f not found
         goto :fail
     )
-    xcopy /y /i /q "Editor\FontAwesome\%%f" "%DEST%\FontAwesome\" >nul
+    xcopy /y /i /q "FontAwesome\%%f" "%DEST%\FontAwesome\" >nul
     if errorlevel 1 (
-        echo ERROR: failed to copy Editor\FontAwesome\%%f
+        echo ERROR: failed to copy FontAwesome\%%f
         goto :fail
     )
 )
