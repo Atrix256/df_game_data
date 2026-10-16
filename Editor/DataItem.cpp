@@ -188,6 +188,9 @@ static void AddUIForType(EditorData& editorData, const DefParser& parser, const 
                     std::string value = GetOrDefault(jsonData.m_data, jsonPathItem, dflt);
 
                     // links have a drop down menu
+                    if (!editorData.m_dbroot.m_tables.contains(fieldDef.linkName))
+                        break;
+
                     const DBTable& table = *editorData.m_dbroot.m_tables[fieldDef.linkName];
 
                     if (ImGui::BeginCombo(fieldDef.name.c_str(), value.c_str()))

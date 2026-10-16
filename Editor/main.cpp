@@ -337,10 +337,18 @@ int main(int argc, char** argv)
         icons_config.PixelSnapH = true;
         icons_config.GlyphMinAdvanceX = 18.0f;
 
-        const char* fontName = "FontAwesome/fontawesome-webfont.ttf";
+        // Get path to font, relative to executable, not working directory.
+        std::filesystem::path fontPath;
+        {
+            char exePath[_MAX_PATH + 1];
+            GetModuleFileNameA(NULL, exePath, _MAX_PATH);
+            fontPath = exePath;
+            fontPath.replace_filename("");
+            fontPath = fontPath / "FontAwesome" / "fontawesome-webfont.ttf";
+        }
 
         // Use an actual pixel size here, matching base_config.SizePixels (or close to it)
-        io.Fonts->AddFontFromFileTTF(fontName, 18.0f, &icons_config, icons_ranges);
+        io.Fonts->AddFontFromFileTTF(fontPath.generic_string().c_str(), 18.0f, &icons_config, icons_ranges);
     }
 
     // Our state
