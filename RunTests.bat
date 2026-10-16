@@ -40,7 +40,9 @@ REM NOTE: /m omitted deliberately here - parallel build was racing a DLL
 REM copy step and producing an Editor.exe without nfd.dll.
 echo.
 echo ===== Building data compiler: %DATA_SLN% [Release x64] =====
-set "DATA_EXE_DIR=%ROOT%x64\Release"
+REM Editor.exe now builds into the repo root (same folder as this script).
+REM Strip the trailing backslash from ROOT so paths don't end up with "\\".
+set "DATA_EXE_DIR=%ROOT:~0,-1%"
 
 REM Clear any stale output from a previous build so a broken build can't
 REM silently "succeed" by running against leftover artifacts.

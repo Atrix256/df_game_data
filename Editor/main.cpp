@@ -9,7 +9,7 @@
 #include "../df_resource.h"
 
 #include "Editor.h"
-#include "FontAwesome/IconsFontAwesome7.h"
+#include "../FontAwesome/IconsFontAwesome7.h"
 
 #define NOMINMAX
 

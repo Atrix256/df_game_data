@@ -1,7 +1,7 @@
 #pragma once
 
 #include "imgui.h"
-#include "FontAwesome/IconsFontAwesome7.h"
+#include "../FontAwesome/IconsFontAwesome7.h"
 
 class ImGui_Enabled
 {
