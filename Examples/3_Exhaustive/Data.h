@@ -44,6 +44,12 @@ public:
 
     bool LoadFromFile(const char* fileName);
 
+    static Data& Get()
+    {
+        static Data db;
+        return db;
+    }
+
 public:
     #pragma pack(push, 1)
 

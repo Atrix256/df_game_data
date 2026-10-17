@@ -36,6 +36,10 @@ Turning off the name look up table, and losing the ability to look up records by
 
 ## C++ Header File Interface
 
+### Singleton
+
+The generated header class has a static `Get()` method if you want to use the header as a singleton.  If you don't want to use it as a singleton, you can make an object of the class and use it normally.
+
 ### Loading
 There are two functions for loading a .bin database file:
 

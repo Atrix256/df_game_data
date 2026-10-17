@@ -44,6 +44,12 @@ public:
 
     bool LoadFromFile(const char* fileName);
 
+    static Data_No_Obfuscation& Get()
+    {
+        static Data_No_Obfuscation db;
+        return db;
+    }
+
 public:
     #pragma pack(push, 1)
 
