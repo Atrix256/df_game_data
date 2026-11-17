@@ -120,10 +120,10 @@ public:
             return *this;
         }
 
-        const T& Get()
+        const T& Get() const
         {
             if (m_parent && m_parent->m_generation != m_generation)
-                *this = m_parent->Get<T>(m_recordName);
+                *const_cast<Record<T>*>(this) = m_parent->Get<T>(m_recordName);
             static const T s_dummy = T();
             return m_record ? *m_record : s_dummy;
         }

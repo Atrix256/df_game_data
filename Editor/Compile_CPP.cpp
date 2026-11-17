@@ -725,14 +725,14 @@ static bool MakeHeader_Global(const DBCompileSettings& compilerSettings, const D
         }
 
         os <<
-            indent << "    const T& Get()" << (compilerSettings.hotReloading ? "" : " const") << "\n" <<
+            indent << "    const T& Get() const" << "\n" <<
             indent << "    {\n";
 
         if (compilerSettings.hotReloading)
         {
             os <<
                 indent << "        if (m_parent && m_parent->m_generation != m_generation)\n" <<
-                indent << "            *this = m_parent->Get<T>(m_recordName);\n"
+                indent << "            *const_cast<Record<T>*>(this) = m_parent->Get<T>(m_recordName);\n"
                 ;
         }
 
