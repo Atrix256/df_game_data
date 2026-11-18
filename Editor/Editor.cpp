@@ -316,6 +316,14 @@ static bool ShowMenuBar()
             if (ImGui::MenuItem("Settings", nullptr, false, s_editorData.m_dbroot.Loaded()))
                 s_editorData.m_openSettingsWindow = true;
 
+            if (ImGui::MenuItem("Schemas", nullptr, false, s_editorData.m_dbroot.Loaded()))
+            {
+                //OSOpenFile(s_editorData.m_dbroot.GetPath());
+
+                for (const auto& pair : s_editorData.m_dbroot.m_tables)
+                    OSOpenFile(pair.second->GetPath());
+            }
+
             ImGui::EndMenu();
         }
 
